@@ -50,6 +50,7 @@ jobs:
         with:
           script: |
             const appName = '${{ steps.app-name.outputs.app_name }}';
+            const commitSha = '${{ github.event.pull_request.head.sha }}'.substring(0, 7);
             const comment = `## 🚀 JavaFX Preview Environment
             
             **Status:** 🔨 Building...
@@ -57,7 +58,7 @@ jobs:
             The preview environment is being created. This may take 5-7 minutes.
             
             ---
-            _App: \`${appName}\` | Commit: \`${{ github.event.pull_request.head.sha.substring(0, 7) }}\`_`;
+            _App: \`${appName}\` | Commit: \`${commitSha}\`_`;
             
             // Find existing comment
             const { data: comments } = await github.rest.issues.listComments({
@@ -128,6 +129,7 @@ jobs:
           script: |
             const appName = '${{ steps.app-name.outputs.app_name }}';
             const appUrl = '${{ steps.app-url.outputs.url }}';
+            const commitSha = '${{ github.event.pull_request.head.sha }}'.substring(0, 7);
             const comment = `## 🚀 JavaFX Preview Environment
             
             **Status:** ✅ Ready
@@ -145,7 +147,7 @@ jobs:
             
             ---
             _Preview environment will be automatically destroyed when this PR is closed._  
-            _App: \`${appName}\` | Commit: \`${{ github.event.pull_request.head.sha.substring(0, 7) }}\`_`;
+            _App: \`${appName}\` | Commit: \`${commitSha}\`_`;
             
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
@@ -180,6 +182,7 @@ jobs:
           script: |
             const appName = '${{ steps.app-name.outputs.app_name }}';
             const runUrl = `https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+            const commitSha = '${{ github.event.pull_request.head.sha }}'.substring(0, 7);
             const comment = `## 🚀 JavaFX Preview Environment
             
             **Status:** ❌ Failed
@@ -192,7 +195,7 @@ jobs:
             - Insufficient Fly.io resources
             
             ---
-            _App: \`${appName}\` | Commit: \`${{ github.event.pull_request.head.sha.substring(0, 7) }}\`_`;
+            _App: \`${appName}\` | Commit: \`${commitSha}\`_`;
             
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
