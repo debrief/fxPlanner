@@ -1,6 +1,8 @@
 package com.planetmayo.usvsim.controller;
 
 import com.planetmayo.usvsim.model.behaviour.ParallelTrackSearch;
+import com.planetmayo.usvsim.model.behaviour.WaypointTransit;
+import com.planetmayo.usvsim.model.behaviour.ReturnToBase;
 import com.planetmayo.usvsim.model.geometry.Polygon;
 import com.planetmayo.usvsim.model.geometry.Position;
 import com.planetmayo.usvsim.model.mission.Mission;
@@ -11,6 +13,10 @@ import com.planetmayo.usvsim.view.MissionPlanPanel;
 import com.planetmayo.usvsim.view.StatePanel;
 import com.planetmayo.usvsim.view.dialogs.ParallelTrackSearchDialog;
 import com.planetmayo.usvsim.view.dialogs.ParallelTrackSearchParams;
+import com.planetmayo.usvsim.view.dialogs.WaypointTransitDialog;
+import com.planetmayo.usvsim.view.dialogs.WaypointTransitParams;
+import com.planetmayo.usvsim.view.dialogs.ReturnToBaseDialog;
+import com.planetmayo.usvsim.view.dialogs.ReturnToBaseParams;
 
 import java.util.List;
 
@@ -62,10 +68,10 @@ public class MissionController {
                 System.out.println("TODO: Expanding square search");
                 break;
             case "Waypoint Transit":
-                System.out.println("TODO: Waypoint transit");
+                startWaypointTransitDialog();
                 break;
             case "Return to Base":
-                System.out.println("TODO: Return to base");
+                startReturnToBaseDialog();
                 break;
             default:
                 System.err.println("Unknown behavior type: " + behaviorType);
@@ -123,6 +129,87 @@ public class MissionController {
 
         } catch (IllegalArgumentException e) {
             System.err.println("Failed to create parallel track search: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Start the Waypoint Transit workflow:
+     * 1. Show waypoint input dialog
+     * 2. Create WaypointTransit behaviour
+     * 3. Add to mission
+     * 4. Update map display
+     */
+    private void startWaypointTransitDialog() {
+        System.out.println("Starting Waypoint Transit workflow");
+
+        WaypointTransitDialog dialog = new WaypointTransitDialog();
+        dialog.showAndWait().ifPresent(params -> {
+            addWaypointTransit(params);
+        });
+    }
+
+    /**
+     * Add a WaypointTransit behaviour to the mission
+     */
+    public void addWaypointTransit(WaypointTransitParams params) {
+        try {
+            // Create the behaviour
+            WaypointTransit behavior = new WaypointTransit(params.waypoints, params.speed);
+
+            // Add to mission
+            mission.getMissionPlan().addBehaviour(behavior);
+            System.out.println("Added waypoint transit: " + params.waypoints.size() +
+                             " waypoints at " + params.speed + " knots");
+
+            // Update UI
+            missionPlanPanel.addBehavior(behavior);
+            mapPanel.renderTracks(behavior.getWaypoints());
+
+        } catch (IllegalArgumentException e) {
+            System.err.println("Failed to create waypoint transit: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Start the Return to Base workflow:
+     * 1. Show return-to-base configuration dialog
+     * 2. Create ReturnToBase behaviour
+     * 3. Add to mission
+     * 4. Update map display
+     */
+    private void startReturnToBaseDialog() {
+        System.out.println("Starting Return to Base workflow");
+
+        // Get current platform position as default
+        Position currentPos = mission.getPlatform().getState().getPosition();
+
+        ReturnToBaseDialog dialog = new ReturnToBaseDialog(currentPos);
+        dialog.showAndWait().ifPresent(params -> {
+            addReturnToBase(params);
+        });
+    }
+
+    /**
+     * Add a ReturnToBase behaviour to the mission
+     */
+    public void addReturnToBase(ReturnToBaseParams params) {
+        try {
+            // Create the behaviour
+            ReturnToBase behavior = new ReturnToBase(params.baseLocation, params.speed);
+
+            // Add to mission
+            mission.getMissionPlan().addBehaviour(behavior);
+            System.out.println("Added return to base: " + String.format("(%.3f°N, %.3f°E)",
+                             params.baseLocation.getLatitude(),
+                             params.baseLocation.getLongitude()) +
+                             " at " + params.speed + " knots");
+
+            // Update UI
+            missionPlanPanel.addBehavior(behavior);
+            mapPanel.renderTracks(behavior.getWaypoints());
+
+        } catch (IllegalArgumentException e) {
+            System.err.println("Failed to create return to base: " + e.getMessage());
         }
     }
 

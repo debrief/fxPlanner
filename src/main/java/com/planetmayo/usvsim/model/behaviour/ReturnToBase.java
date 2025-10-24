@@ -1,0 +1,115 @@
+package com.planetmayo.usvsim.model.behaviour;
+
+import com.planetmayo.usvsim.controller.BehaviourExecutor;
+import com.planetmayo.usvsim.model.geometry.Position;
+import com.planetmayo.usvsim.model.geometry.Waypoint;
+import com.planetmayo.usvsim.model.geometry.WaypointType;
+import com.planetmayo.usvsim.model.platform.PlatformDemand;
+import com.planetmayo.usvsim.model.platform.PlatformState;
+import com.planetmayo.usvsim.model.platform.TurnDirection;
+import javafx.scene.paint.Color;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Return to base behaviour.
+ *
+ * Navigates directly to a designated base location.
+ * Used at end of mission or emergency procedures.
+ *
+ * Characteristics:
+ * - Single waypoint (base location)
+ * - Direct navigation
+ * - Configurable speed
+ * - Simple completion condition (reached base)
+ */
+public class ReturnToBase implements Behaviour {
+    private final Position baseLocation;
+    private final double platformSpeed;
+    private final List<Waypoint> waypoints;
+    private BehaviourState state;
+    private boolean reachedBase;
+
+    /**
+     * Create return to base behaviour.
+     *
+     * @param baseLocation position of base/return point
+     * @param speed platform speed (knots)
+     */
+    public ReturnToBase(Position baseLocation, double speed) {
+        this.baseLocation = baseLocation;
+        this.platformSpeed = speed;
+        this.state = BehaviourState.PENDING;
+        this.reachedBase = false;
+
+        // Create single waypoint for base location
+        this.waypoints = new ArrayList<>();
+        Waypoint baseWaypoint = new Waypoint(baseLocation, speed, 50.0, WaypointType.BASE);
+        this.waypoints.add(baseWaypoint);
+    }
+
+    @Override
+    public String getName() {
+        return "Return to Base";
+    }
+
+    @Override
+    public String getDescription() {
+        return String.format("Base: %.2f°N, %.2f°E at %g knots",
+            baseLocation.getLatitude(),
+            baseLocation.getLongitude(),
+            platformSpeed);
+    }
+
+    @Override
+    public BehaviourState getState() {
+        return state;
+    }
+
+    @Override
+    public double getProgress() {
+        if (reachedBase) {
+            return 1.0;
+        }
+        // Return 0% until reaching base (simple but correct)
+        return 0.0;
+    }
+
+    @Override
+    public PlatformDemand getDemandedState(PlatformState currentState) {
+        if (reachedBase) {
+            return new PlatformDemand(currentState.getHeading(), 0.0, 0.0, TurnDirection.SHORTEST);
+        }
+
+        return BehaviourExecutor.getDemandedState(currentState, waypoints.get(0));
+    }
+
+    @Override
+    public void updateProgress(PlatformState currentState) {
+        if (state == BehaviourState.PENDING) {
+            state = BehaviourState.EXECUTING;
+        }
+
+        // Check if reached base
+        if (BehaviourExecutor.isWaypointReached(currentState, waypoints.get(0))) {
+            reachedBase = true;
+            state = BehaviourState.COMPLETE;
+        }
+    }
+
+    @Override
+    public boolean isComplete() {
+        return reachedBase || state == BehaviourState.COMPLETE;
+    }
+
+    @Override
+    public List<Waypoint> getWaypoints() {
+        return new ArrayList<>(waypoints);
+    }
+
+    @Override
+    public Color getDisplayColor() {
+        return Color.web("#F44336");  // Red
+    }
+}
