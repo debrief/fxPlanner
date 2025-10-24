@@ -150,11 +150,11 @@
 
 ### Integration Test
 
-- [ ] T056 [US2] Write integration test for behaviour sequencing in src/test/java/com/planetmayo/usvsim/integration/SimulationEngineTest.java (start, wait for completion, verify state)
+- [x] T056 [US2] Write integration test for behaviour sequencing in src/test/java/com/planetmayo/usvsim/integration/SimulationEngineTest.java (start, wait for completion, verify state)
 
 ### E2E Test (Complete Workflow)
 
-- [ ] T057 [US2] Write E2E test for simulation execution in src/test/java/com/planetmayo/usvsim/e2e/SimulationExecutionTest.java (TestFX: create mission, start, pause, stop)
+- [x] T057 [US2] Write E2E test for simulation execution in src/test/java/com/planetmayo/usvsim/e2e/SimulationExecutionTest.java (TestFX: create mission, start, pause, stop)
 
 **US2 Completion Criteria**: Can start simulation, USV moves with smooth curves, pause/resume works, stop resets, track history visible
 

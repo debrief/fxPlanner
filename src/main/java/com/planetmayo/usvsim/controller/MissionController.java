@@ -204,8 +204,11 @@ public class MissionController {
         controlPanel.setOnSpeedChange(this::setTimeAcceleration);
 
         // Wire state panel updates from simulation engine (T055)
+        // Post updates to JavaFX thread to avoid cross-thread UI access
         simulationEngine.setOnStateChanged(() -> {
-            statePanel.updateState(mission.getPlatform().getState());
+            javafx.application.Platform.runLater(() -> {
+                statePanel.updateState(mission.getPlatform().getState());
+            });
         });
     }
 }
