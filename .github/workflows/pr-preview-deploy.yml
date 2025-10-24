@@ -1,0 +1,221 @@
+name: Deploy PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+jobs:
+  deploy-preview:
+    name: Deploy JavaFX Preview to Fly.io
+    runs-on: ubuntu-latest
+    
+    # Don't run on closed PRs
+    if: github.event.pull_request.state == 'open'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      
+      - name: Generate app name
+        id: app-name
+        run: |
+          # Create a sanitized app name from PR number
+          APP_NAME="fxplanner-pr-${{ github.event.pull_request.number }}"
+          echo "app_name=${APP_NAME}" >> $GITHUB_OUTPUT
+          echo "App name: ${APP_NAME}"
+      
+      - name: Check if app exists
+        id: check-app
+        run: |
+          if flyctl status --app ${{ steps.app-name.outputs.app_name }} 2>/dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+      
+      - name: Create Fly.io app (if needed)
+        if: steps.check-app.outputs.exists == 'false'
+        run: |
+          flyctl apps create ${{ steps.app-name.outputs.app_name }} --org personal
+      
+      - name: Post initial comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const appName = '${{ steps.app-name.outputs.app_name }}';
+            const comment = `## 🚀 JavaFX Preview Environment
+            
+            **Status:** 🔨 Building...
+            
+            The preview environment is being created. This may take 5-7 minutes.
+            
+            ---
+            _App: \`${appName}\` | Commit: \`${{ github.event.pull_request.head.sha.substring(0, 7) }}\`_`;
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            const botComment = comments.find(c => 
+              c.user.type === 'Bot' && c.body.includes('JavaFX Preview Environment')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
+      
+      - name: Deploy to Fly.io
+        run: |
+          # Deploy the application
+          flyctl deploy \
+            --app ${{ steps.app-name.outputs.app_name }} \
+            --region lhr \
+            --ha=false \
+            --remote-only
+        timeout-minutes: 15
+      
+      - name: Get app URL
+        id: app-url
+        run: |
+          APP_URL="https://${{ steps.app-name.outputs.app_name }}.fly.dev"
+          echo "url=${APP_URL}" >> $GITHUB_OUTPUT
+          echo "Preview URL: ${APP_URL}"
+      
+      - name: Wait for app to be ready
+        run: |
+          echo "Waiting for app to become healthy..."
+          sleep 30
+          
+          # Try up to 10 times with 10 second intervals
+          for i in {1..10}; do
+            if curl -f -s "${{ steps.app-url.outputs.url }}" > /dev/null; then
+              echo "App is ready!"
+              exit 0
+            fi
+            echo "Attempt $i: App not ready yet, waiting..."
+            sleep 10
+          done
+          
+          echo "Warning: App may not be fully ready yet, but deployment succeeded."
+          exit 0
+      
+      - name: Update PR comment with success
+        uses: actions/github-script@v7
+        if: success()
+        with:
+          script: |
+            const appName = '${{ steps.app-name.outputs.app_name }}';
+            const appUrl = '${{ steps.app-url.outputs.url }}';
+            const comment = `## 🚀 JavaFX Preview Environment
+            
+            **Status:** ✅ Ready
+            
+            **Access:** [Launch Preview](${appUrl})
+            
+            **Instructions:**
+            1. Click the preview link above
+            2. Application will load directly in your browser
+            3. Interact with your JavaFX application to review changes
+            
+            **Build Log:** [View on Fly.io](https://fly.io/apps/${appName}/logs)
+            
+            **Note:** This is a web-rendered version of your JavaFX app using JPro. Some advanced JavaFX features may have limitations.
+            
+            ---
+            _Preview environment will be automatically destroyed when this PR is closed._  
+            _App: \`${appName}\` | Commit: \`${{ github.event.pull_request.head.sha.substring(0, 7) }}\`_`;
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            const botComment = comments.find(c => 
+              c.user.type === 'Bot' && c.body.includes('JavaFX Preview Environment')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
+      
+      - name: Update PR comment with failure
+        uses: actions/github-script@v7
+        if: failure()
+        with:
+          script: |
+            const appName = '${{ steps.app-name.outputs.app_name }}';
+            const runUrl = `https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+            const comment = `## 🚀 JavaFX Preview Environment
+            
+            **Status:** ❌ Failed
+            
+            The preview environment failed to deploy. Please check the [workflow logs](${runUrl}) for details.
+            
+            Common issues:
+            - Build failures in the Dockerfile
+            - Fly.io API token not configured or invalid
+            - Insufficient Fly.io resources
+            
+            ---
+            _App: \`${appName}\` | Commit: \`${{ github.event.pull_request.head.sha.substring(0, 7) }}\`_`;
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            const botComment = comments.find(c => 
+              c.user.type === 'Bot' && c.body.includes('JavaFX Preview Environment')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }

@@ -1,0 +1,34 @@
+name: Audit Preview Apps
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+env:
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+jobs:
+  audit-apps:
+    name: Audit and Cleanup Orphaned Apps
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      
+      - name: Run audit script
+        run: |
+          chmod +x scripts/cleanup-orphaned-apps.sh
+          ./scripts/cleanup-orphaned-apps.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Report results
+        if: always()
+        run: |
+          echo "Audit completed. Check logs for details."

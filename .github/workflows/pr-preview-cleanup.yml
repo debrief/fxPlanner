@@ -1,0 +1,88 @@
+name: Cleanup PR Preview
+
+on:
+  pull_request:
+    types: [closed]
+
+env:
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+jobs:
+  cleanup-preview:
+    name: Destroy Fly.io Preview App
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Set up Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      
+      - name: Generate app name
+        id: app-name
+        run: |
+          APP_NAME="fxplanner-pr-${{ github.event.pull_request.number }}"
+          echo "app_name=${APP_NAME}" >> $GITHUB_OUTPUT
+          echo "App name to destroy: ${APP_NAME}"
+      
+      - name: Check if app exists
+        id: check-app
+        run: |
+          if flyctl status --app ${{ steps.app-name.outputs.app_name }} 2>/dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "App exists, will destroy"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "App does not exist, nothing to cleanup"
+          fi
+        continue-on-error: true
+      
+      - name: Destroy Fly.io app
+        if: steps.check-app.outputs.exists == 'true'
+        run: |
+          echo "Destroying app: ${{ steps.app-name.outputs.app_name }}"
+          flyctl apps destroy ${{ steps.app-name.outputs.app_name }} --yes
+      
+      - name: Post cleanup comment
+        uses: actions/github-script@v7
+        if: steps.check-app.outputs.exists == 'true'
+        with:
+          script: |
+            const appName = '${{ steps.app-name.outputs.app_name }}';
+            const comment = `## 🧹 Preview Environment Cleanup
+            
+            The preview environment \`${appName}\` has been destroyed as this PR is now closed.
+            
+            ---
+            _Resources have been cleaned up successfully._`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+      
+      - name: Report cleanup failure
+        uses: actions/github-script@v7
+        if: failure()
+        with:
+          script: |
+            const appName = '${{ steps.app-name.outputs.app_name }}';
+            const runUrl = `https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+            const comment = `## ⚠️ Preview Environment Cleanup Failed
+            
+            Failed to destroy preview environment \`${appName}\`. Manual cleanup may be required.
+            
+            Check the [workflow logs](${runUrl}) for details, or manually destroy the app:
+            \`\`\`
+            flyctl apps destroy ${appName} --yes
+            \`\`\`
+            
+            ---
+            _Please verify the app is cleaned up to avoid unnecessary costs._`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
