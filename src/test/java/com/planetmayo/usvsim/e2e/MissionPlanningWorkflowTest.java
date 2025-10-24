@@ -6,6 +6,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
 import org.testfx.api.FxRobot;
@@ -117,8 +118,8 @@ public class MissionPlanningWorkflowTest extends ApplicationTest {
         System.out.println("DEBUG: MapPanel contains " + mapPanel.getChildren().size() + " children");
         System.out.println("DEBUG: Labels found: " + allLabels);
 
-        // Verify MapPanel has actual java_leaflet MapView, not just placeholder
-        // T036 requires: MapView (actual map), NOT placeholder message
+        // Verify MapPanel has actual WebView with Leaflet map, not just placeholder
+        // T036 requires: Functional Leaflet map embedded in WebView, NOT placeholder message
         var hasIncompletePlaceholder = mapPanel.getChildren().stream()
             .filter(node -> node instanceof Label)
             .map(node -> ((Label) node).getText())
@@ -127,9 +128,13 @@ public class MissionPlanningWorkflowTest extends ApplicationTest {
                  text.contains("placeholder") ||
                  text.contains("TODO")));
 
-        assertTrue(!hasIncompletePlaceholder && mapPanel.getChildren().size() > 3,
-            "T036 INCOMPLETE: MapPanel must have actual java_leaflet MapView with offline tiles and pan/zoom. " +
-            "Currently has placeholder stub message. Requires functional map integration.");
+        // Check for WebView (Leaflet map) in MapPanel
+        var hasWebView = mapPanel.getChildren().stream()
+            .anyMatch(node -> node instanceof WebView);
+
+        assertTrue(!hasIncompletePlaceholder && hasWebView,
+            "T036 INCOMPLETE: MapPanel must have actual WebView with Leaflet map embedded. " +
+            "Currently has placeholder stub message or missing WebView. Requires functional map integration.");
     }
 
     @Test

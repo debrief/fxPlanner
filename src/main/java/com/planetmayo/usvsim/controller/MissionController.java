@@ -85,28 +85,37 @@ public class MissionController implements MainView.MissionControllerCallback {
 
     /**
      * Start the Parallel Track Search workflow:
-     * 1. Prompt user to draw polygon on map
-     * 2. Show parameter dialog (orientation, spacing)
-     * 3. Create ParallelTrackSearch behaviour
-     * 4. Add to mission
-     * 5. Update map display
+     * 1. Show drawing instructions dialog
+     * 2. Prompt user to draw polygon on map
+     * 3. Show parameter dialog (orientation, spacing)
+     * 4. Create ParallelTrackSearch behaviour
+     * 5. Add to mission
+     * 6. Update map display
      */
     private void startParallelTrackSearchDialog() {
         System.out.println("Starting Parallel Track Search workflow");
 
-        // Step 1: Start polygon drawing
+        // Step 1: Start polygon drawing on map (setup callback first)
         drawingController.startDrawingPolygon(polygon -> {
-            System.out.println("Polygon drawn with " + polygon.getVertices().size() + " vertices");
+            // This callback is triggered when the polygon is drawn and confirmed
+            System.out.println("✓ Polygon received with " + polygon.getVertices().size() + " vertices");
 
-            // Step 2: Show parameter dialog
+            // Step 2: Show parameter dialog for search pattern
             ParallelTrackSearchDialog dialog = new ParallelTrackSearchDialog();
             dialog.showAndWait().ifPresent(params -> {
                 addParallelTrackSearch(polygon, params);
             });
         });
 
-        // Prompt user
-        System.out.println("Please draw a polygon on the map. Click to add vertices. Press Enter or click 'Done' when finished.");
+        // Step 0: Show instructions dialog (non-blocking, gives user time to draw)
+        com.planetmayo.usvsim.view.dialogs.PolygonDrawingInstructionsDialog instructionsDialog =
+            new com.planetmayo.usvsim.view.dialogs.PolygonDrawingInstructionsDialog();
+        instructionsDialog.setOnCloseRequest(event -> {
+            // User clicked "Done Drawing" - finish the polygon
+            System.out.println("User clicked Done Drawing - finishing polygon");
+            drawingController.finishDrawing();
+        });
+        instructionsDialog.showAndWait();
     }
 
     /**
