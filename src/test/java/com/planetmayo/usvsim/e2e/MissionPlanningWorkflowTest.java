@@ -4,6 +4,8 @@ import com.planetmayo.usvsim.Main;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
 import org.testfx.api.FxRobot;
@@ -87,6 +89,47 @@ public class MissionPlanningWorkflowTest extends ApplicationTest {
         // Verify it's a ComboBox
         assertTrue(comboBoxes.stream().anyMatch(node -> node instanceof ComboBox),
             "ComboBox should be found");
+    }
+
+    @Test
+    void testMapViewIntegration() {
+        // **CRITICAL**: Verify java_leaflet MapView is integrated (not placeholder)
+        // This test ensures T036 is properly implemented
+
+        // Get the main scene root
+        var root = applicationStage.getScene().getRoot();
+        assertTrue(root instanceof BorderPane, "Root should be BorderPane layout");
+
+        BorderPane mainLayout = (BorderPane) root;
+        var centerContent = mainLayout.getCenter();
+        assertNotNull(centerContent, "Center should contain MapPanel");
+
+        // MapPanel should be a Pane/Region containing the map
+        assertTrue(centerContent instanceof Pane, "Center should be a Pane (MapPanel)");
+        Pane mapPanel = (Pane) centerContent;
+
+        // Debug: Print all labels to see what's actually in the map
+        var allLabels = mapPanel.getChildren().stream()
+            .filter(node -> node instanceof Label)
+            .map(node -> ((Label) node).getText())
+            .toList();
+
+        System.out.println("DEBUG: MapPanel contains " + mapPanel.getChildren().size() + " children");
+        System.out.println("DEBUG: Labels found: " + allLabels);
+
+        // Verify MapPanel has actual java_leaflet MapView, not just placeholder
+        // T036 requires: MapView (actual map), NOT placeholder message
+        var hasIncompletePlaceholder = mapPanel.getChildren().stream()
+            .filter(node -> node instanceof Label)
+            .map(node -> ((Label) node).getText())
+            .anyMatch(text -> text != null &&
+                (text.contains("will be integrated") ||
+                 text.contains("placeholder") ||
+                 text.contains("TODO")));
+
+        assertTrue(!hasIncompletePlaceholder && mapPanel.getChildren().size() > 3,
+            "T036 INCOMPLETE: MapPanel must have actual java_leaflet MapView with offline tiles and pan/zoom. " +
+            "Currently has placeholder stub message. Requires functional map integration.");
     }
 
     @Test

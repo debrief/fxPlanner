@@ -101,8 +101,8 @@
 
 ### UI Implementation (After Mockup Approval)
 
-- [x] T036 [US1] Create MapPanel in src/main/java/com/planetmayo/usvsim/view/MapPanel.java with java_leaflet MapView integration, offline tile provider, and POI marker for Portland Harbour. Include pan/zoom controls. Drawing overlay comes in T037.
-- [x] T037 [US1] Implement DrawingController in src/main/java/com/planetmayo/usvsim/controller/DrawingController.java (polygon drawing, click capture)
+- [ ] T036 [US1] **REQUIRED**: Create MapPanel in src/main/java/com/planetmayo/usvsim/view/MapPanel.java with **java_leaflet MapView integration** (non-negotiable). Features: (1) Functional MapView displaying Portland Harbour tiles, (2) Offline tile provider with bundled map data, (3) Pan/zoom controls working, (4) POI marker for starting position. **E2E test MUST verify MapView is present and functional** (not placeholder).
+- [ ] T037 [US1] **REQUIRED**: Implement DrawingController in src/main/java/com/planetmayo/usvsim/controller/DrawingController.java with **actual polygon drawing on map**. Features: (1) Click-to-place vertices on MapView, (2) Visual feedback (lines between clicks), (3) Capture polygon from drawn vertices, (4) Validate polygon (min 3 vertices). **E2E test MUST verify drawing interaction works on actual map**.
 - [x] T038 [US1] Create MissionPlanPanel in src/main/java/com/planetmayo/usvsim/view/MissionPlanPanel.java (list behaviours, show status)
 - [x] T039 [US1] Create ParallelTrackSearchDialog in src/main/java/com/planetmayo/usvsim/view/dialogs/ParallelTrackSearchDialog.java
 - [x] T040 [US1] Create MainView in src/main/java/com/planetmayo/usvsim/view/MainView.java (BorderPane layout per approved mockup)
