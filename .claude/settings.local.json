@@ -14,7 +14,10 @@
       "Bash(mvn test:*)",
       "Bash(mvn clean test:*)",
       "Bash(mvn:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:stackoverflow.com)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": [
