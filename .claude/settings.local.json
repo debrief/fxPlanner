@@ -6,7 +6,13 @@
       "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
       "Bash(.specify/scripts/bash/*.sh:*)",
       "Bash(.specify/scripts/bash/update-agent-context.sh:*)",
-      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)"
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(git rev-parse:*)",
+      "Read(//Users/ian/.claude/**)",
+      "Read(//Users/ian/.claude/commands/**)",
+      "Bash(mvn clean compile:*)",
+      "Bash(mvn test:*)",
+      "Bash(mvn clean test:*)"
     ],
     "deny": [],
     "ask": []

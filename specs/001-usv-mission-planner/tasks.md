@@ -24,14 +24,14 @@
 
 **Purpose**: Initialize Maven project with JavaFX, dependencies, and directory structure per plan.md
 
-- [ ] T001 Create Maven project structure with groupId `com.planetmayo` and artifactId `usv-mission-planner`
-- [ ] T002 Configure pom.xml with Java 25, JavaFX 21, JTS Topology Suite, JUnit 5, TestFX dependencies
-- [ ] T003 [P] Create package structure: src/main/java/com/planetmayo/usvsim/{model,controller,view,util}/
-- [ ] T004 [P] Create test package structure: src/test/java/com/planetmayo/usvsim/{unit,integration,e2e}/
-- [ ] T005 [P] Create resources directory: src/main/resources/{map-tiles,css}/
-- [ ] T006 [P] Configure Maven plugins: JavaFX plugin, Surefire (tests), Exec (run)
-- [ ] T007 Verify build with `mvn clean compile` (should succeed with no source files yet)
-- [ ] T008 Create Main.java in src/main/java/com/planetmayo/usvsim/ extending Application, with start() method that creates empty Stage and calls show(). Verify `mvn javafx:run` launches a blank window without errors.
+- [x] T001 Create Maven project structure with groupId `com.planetmayo` and artifactId `usv-mission-planner`
+- [x] T002 Configure pom.xml with Java 25, JavaFX 21, JTS Topology Suite, JUnit 5, TestFX dependencies
+- [x] T003 [P] Create package structure: src/main/java/com/planetmayo/usvsim/{model,controller,view,util}/
+- [x] T004 [P] Create test package structure: src/test/java/com/planetmayo/usvsim/{unit,integration,e2e}/
+- [x] T005 [P] Create resources directory: src/main/resources/{map-tiles,css}/
+- [x] T006 [P] Configure Maven plugins: JavaFX plugin, Surefire (tests), Exec (run)
+- [x] T007 Verify build with `mvn clean compile` (should succeed with no source files yet)
+- [x] T008 Create Main.java in src/main/java/com/planetmayo/usvsim/ extending Application, with start() method that creates empty Stage and calls show(). Verify `mvn javafx:run` launches a blank window without errors.
 
 **Completion Criteria**: `mvn clean install` succeeds, project structure matches plan.md
 
@@ -43,16 +43,16 @@
 
 ### Geometry & Navigation Utilities (Pure Functions)
 
-- [ ] T009 [P] Write unit tests for GeoUtils.distance() in src/test/java/com/planetmayo/usvsim/unit/util/GeoUtilsTest.java
-- [ ] T010 [P] Implement GeoUtils.distance() using Haversine formula in src/main/java/com/planetmayo/usvsim/util/GeoUtils.java
-- [ ] T011 [P] Write unit tests for GeoUtils.bearing() in GeoUtilsTest.java
-- [ ] T012 [P] Implement GeoUtils.bearing() in GeoUtils.java
-- [ ] T013 [P] Write unit tests for GeoUtils.destination() in GeoUtilsTest.java
-- [ ] T014 [P] Implement GeoUtils.destination() in GeoUtils.java
+- [x] T009 [P] Write unit tests for GeoUtils.distance() in src/test/java/com/planetmayo/usvsim/unit/util/GeoUtilsTest.java
+- [x] T010 [P] Implement GeoUtils.distance() using Haversine formula in src/main/java/com/planetmayo/usvsim/util/GeoUtils.java
+- [x] T011 [P] Write unit tests for GeoUtils.bearing() in GeoUtilsTest.java
+- [x] T012 [P] Implement GeoUtils.bearing() in GeoUtils.java
+- [x] T013 [P] Write unit tests for GeoUtils.destination() in GeoUtilsTest.java
+- [x] T014 [P] Implement GeoUtils.destination() in GeoUtils.java
 
 ### Core Geometry Entities
 
-- [ ] T015 [P] Create Position class in src/main/java/com/planetmayo/usvsim/model/geometry/Position.java (immutable, lat/lon validation)
+- [x] T015 [P] Create Position class in src/main/java/com/planetmayo/usvsim/model/geometry/Position.java (immutable, lat/lon validation)
 - [ ] T016 [P] Create Waypoint class in src/main/java/com/planetmayo/usvsim/model/geometry/Waypoint.java
 - [ ] T017 [P] Write unit tests for Polygon validation in src/test/java/com/planetmayo/usvsim/unit/util/PolygonUtilsTest.java
 - [ ] T018 [P] Create Polygon class in src/main/java/com/planetmayo/usvsim/model/geometry/Polygon.java with JTS integration
@@ -66,10 +66,10 @@
 
 ### Behaviour Interface & Enums
 
-- [ ] T023 [P] Create BehaviourState enum in src/main/java/com/planetmayo/usvsim/model/behaviour/BehaviourState.java
-- [ ] T024 [P] Create MissionState enum in src/main/java/com/planetmayo/usvsim/model/mission/MissionState.java
-- [ ] T025 [P] Create WaypointType enum in src/main/java/com/planetmayo/usvsim/model/geometry/WaypointType.java
-- [ ] T026 [P] Create TurnDirection enum in src/main/java/com/planetmayo/usvsim/model/platform/TurnDirection.java
+- [x] T023 [P] Create BehaviourState enum in src/main/java/com/planetmayo/usvsim/model/behaviour/BehaviourState.java
+- [x] T024 [P] Create MissionState enum in src/main/java/com/planetmayo/usvsim/model/mission/MissionState.java
+- [x] T025 [P] Create WaypointType enum in src/main/java/com/planetmayo/usvsim/model/geometry/WaypointType.java
+- [x] T026 [P] Create TurnDirection enum in src/main/java/com/planetmayo/usvsim/model/platform/TurnDirection.java
 - [ ] T027 Create Behaviour interface in src/main/java/com/planetmayo/usvsim/model/behaviour/Behaviour.java per contracts/
 
 **Completion Criteria**: All util/ tests pass with >80% coverage, core entities buildable
