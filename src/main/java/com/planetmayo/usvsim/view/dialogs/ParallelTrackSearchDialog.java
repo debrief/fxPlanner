@@ -21,11 +21,11 @@ import javafx.scene.layout.VBox;
  * - OK/Cancel buttons
  */
 public class ParallelTrackSearchDialog extends Dialog<ParallelTrackSearchParams> {
-    private final TextField orientationField;
-    private final TextField spacingField;
-    private final TextField speedField;
-    private final Label previewLabel;
-    private final Label errorLabel;
+    private TextField orientationField;
+    private TextField spacingField;
+    private TextField speedField;
+    private Label previewLabel;
+    private Label errorLabel;
 
     public ParallelTrackSearchDialog() {
         setTitle("Add Parallel Track Search");
@@ -177,21 +177,6 @@ public class ParallelTrackSearchDialog extends Dialog<ParallelTrackSearchParams>
                 estimatedTracks, estimatedDistance));
         } catch (NumberFormatException e) {
             // Preview unchanged
-        }
-    }
-
-    /**
-     * Result class for dialog output
-     */
-    public static class ParallelTrackSearchParams {
-        public final double orientation;
-        public final double spacing;
-        public final double speed;
-
-        public ParallelTrackSearchParams(double orientation, double spacing, double speed) {
-            this.orientation = orientation;
-            this.spacing = spacing;
-            this.speed = speed;
         }
     }
 }

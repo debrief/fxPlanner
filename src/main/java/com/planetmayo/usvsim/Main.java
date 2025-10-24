@@ -1,15 +1,14 @@
 package com.planetmayo.usvsim;
 
+import com.planetmayo.usvsim.view.MainView;
 import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 /**
  * Main entry point for USV Mission Planning & Simulation System.
  *
  * Extends JavaFX Application to provide desktop UI.
+ * Launches MainView with 70/30 layout (map/controls).
  */
 public class Main extends Application {
 
@@ -21,17 +20,11 @@ public class Main extends Application {
      */
     @Override
     public void start(Stage stage) throws Exception {
-        // Create root layout
-        BorderPane root = new BorderPane();
-        root.setCenter(new Label("USV Mission Planner - Loading..."));
+        // Create main application view
+        MainView mainView = new MainView(stage);
 
-        // Create scene
-        Scene scene = new Scene(root, 1200, 800);
-
-        // Configure stage
-        stage.setTitle("USV Mission Planner");
-        stage.setScene(scene);
-        stage.show();
+        // Display the application
+        mainView.show();
     }
 
     /**
