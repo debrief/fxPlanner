@@ -123,7 +123,7 @@ public class MissionController implements MainView.MissionControllerCallback {
                 startParallelTrackSearchDialog();
                 break;
             case "Expanding Square Search":
-                System.out.println("TODO: Expanding square search");
+                startExpandingSquareSearchDialog();
                 break;
             case "Waypoint Transit":
                 startWaypointTransitDialog();
@@ -235,6 +235,9 @@ public class MissionController implements MainView.MissionControllerCallback {
             mapPanel.renderPolygon(searchArea);
             mapPanel.renderTracks(behavior.getWaypoints());
 
+            // Update Start button state
+            updateStartButtonState();
+
         } catch (IllegalArgumentException e) {
             System.err.println("Failed to create parallel track search: " + e.getMessage());
         }
@@ -334,6 +337,9 @@ public class MissionController implements MainView.MissionControllerCallback {
             missionPlanPanel.addBehavior(behavior);
             mapPanel.renderTracks(behavior.getWaypoints(), true);  // Show start marker for waypoint transit
 
+            // Update Start button state
+            updateStartButtonState();
+
         } catch (IllegalArgumentException e) {
             System.err.println("Failed to create waypoint transit: " + e.getMessage());
         }
@@ -390,6 +396,9 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             // Render path from start to base
             renderReturnToBasePath(startPos, params.baseLocation, params.speed);
+
+            // Update Start button state
+            updateStartButtonState();
 
         } catch (IllegalArgumentException e) {
             System.err.println("Failed to create return to base: " + e.getMessage());
@@ -552,6 +561,9 @@ public class MissionController implements MainView.MissionControllerCallback {
         controlPanel.setOnResume(this::resumeSimulation);
         controlPanel.setOnStop(this::stopSimulation);
         controlPanel.setOnSpeedChange(this::setTimeAcceleration);
+
+        // Initialize Start button to disabled (no behaviours yet)
+        updateStartButtonState();
 
         // Wire state panel updates from simulation engine (T055)
         // Post updates to JavaFX thread to avoid cross-thread UI access
@@ -731,6 +743,9 @@ public class MissionController implements MainView.MissionControllerCallback {
             mapPanel.renderPolygon(searchArea);
             mapPanel.renderTracks(behavior.getWaypoints());
 
+            // Update Start button state
+            updateStartButtonState();
+
         } catch (IllegalArgumentException e) {
             System.err.println("Failed to create expanding square search: " + e.getMessage());
         }
@@ -791,6 +806,9 @@ public class MissionController implements MainView.MissionControllerCallback {
             mapPanel.clearOverlays();
             rerenderAllBehaviours();
 
+            // Update Start button state
+            updateStartButtonState();
+
             System.out.println("Updated parallel track search at index " + index);
         });
 
@@ -836,6 +854,9 @@ public class MissionController implements MainView.MissionControllerCallback {
             mapPanel.clearOverlays();
             rerenderAllBehaviours();
 
+            // Update Start button state
+            updateStartButtonState();
+
             System.out.println("Updated return to base at index " + index);
         });
 
@@ -872,6 +893,9 @@ public class MissionController implements MainView.MissionControllerCallback {
             // Clear old overlays and re-render all behaviours
             mapPanel.clearOverlays();
             rerenderAllBehaviours();
+
+            // Update Start button state
+            updateStartButtonState();
 
             System.out.println("Updated expanding square search at index " + index);
         });
@@ -920,6 +944,15 @@ public class MissionController implements MainView.MissionControllerCallback {
         }
         // No previous waypoints - return platform start position
         return mission.getPlatform().getState().getPosition();
+    }
+
+    /**
+     * Update Start button enabled state based on mission contents.
+     * Start button should only be enabled when mission contains 1+ behaviours.
+     */
+    private void updateStartButtonState() {
+        boolean hasBehaviours = !mission.getMissionPlan().getBehaviours().isEmpty();
+        mainView.updateStartButtonState(hasBehaviours);
     }
 
     /**

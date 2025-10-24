@@ -26,6 +26,7 @@ public class MainView extends BorderPane {
     private final MissionPlanPanel missionPlanPanel;
     private final StatePanel statePanel;
     private MissionControllerCallback missionController;
+    private ComboBox<String> addBehaviorDropdown;
 
     public MainView(Stage stage) {
         this.stage = stage;
@@ -83,7 +84,7 @@ public class MainView extends BorderPane {
         box.setStyle("-fx-padding: 5; -fx-border-color: #EEE; -fx-border-width: 1 0 0 0;");
 
         // Add Behaviour dropdown
-        ComboBox<String> addBehaviorDropdown = new ComboBox<>();
+        addBehaviorDropdown = new ComboBox<>();
         addBehaviorDropdown.setPromptText("+ Add Behaviour");
         addBehaviorDropdown.getItems().addAll(
             "Parallel Track Search",
@@ -92,7 +93,12 @@ public class MainView extends BorderPane {
             "Return to Base"
         );
         addBehaviorDropdown.setPrefWidth(180);
-        addBehaviorDropdown.setOnAction(event -> handleAddBehavior(addBehaviorDropdown.getValue()));
+        addBehaviorDropdown.setOnAction(event -> {
+            String selected = addBehaviorDropdown.getValue();
+            handleAddBehavior(selected);
+            // Reset selection to allow re-selecting same behavior type
+            javafx.application.Platform.runLater(() -> addBehaviorDropdown.setValue(null));
+        });
 
         // Configure button
         Button configureBtn = new Button("⚙ Configure");
@@ -184,6 +190,13 @@ public class MainView extends BorderPane {
      */
     public void setMissionControllerCallback(MissionControllerCallback controller) {
         this.missionController = controller;
+    }
+
+    /**
+     * Update Start button enabled state based on mission contents
+     */
+    public void updateStartButtonState(boolean hasBehaviours) {
+        controlPanel.setStartButtonEnabled(hasBehaviours);
     }
 
     /**

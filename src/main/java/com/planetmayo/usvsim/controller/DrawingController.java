@@ -136,21 +136,42 @@ public class DrawingController {
         }
 
         try {
-            // Call JavaScript finishDrawing function (works with both Leaflet.Draw and fallback)
-            String finishScript = """
-                window.updateStatus('Finalizing polygon...');
-                if (typeof window.finishDrawing === 'function') {
-                    window.finishDrawing();
-                    window.updateStatus('Finished drawing function called');
-                } else {
-                    window.updateStatus('finishDrawing function not found!');
-                }
-                window.drawnCoordinates;
-                """;
+            Object coordsObj = null;
 
-            System.out.println("Executing finish script...");
-            Object coordsObj = webEngine.executeScript(finishScript);
-            System.out.println("Finish script returned: " + coordsObj);
+            // Call appropriate JavaScript finish function based on mode
+            if (mode == DrawingMode.POLYGON) {
+                // Call polygon finish function
+                String finishScript = """
+                    window.updateStatus('Finalizing polygon...');
+                    if (typeof window.finishDrawing === 'function') {
+                        window.finishDrawing();
+                        window.updateStatus('Finished drawing function called');
+                    } else {
+                        window.updateStatus('finishDrawing function not found!');
+                    }
+                    window.drawnCoordinates;
+                    """;
+
+                System.out.println("Executing polygon finish script...");
+                coordsObj = webEngine.executeScript(finishScript);
+                System.out.println("Polygon finish script returned: " + coordsObj);
+            } else if (mode == DrawingMode.WAYPOINT) {
+                // Call polyline finish function
+                String finishScript = """
+                    window.updateStatus('Finalizing polyline...');
+                    if (typeof window.finishPolyline === 'function') {
+                        window.finishPolyline();
+                        window.updateStatus('Finished polyline function called');
+                    } else {
+                        window.updateStatus('finishPolyline function not found!');
+                    }
+                    window.drawnPolylineCoordinates;
+                    """;
+
+                System.out.println("Executing polyline finish script...");
+                coordsObj = webEngine.executeScript(finishScript);
+                System.out.println("Polyline finish script returned: " + coordsObj);
+            }
 
             if (coordsObj != null && mode == DrawingMode.POLYGON) {
                 System.out.println("✓ Coordinates received: " + coordsObj);
@@ -194,62 +215,42 @@ public class DrawingController {
                     System.err.println("Error parsing coordinates: " + e.getMessage());
                     e.printStackTrace();
                 }
-            } else if (mode == DrawingMode.WAYPOINT) {
+            } else if (mode == DrawingMode.WAYPOINT && coordsObj != null) {
                 // Handle waypoint/polyline completion
-                System.out.println("✓ Retrieving polyline coordinates");
+                System.out.println("✓ Processing polyline coordinates (WAYPOINT mode)");
 
-                // Get polyline coordinates from JavaScript
-                String polylineScript = """
-                    if (typeof window.finishPolyline === 'function') {
-                        window.finishPolyline();
-                    }
-                    window.drawnPolylineCoordinates;
-                    """;
+                try {
+                    List<Position> waypoints = parseCoordinates(coordsObj);
+                    System.out.println("Parsed " + waypoints.size() + " waypoints from polyline");
 
-                Object polylineObj = webEngine.executeScript(polylineScript);
-                System.out.println("Polyline script returned: " + polylineObj);
+                    if (!waypoints.isEmpty() && waypoints.size() >= 2) {
+                        mode = DrawingMode.DISABLED;
 
-                if (polylineObj != null) {
-                    try {
-                        List<Position> waypoints = parseCoordinates(polylineObj);
-                        System.out.println("Parsed " + waypoints.size() + " waypoints from polyline");
-
-                        if (!waypoints.isEmpty() && waypoints.size() >= 2) {
-                            mode = DrawingMode.DISABLED;
-
-                            if (onWaypointsComplete != null) {
-                                System.out.println("Calling onWaypointsComplete callback with " + waypoints.size() + " waypoints");
-                                onWaypointsComplete.accept(waypoints);
-                            } else {
-                                System.out.println("ERROR: onWaypointsComplete callback is NULL!");
-                            }
-                            System.out.println("✓ Polyline complete: " + waypoints.size() + " waypoints");
-                            } else {
-                            System.out.println("ERROR: Polyline needs at least 2 waypoints, got: " + waypoints.size());
-                            showErrorDialog("Polyline must have at least 2 waypoints. Please add more points.");
-                            return;
+                        if (onWaypointsComplete != null) {
+                            System.out.println("Calling onWaypointsComplete callback with " + waypoints.size() + " waypoints");
+                            onWaypointsComplete.accept(waypoints);
+                        } else {
+                            System.out.println("ERROR: onWaypointsComplete callback is NULL!");
                         }
-                    } catch (Exception e) {
-                        System.err.println("Error parsing polyline coordinates: " + e.getMessage());
-                        e.printStackTrace();
+                        System.out.println("✓ Polyline complete: " + waypoints.size() + " waypoints");
+                    } else {
+                        System.out.println("ERROR: Polyline needs at least 2 waypoints, got: " + waypoints.size());
+                        showErrorDialog("Polyline must have at least 2 waypoints. Please add more points.");
+                        return;
                     }
-                } else {
-                    System.out.println("ERROR: polylineObj is null");
-                    showErrorDialog("Failed to capture polyline. Please try again.");
-                    mode = DrawingMode.DISABLED;
+                } catch (Exception e) {
+                    System.err.println("Error parsing polyline coordinates: " + e.getMessage());
+                    e.printStackTrace();
                 }
             } else {
-                System.out.println("ERROR: coordsObj is null or mode is not POLYGON. coordsObj=" + coordsObj + ", mode=" + mode);
-                showErrorDialog("Failed to capture polygon. Please try again.");
+                System.out.println("ERROR: coordsObj is null or invalid mode. coordsObj=" + coordsObj + ", mode=" + mode);
+                showErrorDialog("Failed to capture drawing. Please try again.");
+                mode = DrawingMode.DISABLED;
             }
         } catch (Exception e) {
             System.err.println("Error finishing drawing: " + e.getMessage());
             e.printStackTrace();
             showErrorDialog("Error during drawing: " + e.getMessage());
-        }
-
-        // Only set to DISABLED if we successfully completed
-        if (mode == DrawingMode.POLYGON) {
             mode = DrawingMode.DISABLED;
         }
     }

@@ -207,6 +207,13 @@ public class ControlPanel extends VBox {
     }
 
     /**
+     * Enable or disable Start button based on mission state
+     */
+    public void setStartButtonEnabled(boolean enabled) {
+        startBtn.setDisable(!enabled);
+    }
+
+    /**
      * Reset to initial state
      */
     public void reset() {
