@@ -53,16 +53,16 @@
 ### Core Geometry Entities
 
 - [x] T015 [P] Create Position class in src/main/java/com/planetmayo/usvsim/model/geometry/Position.java (immutable, lat/lon validation)
-- [ ] T016 [P] Create Waypoint class in src/main/java/com/planetmayo/usvsim/model/geometry/Waypoint.java
-- [ ] T017 [P] Write unit tests for Polygon validation in src/test/java/com/planetmayo/usvsim/unit/util/PolygonUtilsTest.java
-- [ ] T018 [P] Create Polygon class in src/main/java/com/planetmayo/usvsim/model/geometry/Polygon.java with JTS integration
+- [x] T016 [P] Create Waypoint class in src/main/java/com/planetmayo/usvsim/model/geometry/Waypoint.java
+- [x] T017 [P] Write unit tests for Polygon validation in src/test/java/com/planetmayo/usvsim/unit/util/PolygonUtilsTest.java
+- [x] T018 [P] Create Polygon class in src/main/java/com/planetmayo/usvsim/model/geometry/Polygon.java with JTS integration
 
 ### Platform Model (Shared)
 
-- [ ] T019 [P] Create PlatformCapabilities class in src/main/java/com/planetmayo/usvsim/model/platform/PlatformCapabilities.java
-- [ ] T020 [P] Create PlatformState class with JavaFX properties in src/main/java/com/planetmayo/usvsim/model/platform/PlatformState.java
-- [ ] T021 [P] Create PlatformDemand class in src/main/java/com/planetmayo/usvsim/model/platform/PlatformDemand.java
-- [ ] T022 Create Platform class in src/main/java/com/planetmayo/usvsim/model/platform/Platform.java (manages state, track history)
+- [x] T019 [P] Create PlatformCapabilities class in src/main/java/com/planetmayo/usvsim/model/platform/PlatformCapabilities.java
+- [x] T020 [P] Create PlatformState class with JavaFX properties in src/main/java/com/planetmayo/usvsim/model/platform/PlatformState.java
+- [x] T021 [P] Create PlatformDemand class in src/main/java/com/planetmayo/usvsim/model/platform/PlatformDemand.java
+- [x] T022 Create Platform class in src/main/java/com/planetmayo/usvsim/model/platform/Platform.java (manages state, track history)
 
 ### Behaviour Interface & Enums
 
@@ -70,7 +70,7 @@
 - [x] T024 [P] Create MissionState enum in src/main/java/com/planetmayo/usvsim/model/mission/MissionState.java
 - [x] T025 [P] Create WaypointType enum in src/main/java/com/planetmayo/usvsim/model/geometry/WaypointType.java
 - [x] T026 [P] Create TurnDirection enum in src/main/java/com/planetmayo/usvsim/model/platform/TurnDirection.java
-- [ ] T027 Create Behaviour interface in src/main/java/com/planetmayo/usvsim/model/behaviour/Behaviour.java per contracts/
+- [x] T027 Create Behaviour interface in src/main/java/com/planetmayo/usvsim/model/behaviour/Behaviour.java per contracts/
 
 **Completion Criteria**: All util/ tests pass with >80% coverage, core entities buildable
 
