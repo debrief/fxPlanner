@@ -89,24 +89,24 @@ public class ControlPanel extends VBox {
         Label minLabel = new Label("Speed: 1×");
         minLabel.setPrefWidth(80);
 
-        speedSlider = new Slider(1, 10, 1);
+        speedSlider = new Slider(1, 500, 1);
         speedSlider.setShowTickLabels(true);
         speedSlider.setShowTickMarks(true);
-        speedSlider.setMajorTickUnit(1);
-        speedSlider.setMinorTickCount(0);
-        speedSlider.setSnapToTicks(true);
+        speedSlider.setMajorTickUnit(50);
+        speedSlider.setMinorTickCount(4);
+        speedSlider.setSnapToTicks(false);  // Allow smooth adjustment
         speedSlider.setPrefWidth(200);
         speedSlider.setOnMouseReleased(e -> {
             double value = speedSlider.getValue();
-            speedLabel.setText(String.format("%.1f×", value));
+            speedLabel.setText(String.format("%.0f×", value));  // Show integer for clarity
             if (onSpeedChange != null) onSpeedChange.accept(value);
         });
 
-        speedLabel = new Label("1.0×");
+        speedLabel = new Label("1×");
         speedLabel.setPrefWidth(50);
         speedLabel.setStyle("-fx-font-weight: bold;");
 
-        Label maxLabel = new Label("10×");
+        Label maxLabel = new Label("500×");
         maxLabel.setPrefWidth(30);
 
         box.getChildren().addAll(minLabel, speedSlider, speedLabel, maxLabel);

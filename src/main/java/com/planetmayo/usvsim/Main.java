@@ -27,7 +27,8 @@ public class Main extends Application {
         MainView mainView = new MainView(stage);
 
         // Create mission model (default: start at Portland Harbour)
-        Mission mission = Mission.createDefault(Position.of(50.6, -2.4));
+        // Start position: 50°34'16.3"N 2°27'09.1"W = 50.5712°N, -2.4525°W
+        Mission mission = Mission.createDefault(Position.of(50.5712, -2.4525));
 
         // Create controller to wire UI to model
         MissionController controller = new MissionController(mission, mainView);

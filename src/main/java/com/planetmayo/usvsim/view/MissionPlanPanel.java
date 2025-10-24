@@ -102,6 +102,27 @@ public class MissionPlanPanel extends VBox {
         return behaviorList.getItems();
     }
 
+    /**
+     * Refresh the ListView to show updated behaviour states
+     */
+    public void refresh() {
+        behaviorList.refresh();
+    }
+
+    /**
+     * Set double-click handler for editing behaviours
+     */
+    public void setOnBehaviourDoubleClick(java.util.function.Consumer<Behaviour> handler) {
+        behaviorList.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2) {
+                Behaviour selected = behaviorList.getSelectionModel().getSelectedItem();
+                if (selected != null && handler != null) {
+                    handler.accept(selected);
+                }
+            }
+        });
+    }
+
     private void handleMoveUp() {
         Behaviour selected = getSelectedBehavior();
         if (selected == null) return;

@@ -28,14 +28,26 @@ public class WaypointTransitDialog extends Dialog<WaypointTransitParams> {
     private List<Position> waypoints;
 
     public WaypointTransitDialog() {
+        this(new ArrayList<>());
+    }
+
+    /**
+     * Constructor with pre-drawn waypoints from map
+     */
+    public WaypointTransitDialog(List<Position> drawnWaypoints) {
         setTitle("Waypoint Transit Configuration");
         setHeaderText("Configure waypoint-based navigation");
 
-        waypoints = new ArrayList<>();
+        waypoints = new ArrayList<>(drawnWaypoints);
 
         // Create content
         VBox content = createContent();
         getDialogPane().setContent(content);
+
+        // Populate list with pre-drawn waypoints
+        if (!waypoints.isEmpty()) {
+            updateWaypointList();
+        }
 
         // Add buttons
         ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);

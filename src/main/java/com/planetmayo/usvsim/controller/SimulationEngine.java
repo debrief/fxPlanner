@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * Architecture:
  * - ScheduledExecutorService runs time-stepped loop every 100ms (~10 Hz internally)
- * - Time step scaled by acceleration factor (1× = real-time, 10× = 10 times faster)
+ * - Time step scaled by acceleration factor (1× = real-time, 500× = 500 times faster)
  * - Platform state updated continuously
  * - Behaviours polled for demanded state and progress
  */
@@ -40,7 +40,7 @@ public class SimulationEngine {
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicBoolean paused = new AtomicBoolean(false);
 
-    private double timeAcceleration = 1.0;  // 1× = real-time, 10× = 10× faster
+    private double timeAcceleration = 1.0;  // 1× = real-time, up to 500× faster
     private long lastStepTimeMs;
     private Runnable onStateChanged;
     private Runnable onSimulationComplete;
@@ -121,11 +121,11 @@ public class SimulationEngine {
     }
 
     /**
-     * Set time acceleration factor (1× = real-time, 10× = 10× faster)
+     * Set time acceleration factor (1× = real-time, up to 500× faster)
      */
     public void setTimeAcceleration(double factor) {
-        if (factor < 1.0 || factor > 100.0) {
-            System.err.println("Time acceleration must be in [1, 100]");
+        if (factor < 1.0 || factor > 500.0) {
+            System.err.println("Time acceleration must be in [1, 500]");
             return;
         }
         this.timeAcceleration = factor;

@@ -42,6 +42,8 @@ public class MissionController implements MainView.MissionControllerCallback {
     private final StatePanel statePanel;
     private final DrawingController drawingController;
     private final SimulationEngine simulationEngine;
+    private long simulationStartTimeMs = 0;
+    private long finalSimulationTimeMs = 0;  // Frozen time when simulation completes
 
     public MissionController(Mission mission, MainView mainView) {
         this.mission = mission;
@@ -55,6 +57,44 @@ public class MissionController implements MainView.MissionControllerCallback {
 
         // Wire UI event handlers
         wireUIHandlers();
+
+        // Show initial platform start position on map after it loads
+        initializeStartPositionMarker();
+    }
+
+    /**
+     * Initialize start position marker after map is fully loaded.
+     * Uses polling to check if Leaflet map is ready before showing marker.
+     */
+    private void initializeStartPositionMarker() {
+        // Poll for map readiness (check if window.leafletMap exists)
+        javafx.animation.Timeline mapReadyPoller = new javafx.animation.Timeline();
+        javafx.animation.KeyFrame checkFrame = new javafx.animation.KeyFrame(
+            javafx.util.Duration.millis(200),
+            _ -> {
+                try {
+                    Object mapReady = mapPanel.getWebEngine().executeScript(
+                        "typeof window.leafletMap !== 'undefined' && window.leafletMap !== null"
+                    );
+
+                    if (mapReady != null && Boolean.parseBoolean(mapReady.toString())) {
+                        System.out.println("Map ready - showing start position marker");
+                        javafx.application.Platform.runLater(() -> {
+                            mapPanel.showStartPosition(mission.getPlatform().getState().getPosition());
+                        });
+                        // Stop polling once marker is shown
+                        mapReadyPoller.stop();
+                    } else {
+                        System.out.println("Waiting for map to initialize...");
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error checking map readiness: " + e.getMessage());
+                }
+            }
+        );
+        mapReadyPoller.getKeyFrames().add(checkFrame);
+        mapReadyPoller.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        mapReadyPoller.play();
     }
 
     /**
@@ -107,15 +147,54 @@ public class MissionController implements MainView.MissionControllerCallback {
             });
         });
 
-        // Step 0: Show instructions dialog (non-blocking, gives user time to draw)
+        // Step 0: Show instructions dialog (NON-MODAL so user can click on map)
         com.planetmayo.usvsim.view.dialogs.PolygonDrawingInstructionsDialog instructionsDialog =
             new com.planetmayo.usvsim.view.dialogs.PolygonDrawingInstructionsDialog();
-        instructionsDialog.setOnCloseRequest(event -> {
-            // User clicked "Done Drawing" - finish the polygon
-            System.out.println("User clicked Done Drawing - finishing polygon");
-            drawingController.finishDrawing();
-        });
-        instructionsDialog.showAndWait();
+        // CRITICAL: Make dialog non-modal so map remains clickable
+        instructionsDialog.initModality(javafx.stage.Modality.NONE);
+
+        // Wire the "Done Drawing" button directly (don't use onCloseRequest which fires on Escape/X too)
+        javafx.scene.control.Button doneButton = (javafx.scene.control.Button) instructionsDialog.getDialogPane().lookupButton(javafx.scene.control.ButtonType.OK);
+        if (doneButton != null) {
+            // CRITICAL: Disable button initially to prevent premature clicks
+            doneButton.setDisable(true);
+            doneButton.setText("Done Drawing (draw 1+ vertices first)");
+
+            // Setup button click handler
+            doneButton.setOnAction(event -> {
+                System.out.println("User clicked Done Drawing - finishing polygon");
+                drawingController.finishDrawing();
+                instructionsDialog.close();
+            });
+
+            // Setup polling to enable button when vertices are drawn
+            javafx.animation.Timeline enableButtonPoller = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), event -> {
+                    Object vertexCountObj = mapPanel.getWebEngine().executeScript("window.vertexCount || 0");
+                    try {
+                        final int vertexCount = vertexCountObj != null ? Integer.parseInt(vertexCountObj.toString()) : 0;
+                        if (vertexCount > 0 && doneButton.isDisable()) {
+                            javafx.application.Platform.runLater(() -> {
+                                doneButton.setDisable(false);
+                                doneButton.setText("Done Drawing");
+                                System.out.println("Done Drawing button enabled - " + vertexCount + " vertices drawn");
+                            });
+                        }
+                    } catch (Exception e) {
+                        // Ignore parse errors
+                    }
+                })
+            );
+            enableButtonPoller.setCycleCount(javafx.animation.Animation.INDEFINITE);
+            enableButtonPoller.play();
+
+            // Stop polling when dialog closes
+            instructionsDialog.setOnCloseRequest(event -> {
+                enableButtonPoller.stop();
+            });
+        }
+
+        instructionsDialog.show();
     }
 
     /**
@@ -148,18 +227,77 @@ public class MissionController implements MainView.MissionControllerCallback {
 
     /**
      * Start the Waypoint Transit workflow:
-     * 1. Show waypoint input dialog
-     * 2. Create WaypointTransit behaviour
-     * 3. Add to mission
-     * 4. Update map display
+     * 1. Start polyline drawing on map
+     * 2. User draws polyline by clicking waypoints
+     * 3. Re-clicking last point finishes drawing
+     * 4. Show parameter dialog with drawn waypoints
+     * 5. Create WaypointTransit behaviour
+     * 6. Add to mission
+     * 7. Update map display
      */
     private void startWaypointTransitDialog() {
         System.out.println("Starting Waypoint Transit workflow");
 
-        WaypointTransitDialog dialog = new WaypointTransitDialog();
-        dialog.showAndWait().ifPresent(params -> {
-            addWaypointTransit(params);
+        // Step 1: Start polyline drawing on map (setup callback first)
+        drawingController.startDrawingWaypoints(waypoints -> {
+            // This callback is triggered when the polyline is drawn and completed
+            System.out.println("✓ Polyline received with " + waypoints.size() + " waypoints");
+
+            // Step 2: Show parameter dialog with the drawn waypoints
+            WaypointTransitDialog dialog = new WaypointTransitDialog(waypoints);
+            dialog.showAndWait().ifPresent(params -> {
+                addWaypointTransit(params);
+            });
         });
+
+        // Step 0: Show instructions dialog (NON-MODAL so user can click on map)
+        com.planetmayo.usvsim.view.dialogs.PolylineDrawingInstructionsDialog instructionsDialog =
+            new com.planetmayo.usvsim.view.dialogs.PolylineDrawingInstructionsDialog();
+        // CRITICAL: Make dialog non-modal so map remains clickable
+        instructionsDialog.initModality(javafx.stage.Modality.NONE);
+
+        // Wire the "Done Drawing" button directly
+        javafx.scene.control.Button doneButton = (javafx.scene.control.Button) instructionsDialog.getDialogPane().lookupButton(javafx.scene.control.ButtonType.OK);
+        if (doneButton != null) {
+            // CRITICAL: Disable button initially to prevent premature clicks
+            doneButton.setDisable(true);
+            doneButton.setText("Done Drawing (draw 2+ waypoints first)");
+
+            // Setup button click handler
+            doneButton.setOnAction(_ -> {
+                System.out.println("User clicked Done Drawing - finishing polyline");
+                drawingController.finishDrawing();
+                instructionsDialog.close();
+            });
+
+            // Setup polling to enable button when waypoints are drawn
+            javafx.animation.Timeline enableButtonPoller = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), _ -> {
+                    Object vertexCountObj = mapPanel.getWebEngine().executeScript("window.vertexCount || 0");
+                    try {
+                        final int vertexCount = vertexCountObj != null ? Integer.parseInt(vertexCountObj.toString()) : 0;
+                        if (vertexCount >= 2 && doneButton.isDisable()) {
+                            javafx.application.Platform.runLater(() -> {
+                                doneButton.setDisable(false);
+                                doneButton.setText("Done Drawing");
+                                System.out.println("Done Drawing button enabled - " + vertexCount + " waypoints drawn");
+                            });
+                        }
+                    } catch (Exception e) {
+                        // Ignore parse errors
+                    }
+                })
+            );
+            enableButtonPoller.setCycleCount(javafx.animation.Animation.INDEFINITE);
+            enableButtonPoller.play();
+
+            // Stop polling when dialog closes
+            instructionsDialog.setOnCloseRequest(_ -> {
+                enableButtonPoller.stop();
+            });
+        }
+
+        instructionsDialog.show();
     }
 
     /**
@@ -177,7 +315,7 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             // Update UI
             missionPlanPanel.addBehavior(behavior);
-            mapPanel.renderTracks(behavior.getWaypoints());
+            mapPanel.renderTracks(behavior.getWaypoints(), true);  // Show start marker for waypoint transit
 
         } catch (IllegalArgumentException e) {
             System.err.println("Failed to create waypoint transit: " + e.getMessage());
@@ -208,6 +346,9 @@ public class MissionController implements MainView.MissionControllerCallback {
      */
     public void addReturnToBase(ReturnToBaseParams params) {
         try {
+            // Determine start position for rendering BEFORE adding new behaviour
+            Position startPos = getLastWaypointPosition();
+
             // Create the behaviour
             ReturnToBase behavior = new ReturnToBase(params.baseLocation, params.speed);
 
@@ -220,11 +361,63 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             // Update UI
             missionPlanPanel.addBehavior(behavior);
-            mapPanel.renderTracks(behavior.getWaypoints());
+
+            // Render path from start to base
+            renderReturnToBasePath(startPos, params.baseLocation, params.speed);
 
         } catch (IllegalArgumentException e) {
             System.err.println("Failed to create return to base: " + e.getMessage());
         }
+    }
+
+    /**
+     * Get the last waypoint position from the previous behaviour, or current platform position
+     */
+    private Position getLastWaypointPosition() {
+        var behaviours = mission.getMissionPlan().getBehaviours();
+        System.out.println("Getting last waypoint position - " + behaviours.size() + " behaviours total");
+
+        if (behaviours.size() >= 1) {
+            // Get last waypoint from most recent behaviour
+            var lastBehaviour = behaviours.get(behaviours.size() - 1);
+            var waypoints = lastBehaviour.getWaypoints();
+            System.out.println("  Last behaviour: " + lastBehaviour.getName() +
+                             " with " + waypoints.size() + " waypoints");
+            if (!waypoints.isEmpty()) {
+                Position pos = waypoints.get(waypoints.size() - 1).getPosition();
+                System.out.println("  Using last waypoint from last behaviour");
+                return pos;
+            }
+        }
+        // Default to current platform position
+        Position pos = mission.getPlatform().getState().getPosition();
+        System.out.println("  Using current platform position (no behaviours yet)");
+        return pos;
+    }
+
+    /**
+     * Render return to base path from start position to base location
+     */
+    private void renderReturnToBasePath(Position startPos, Position basePos, double speed) {
+        System.out.println("Rendering return to base path:");
+        System.out.println("  Start: " + String.format("%.4f°N, %.4f°W",
+            startPos.getLatitude(), Math.abs(startPos.getLongitude())));
+        System.out.println("  Base:  " + String.format("%.4f°N, %.4f°W",
+            basePos.getLatitude(), Math.abs(basePos.getLongitude())));
+        System.out.println("  Speed: " + speed + " knots");
+
+        // Create waypoints for rendering the path
+        var pathWaypoints = new java.util.ArrayList<com.planetmayo.usvsim.model.geometry.Waypoint>();
+        pathWaypoints.add(new com.planetmayo.usvsim.model.geometry.Waypoint(
+            startPos, speed, 50, com.planetmayo.usvsim.model.geometry.WaypointType.TRANSIT));
+        pathWaypoints.add(new com.planetmayo.usvsim.model.geometry.Waypoint(
+            basePos, speed, 50, com.planetmayo.usvsim.model.geometry.WaypointType.BASE));
+
+        System.out.println("  Created " + pathWaypoints.size() + " waypoints for rendering");
+
+        // Render with start marker
+        mapPanel.renderTracks(pathWaypoints, true);
+        System.out.println("  Called renderTracks with start marker");
     }
 
     /**
@@ -249,6 +442,8 @@ public class MissionController implements MainView.MissionControllerCallback {
             System.err.println("Cannot start: mission plan is empty");
             return;
         }
+        simulationStartTimeMs = System.currentTimeMillis();
+        finalSimulationTimeMs = 0;  // Reset frozen time
         simulationEngine.start();
     }
 
@@ -271,6 +466,9 @@ public class MissionController implements MainView.MissionControllerCallback {
      */
     public void stopSimulation() {
         simulationEngine.stop();
+        simulationStartTimeMs = 0;
+        finalSimulationTimeMs = 0;  // Reset frozen time
+        statePanel.reset();
     }
 
     /**
@@ -308,8 +506,63 @@ public class MissionController implements MainView.MissionControllerCallback {
         // Post updates to JavaFX thread to avoid cross-thread UI access
         simulationEngine.setOnStateChanged(() -> {
             javafx.application.Platform.runLater(() -> {
-                statePanel.updateState(mission.getPlatform().getState());
+                var state = mission.getPlatform().getState();
+                statePanel.updateState(state);
+
+                // Update simulation time (elapsed since start)
+                if (finalSimulationTimeMs > 0) {
+                    // Simulation complete - show frozen final time
+                    statePanel.setTimestamp(finalSimulationTimeMs);
+                    controlPanel.updateSimulationTime(finalSimulationTimeMs);
+                } else if (simulationStartTimeMs > 0) {
+                    // Simulation running - show live elapsed time
+                    long elapsedMs = System.currentTimeMillis() - simulationStartTimeMs;
+                    statePanel.setTimestamp(elapsedMs);
+                    controlPanel.updateSimulationTime(elapsedMs);
+
+                    // Debug: Log every 100th update
+                    if (elapsedMs % 10000 < 200) {
+                        System.out.println("Simulation time: " + (elapsedMs / 1000) + "s");
+                    }
+                }
+
+                // Update map with current position and heading
+                mapPanel.updatePlatformPosition(state.getPosition(), state.getHeading());
+
+                // Add to track history
+                mapPanel.addTrackPoint(state.getPosition());
+
+                // Refresh mission plan to show updated behaviour status
+                missionPlanPanel.refresh();
             });
+        });
+
+        // Wire simulation completion callback
+        simulationEngine.setOnSimulationComplete(() -> {
+            javafx.application.Platform.runLater(() -> {
+                // Capture final elapsed time
+                if (simulationStartTimeMs > 0) {
+                    finalSimulationTimeMs = System.currentTimeMillis() - simulationStartTimeMs;
+                    statePanel.setTimestamp(finalSimulationTimeMs);
+                    System.out.println("Mission complete - final time: " +
+                        String.format("%02d:%02d:%02d",
+                            finalSimulationTimeMs / 3600000,
+                            (finalSimulationTimeMs % 3600000) / 60000,
+                            (finalSimulationTimeMs % 60000) / 1000));
+                }
+            });
+        });
+
+        // Wire double-click handler for editing behaviours in mission plan
+        missionPlanPanel.setOnBehaviourDoubleClick(behaviour -> {
+            System.out.println("Double-clicked on behaviour: " + behaviour.getName());
+            // TODO: Open appropriate edit dialog based on behaviour type
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                javafx.scene.control.Alert.AlertType.INFORMATION);
+            alert.setTitle("Edit Behaviour");
+            alert.setHeaderText(behaviour.getName());
+            alert.setContentText("Edit functionality coming soon.\n\nBehaviour: " + behaviour.getDescription());
+            alert.show();
         });
 
         // Register this controller as the callback for MainView (T068)
@@ -350,19 +603,65 @@ public class MissionController implements MainView.MissionControllerCallback {
     private void startExpandingSquareSearchDialog() {
         System.out.println("Starting Expanding Square Search workflow");
 
-        // Step 1: Start polygon drawing
+        // Step 1: Start polygon drawing on map (setup callback first)
         drawingController.startDrawingPolygon(polygon -> {
-            System.out.println("Polygon drawn with " + polygon.getVertices().size() + " vertices");
+            System.out.println("✓ Polygon received with " + polygon.getVertices().size() + " vertices");
 
-            // Step 2: Show parameter dialog
+            // Step 2: Show parameter dialog for search pattern
             ExpandingSquareSearchDialog dialog = new ExpandingSquareSearchDialog();
             dialog.showAndWait().ifPresent(params -> {
                 addExpandingSquareSearch(polygon, params);
             });
         });
 
-        // Prompt user
-        System.out.println("Please draw a polygon on the map. Click to add vertices. Press Enter or click 'Done' when finished.");
+        // Step 0: Show instructions dialog (NON-MODAL so user can click on map)
+        com.planetmayo.usvsim.view.dialogs.PolygonDrawingInstructionsDialog instructionsDialog =
+            new com.planetmayo.usvsim.view.dialogs.PolygonDrawingInstructionsDialog();
+        // CRITICAL: Make dialog non-modal so map remains clickable
+        instructionsDialog.initModality(javafx.stage.Modality.NONE);
+
+        // Wire the "Done Drawing" button directly (don't use onCloseRequest which fires on Escape/X too)
+        javafx.scene.control.Button doneButton = (javafx.scene.control.Button) instructionsDialog.getDialogPane().lookupButton(javafx.scene.control.ButtonType.OK);
+        if (doneButton != null) {
+            // CRITICAL: Disable button initially to prevent premature clicks
+            doneButton.setDisable(true);
+            doneButton.setText("Done Drawing (draw 1+ vertices first)");
+
+            // Setup button click handler
+            doneButton.setOnAction(event -> {
+                System.out.println("User clicked Done Drawing - finishing polygon");
+                drawingController.finishDrawing();
+                instructionsDialog.close();
+            });
+
+            // Setup polling to enable button when vertices are drawn
+            javafx.animation.Timeline enableButtonPoller = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), event -> {
+                    Object vertexCountObj = mapPanel.getWebEngine().executeScript("window.vertexCount || 0");
+                    try {
+                        final int vertexCount = vertexCountObj != null ? Integer.parseInt(vertexCountObj.toString()) : 0;
+                        if (vertexCount > 0 && doneButton.isDisable()) {
+                            javafx.application.Platform.runLater(() -> {
+                                doneButton.setDisable(false);
+                                doneButton.setText("Done Drawing");
+                                System.out.println("Done Drawing button enabled - " + vertexCount + " vertices drawn");
+                            });
+                        }
+                    } catch (Exception e) {
+                        // Ignore parse errors
+                    }
+                })
+            );
+            enableButtonPoller.setCycleCount(javafx.animation.Animation.INDEFINITE);
+            enableButtonPoller.play();
+
+            // Stop polling when dialog closes
+            instructionsDialog.setOnCloseRequest(event -> {
+                enableButtonPoller.stop();
+            });
+        }
+
+        instructionsDialog.show();
     }
 
     /**

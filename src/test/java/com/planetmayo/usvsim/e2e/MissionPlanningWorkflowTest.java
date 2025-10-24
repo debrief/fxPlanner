@@ -128,9 +128,19 @@ public class MissionPlanningWorkflowTest extends ApplicationTest {
                  text.contains("placeholder") ||
                  text.contains("TODO")));
 
-        // Check for WebView (Leaflet map) in MapPanel
+        // Check for WebView (Leaflet map) in MapPanel or nested in AnchorPane
         var hasWebView = mapPanel.getChildren().stream()
-            .anyMatch(node -> node instanceof WebView);
+            .anyMatch(node -> {
+                // Direct child is WebView
+                if (node instanceof WebView) return true;
+                // Check if it's inside an AnchorPane (java_leaflet pattern)
+                if (node instanceof Pane) {
+                    Pane container = (Pane) node;
+                    return container.getChildren().stream()
+                        .anyMatch(child -> child instanceof WebView);
+                }
+                return false;
+            });
 
         assertTrue(!hasIncompletePlaceholder && hasWebView,
             "T036 INCOMPLETE: MapPanel must have actual WebView with Leaflet map embedded. " +

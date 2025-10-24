@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Test - Standalone HTML</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        /* CRITICAL FIX: Use explicit height units */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            /* CRITICAL: 100% height on html/body */
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #map {
+            /* CRITICAL: Use 100vh (viewport height) not 100% */
+            /* This ensures Leaflet gets actual pixel dimensions */
+            height: 100vh;
+            width: 100vw;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+            font-family: monospace;
+            font-size: 12px;
+            max-width: 300px;
+        }
+
+        .status-ok { color: green; }
+        .status-error { color: red; }
+        .status-info { color: blue; }
+    </style>
+</head>
+<body>
+    <!-- Map container with 100vh height -->
+    <div id="map"></div>
+
+    <!-- Status panel -->
+    <div id="status">
+        <strong>Standalone HTML Test</strong><br/>
+        <span id="dimensions"></span><br/>
+        <span id="tile-status">Initializing...</span><br/>
+        <span id="user-agent"></span>
+    </div>
+
+    <script>
+        // Global variables for tile tracking
+        var tilesLoading = 0;
+        var tilesLoaded = 0;
+        var tilesFailed = 0;
+        var tileUrls = [];
+
+        function updateTileStatus() {
+            const status = document.getElementById('tile-status');
+            if (status) {
+                status.innerHTML =
+                    '<span class="status-ok">Loaded: ' + tilesLoaded + '</span> | ' +
+                    '<span class="status-info">Loading: ' + tilesLoading + '</span> | ' +
+                    '<span class="status-error">Failed: ' + tilesFailed + '</span>';
+            }
+        }
+
+        // Show user agent (helps identify if running in WebView)
+        document.getElementById('user-agent').innerHTML =
+            'Browser: ' + (navigator.userAgent.indexOf('JavaFX') > -1 ? 'JavaFX WebView' : 'Standard Browser');
+
+        // Log container dimensions immediately
+        const mapDiv = document.getElementById('map');
+        const actualHeight = mapDiv.offsetHeight;
+        const actualWidth = mapDiv.offsetWidth;
+        const computedStyle = window.getComputedStyle(mapDiv);
+
+        document.getElementById('dimensions').innerHTML =
+            'Container: ' + actualWidth + 'x' + actualHeight + 'px<br/>' +
+            'Computed height: ' + computedStyle.height;
+
+        console.log('Map container dimensions:', actualWidth + 'x' + actualHeight);
+        console.log('Computed style height:', computedStyle.height);
+        console.log('User Agent:', navigator.userAgent);
+
+        // Initialize map
+        try {
+            const map = L.map('map', {
+                center: [50.6, -2.4], // Portland Harbour
+                zoom: 14,
+                zoomControl: true,
+                preferCanvas: false // Use SVG renderer
+            });
+
+            // Add OpenStreetMap tiles with error handling
+            const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19,
+                tileSize: 256,
+                detectRetina: false, // Disable retina to simplify debugging
+                crossOrigin: 'anonymous' // Enable CORS
+            });
+
+            // Track tile loading events
+            tileLayer.on('tileloadstart', function(e) {
+                tilesLoading++;
+                updateTileStatus();
+                console.log('Tile loading:', e.tile.src);
+            });
+
+            tileLayer.on('tileload', function(e) {
+                tilesLoading--;
+                tilesLoaded++;
+                updateTileStatus();
+                console.log('✓ Tile loaded:', e.tile.src);
+                if (!tileUrls.includes(e.tile.src)) {
+                    tileUrls.push(e.tile.src);
+                }
+            });
+
+            tileLayer.on('tileerror', function(e) {
+                tilesLoading--;
+                tilesFailed++;
+                updateTileStatus();
+                console.error('✗ Tile failed:', e.tile ? e.tile.src : 'unknown', e);
+
+                // Show first tile error details
+                if (tilesFailed === 1 && e.tile) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.innerHTML = '<br/><strong>First tile error:</strong><br/>' +
+                        'URL: ' + e.tile.src.substring(0, 50) + '...';
+                    document.getElementById('status').appendChild(errorDiv);
+                }
+            });
+
+            tileLayer.addTo(map);
+
+            // Get Leaflet's view of the container size
+            const size = map.getSize();
+            console.log('Leaflet container size:', size.x + 'x' + size.y);
+            document.getElementById('dimensions').innerHTML +=
+                '<br/>Leaflet sees: ' + size.x + 'x' + size.y + 'px';
+
+            // Add a test marker
+            L.marker([50.6, -2.4])
+                .addTo(map)
+                .bindPopup('Portland Harbour<br/>Test Location')
+                .openPopup();
+
+            // Add a polygon
+            L.polygon([
+                [50.65, -2.35],
+                [50.55, -2.45],
+                [50.60, -2.50],
+                [50.70, -2.40]
+            ], {
+                color: 'red',
+                weight: 2,
+                fillColor: 'red',
+                fillOpacity: 0.2
+            }).addTo(map).bindPopup('Test Polygon');
+
+            // Add a circle
+            L.circle([50.6, -2.4], {
+                radius: 1000,
+                color: 'blue',
+                fillColor: 'blue',
+                fillOpacity: 0.1
+            }).addTo(map);
+
+            // Force a resize after a delay (sometimes helps)
+            setTimeout(function() {
+                map.invalidateSize();
+                const newSize = map.getSize();
+                console.log('Map resized, new size:', newSize.x + 'x' + newSize.y);
+
+                // Report tile loading status
+                console.log('=== Tile Loading Report ===');
+                console.log('Tiles loaded:', tilesLoaded);
+                console.log('Tiles failed:', tilesFailed);
+                console.log('Still loading:', tilesLoading);
+                if (tileUrls.length > 0) {
+                    console.log('Sample tile URL:', tileUrls[0]);
+                }
+            }, 1000);
+
+            console.log('✓ Map initialized successfully');
+
+        } catch (e) {
+            console.error('Error initializing map:', e);
+            document.getElementById('tile-status').innerHTML =
+                '<span class="status-error">Error: ' + e.message + '</span>';
+        }
+
+        // Test network connectivity
+        setTimeout(function() {
+            fetch('https://tile.openstreetmap.org/14/8180/5441.png')
+                .then(response => {
+                    console.log('✓ Network test successful, status:', response.status);
+                })
+                .catch(error => {
+                    console.error('✗ Network test failed:', error);
+                    document.getElementById('status').innerHTML +=
+                        '<br/><span class="status-error">Network blocked!</span>';
+                });
+        }, 500);
+    </script>
+</body>
+</html>

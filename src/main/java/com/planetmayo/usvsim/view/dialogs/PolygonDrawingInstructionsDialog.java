@@ -56,10 +56,11 @@ public class PolygonDrawingInstructionsDialog extends Dialog<Void> {
             "Method 2 - Click-to-Draw (if toolbar unavailable):\n" +
             "  • Simply click on the map to add vertices\n" +
             "  • Each click adds a vertex (blue line shows progress)\n" +
+            "  • Click NEAR THE FIRST VERTEX (<5px) to close polygon\n" +
             "\n" +
             "Requirements:\n" +
             "  • Minimum 3 vertices (triangle shape)\n" +
-            "  • Click \"Done Drawing\" when finished"
+            "  • Use \"Cancel Drawing\" button to cancel at any time"
         );
         instructions.setWrapText(true);
         instructions.setTextAlignment(TextAlignment.LEFT);

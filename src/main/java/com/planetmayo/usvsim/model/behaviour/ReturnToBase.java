@@ -30,6 +30,7 @@ public class ReturnToBase implements Behaviour {
     private final List<Waypoint> waypoints;
     private BehaviourState state;
     private boolean reachedBase;
+    private boolean completionLogged = false;
 
     /**
      * Create return to base behaviour.
@@ -82,7 +83,19 @@ public class ReturnToBase implements Behaviour {
             return new PlatformDemand(currentState.getHeading(), 0.0, 0.0, TurnDirection.SHORTEST);
         }
 
-        return BehaviourExecutor.getDemandedState(currentState, waypoints.get(0));
+        PlatformDemand demand = BehaviourExecutor.getDemandedState(currentState, waypoints.get(0));
+
+        // Debug logging every 5 seconds
+        long now = System.currentTimeMillis();
+        if (lastLogTime == 0 || now - lastLogTime > 5000) {
+            double distance = currentState.getPosition().distanceTo(waypoints.get(0).getPosition());
+            System.out.println("RTB: distance=" + String.format("%.1fm", distance) +
+                             ", demanded_speed=" + String.format("%.1fkn", demand.getDemandedSpeed()) +
+                             ", actual_speed=" + String.format("%.1fkn", currentState.getSpeed()));
+            lastLogTime = now;
+        }
+
+        return demand;
     }
 
     @Override
@@ -91,10 +104,28 @@ public class ReturnToBase implements Behaviour {
             state = BehaviourState.EXECUTING;
         }
 
-        // Check if reached base
-        if (BehaviourExecutor.isWaypointReached(currentState, waypoints.get(0))) {
+        Waypoint baseWaypoint = waypoints.get(0);
+        double distance = currentState.getPosition().distanceTo(baseWaypoint.getPosition());
+        double speed = currentState.getSpeed();
+
+        // Multiple completion criteria for robustness
+        boolean withinRadius = BehaviourExecutor.isWaypointReached(currentState, baseWaypoint);
+        boolean nearlyStopped = speed < 0.5;  // knots
+        boolean closeToBase = distance <= baseWaypoint.getAcceptanceRadius() * 2.0;  // Within 2x radius
+        boolean veryClose = distance <= 100.0;  // Within 100m - very generous
+        boolean almostStopped = speed < 1.0;  // < 1 knot
+
+        // Complete if: within radius, OR (nearly stopped AND close), OR (very close AND almost stopped)
+        if (withinRadius || (nearlyStopped && closeToBase) || (veryClose && almostStopped)) {
             reachedBase = true;
             state = BehaviourState.COMPLETE;
+
+            // Log completion only once
+            if (!completionLogged) {
+                System.out.println("Return to Base complete - distance: " + String.format("%.1fm", distance) +
+                                 ", speed: " + String.format("%.2fkn", speed));
+                completionLogged = true;
+            }
         }
     }
 

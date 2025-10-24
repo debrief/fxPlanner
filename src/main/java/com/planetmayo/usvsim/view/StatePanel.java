@@ -78,20 +78,16 @@ public class StatePanel extends GridPane {
         add(behProgLabel, 0, 6);
         add(behaviourProgressLabel, 1, 6);
 
-        // Timestamp
-        Label timeLabel = new Label("Sim Time:");
-        timeLabel.setStyle("-fx-font-weight: bold;");
-        timestampLabel = new Label("00:00:00");
-        timestampLabel.setStyle("-fx-font-family: 'Courier New'; -fx-font-size: 11;");
-        add(timeLabel, 0, 7);
-        add(timestampLabel, 1, 7);
-
         // Update frequency
         Label freqLabel = new Label("Update Freq:");
         freqLabel.setStyle("-fx-font-weight: bold;");
         updateFreqLabel = new Label("0 Hz");
-        add(freqLabel, 0, 8);
-        add(updateFreqLabel, 1, 8);
+        add(freqLabel, 0, 7);
+        add(updateFreqLabel, 1, 7);
+
+        // Timestamp field still exists for internal use but not displayed
+        timestampLabel = new Label("00:00:00");
+        timestampLabel.setVisible(false);
 
         setHgap(10);
         setVgap(5);
@@ -162,7 +158,7 @@ public class StatePanel extends GridPane {
         statusLabel.setText("Ready");
         progressLabel.setText("0%");
         behaviourProgressLabel.setText("0 of 0 waypoints");
-        timestampLabel.setText("00:00:00");
         updateFreqLabel.setText("0 Hz");
+        // timestampLabel not reset - handled by ControlPanel now
     }
 }

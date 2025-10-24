@@ -86,6 +86,11 @@ public class DrawingController {
 
         try {
             webEngine.executeScript(callbackSetup);
+            // Show Cancel button when drawing starts (on JavaFX thread)
+            javafx.application.Platform.runLater(() -> {
+                mapPanel.setCancelButtonVisible(true);
+                System.out.println("Cancel button shown");
+            });
             System.out.println("Polygon drawing mode started - click on map to add vertices");
         } catch (Exception e) {
             System.err.println("Error starting polygon drawing: " + e.getMessage());
@@ -93,20 +98,48 @@ public class DrawingController {
     }
 
     /**
-     * Start drawing waypoints
+     * Start drawing waypoints (polyline mode)
      */
     public void startDrawingWaypoints(Consumer<List<Position>> onComplete) {
         mode = DrawingMode.WAYPOINT;
         currentVertices.clear();
         onWaypointsComplete = onComplete;
         onPolygonComplete = null;
-        System.out.println("Starting waypoint drawing mode - click to add waypoints");
+
+        // Setup JavaScript callback for polyline
+        String callbackSetup = """
+            window.currentDrawingMode = 'polyline';
+            window.polylineReadyCallback = function(coordinates) {
+                console.log('Polyline callback received with ' + coordinates.length + ' waypoints');
+            };
+
+            // Start polyline drawing
+            if (typeof window.startDrawingPolyline === 'function') {
+                window.startDrawingPolyline();
+            } else {
+                console.log('Polyline drawing not initialized yet');
+            }
+            """;
+
+        try {
+            webEngine.executeScript(callbackSetup);
+            // Show Cancel button when drawing starts
+            javafx.application.Platform.runLater(() -> {
+                mapPanel.setCancelButtonVisible(true);
+                System.out.println("Cancel button shown");
+            });
+            System.out.println("Polyline drawing mode started - click map to add waypoints, re-click last point to finish");
+        } catch (Exception e) {
+            System.err.println("Error starting polyline drawing: " + e.getMessage());
+        }
     }
 
     /**
      * Finish drawing and return the collected geometry
      */
     public void finishDrawing() {
+        System.out.println("finishDrawing() called, mode = " + mode);
+
         if (mode == DrawingMode.DISABLED) {
             System.out.println("Drawing is not active");
             return;
@@ -115,47 +148,140 @@ public class DrawingController {
         try {
             // Call JavaScript finishDrawing function (works with both Leaflet.Draw and fallback)
             String finishScript = """
+                window.updateStatus('Finalizing polygon...');
                 if (typeof window.finishDrawing === 'function') {
                     window.finishDrawing();
+                    window.updateStatus('Finished drawing function called');
+                } else {
+                    window.updateStatus('finishDrawing function not found!');
                 }
                 window.drawnCoordinates;
                 """;
 
+            System.out.println("Executing finish script...");
             Object coordsObj = webEngine.executeScript(finishScript);
+            System.out.println("Finish script returned: " + coordsObj);
 
             if (coordsObj != null && mode == DrawingMode.POLYGON) {
-                System.out.println("Coordinates received: " + coordsObj);
+                System.out.println("✓ Coordinates received: " + coordsObj);
 
                 // Parse the coordinates and create polygon
                 try {
                     // coordsObj should be a JavaScript array of [lat, lng] pairs
                     // Convert to Position objects
                     List<Position> vertices = parseCoordinates(coordsObj);
+                    System.out.println("Parsed " + vertices.size() + " vertices from coordinates");
 
                     if (!vertices.isEmpty() && vertices.size() >= 3) {
                         Polygon polygon = new Polygon(vertices);
                         mode = DrawingMode.DISABLED;
 
                         if (onPolygonComplete != null) {
+                            System.out.println("Calling onPolygonComplete callback with " + polygon.getVertices().size() + " vertices");
                             onPolygonComplete.accept(polygon);
+                        } else {
+                            System.out.println("ERROR: onPolygonComplete callback is NULL!");
                         }
                         System.out.println("✓ Polygon complete: " + polygon.getVertices().size() + " vertices");
+                        mapPanel.setCancelButtonVisible(false);
                     } else {
-                        System.out.println("Polygon needs at least 3 vertices");
+                        System.out.println("ERROR: Polygon needs at least 3 vertices, got: " + vertices.size());
+                        showInvalidPolygonDialog(vertices.size());
+                        // Do NOT set mode to DISABLED - keep drawing active
+                        return;
                     }
                 } catch (Exception e) {
                     System.err.println("Error parsing coordinates: " + e.getMessage());
+                    e.printStackTrace();
                 }
             } else if (mode == DrawingMode.WAYPOINT) {
-                // Handle waypoint completion
-                mode = DrawingMode.DISABLED;
-                System.out.println("Waypoint drawing complete");
+                // Handle waypoint/polyline completion
+                System.out.println("✓ Retrieving polyline coordinates");
+
+                // Get polyline coordinates from JavaScript
+                String polylineScript = """
+                    if (typeof window.finishPolyline === 'function') {
+                        window.finishPolyline();
+                    }
+                    window.drawnPolylineCoordinates;
+                    """;
+
+                Object polylineObj = webEngine.executeScript(polylineScript);
+                System.out.println("Polyline script returned: " + polylineObj);
+
+                if (polylineObj != null) {
+                    try {
+                        List<Position> waypoints = parseCoordinates(polylineObj);
+                        System.out.println("Parsed " + waypoints.size() + " waypoints from polyline");
+
+                        if (!waypoints.isEmpty() && waypoints.size() >= 2) {
+                            mode = DrawingMode.DISABLED;
+
+                            if (onWaypointsComplete != null) {
+                                System.out.println("Calling onWaypointsComplete callback with " + waypoints.size() + " waypoints");
+                                onWaypointsComplete.accept(waypoints);
+                            } else {
+                                System.out.println("ERROR: onWaypointsComplete callback is NULL!");
+                            }
+                            System.out.println("✓ Polyline complete: " + waypoints.size() + " waypoints");
+                            mapPanel.setCancelButtonVisible(false);
+                        } else {
+                            System.out.println("ERROR: Polyline needs at least 2 waypoints, got: " + waypoints.size());
+                            showErrorDialog("Polyline must have at least 2 waypoints. Please add more points.");
+                            return;
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error parsing polyline coordinates: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                } else {
+                    System.out.println("ERROR: polylineObj is null");
+                    showErrorDialog("Failed to capture polyline. Please try again.");
+                    mode = DrawingMode.DISABLED;
+                    mapPanel.setCancelButtonVisible(false);
+                }
+            } else {
+                System.out.println("ERROR: coordsObj is null or mode is not POLYGON. coordsObj=" + coordsObj + ", mode=" + mode);
+                showErrorDialog("Failed to capture polygon. Please try again.");
             }
         } catch (Exception e) {
             System.err.println("Error finishing drawing: " + e.getMessage());
+            e.printStackTrace();
+            showErrorDialog("Error during drawing: " + e.getMessage());
         }
 
-        mode = DrawingMode.DISABLED;
+        // Only set to DISABLED if we successfully completed
+        if (mode == DrawingMode.POLYGON) {
+            mode = DrawingMode.DISABLED;
+            mapPanel.setCancelButtonVisible(false);
+        }
+    }
+
+    /**
+     * Show error when polygon has too few vertices
+     */
+    private void showInvalidPolygonDialog(int vertexCount) {
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
+            alert.setTitle("Invalid Polygon");
+            alert.setHeaderText("Polygon must have at least 3 vertices");
+            alert.setContentText("You have drawn " + vertexCount + " vertices. Please click at least 3 points on the map, then click near the first vertex to close the polygon.");
+            alert.showAndWait();
+            System.out.println("User shown invalid polygon warning");
+        });
+    }
+
+    /**
+     * Show generic error dialog
+     */
+    private void showErrorDialog(String message) {
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+            alert.setTitle("Drawing Error");
+            alert.setHeaderText("An error occurred while drawing");
+            alert.setContentText(message);
+            alert.showAndWait();
+        });
     }
 
     /**
@@ -227,6 +353,7 @@ public class DrawingController {
         currentVertices.clear();
         onPolygonComplete = null;
         onWaypointsComplete = null;
+        mapPanel.setCancelButtonVisible(false);
         System.out.println("Drawing cancelled");
     }
 

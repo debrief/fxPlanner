@@ -41,38 +41,39 @@ public final class SearchPatternGenerator {
                                                         double speed) {
         List<Waypoint> waypoints = new ArrayList<>();
 
-        // Get polygon bounds and centroid
+        // Get polygon centroid and bounds
+        Position centroid = PolygonUtils.calculateCentroid(searchArea);
         Envelope env = searchArea.getJTSPolygon().getEnvelopeInternal();
-        double minLat = env.getMinY();
-        double maxLat = env.getMaxY();
-        double minLon = env.getMinX();
-        double maxLon = env.getMaxX();
+
+        // Calculate diagonal distance for coverage
+        Position cornerNW = Position.of(env.getMaxY(), env.getMinX());
+        Position cornerSE = Position.of(env.getMinY(), env.getMaxX());
+        double diagonalDistance = GeoUtils.distance(cornerNW, cornerSE);
 
         // Normalize orientation to perpendicular direction for tracks
         double trackBearing = GeoUtils.normalizeAngle(trackOrientation);
         double perpBearing = GeoUtils.normalizeAngle(trackOrientation + 90);
 
-        // Generate track lines at regular intervals
-        // Calculate number of tracks needed
-        Position cornerNW = Position.of(maxLat, minLon);
-        Position cornerSE = Position.of(minLat, maxLon);
-        double diagonalDistance = GeoUtils.distance(cornerNW, cornerSE);
-        int numTracks = (int) Math.ceil(diagonalDistance / trackSpacing) + 1;
+        // Calculate number of tracks needed to cover the full area
+        int numTracks = (int) Math.ceil(diagonalDistance / trackSpacing) + 2;  // Extra tracks for safety
 
-        // Generate tracks perpendicular to orientation
+        // Generate tracks from centroid, offset perpendicular to track direction
         List<LineString> trackLines = new ArrayList<>();
         for (int i = 0; i < numTracks; i++) {
+            // Offset from center in both directions
             double offset = (i - numTracks / 2.0) * trackSpacing;
 
-            // Create a line segment perpendicular to track bearing
-            Position start = Position.of(maxLat, minLon);
-            Position offsetStart = start.destination(offset, perpBearing);
-            Position offsetEnd = offsetStart.destination(diagonalDistance * 2, trackBearing);
+            // Start from centroid, offset perpendicular to tracks
+            Position trackCenter = centroid.destination(offset, perpBearing);
+
+            // Extend line in both directions along track bearing (long enough to cover polygon)
+            Position trackStart = trackCenter.destination(diagonalDistance * 1.5, trackBearing + 180);
+            Position trackEnd = trackCenter.destination(diagonalDistance * 1.5, trackBearing);
 
             // Create line
             Coordinate[] coords = {
-                new Coordinate(offsetStart.getLongitude(), offsetStart.getLatitude()),
-                new Coordinate(offsetEnd.getLongitude(), offsetEnd.getLatitude())
+                new Coordinate(trackStart.getLongitude(), trackStart.getLatitude()),
+                new Coordinate(trackEnd.getLongitude(), trackEnd.getLatitude())
             };
             LineString line = gf.createLineString(coords);
             trackLines.add(line);
