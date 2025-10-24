@@ -58,6 +58,27 @@
             <version>${jts.version}</version>
         </dependency>
 
+        <!-- java_leaflet: JavaFX Leaflet wrapper (research spike) -->
+        <dependency>
+            <groupId>io.github.makbn</groupId>
+            <artifactId>jlmap-fx</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+
+        <!-- SLF4J for logging (required by java_leaflet) -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.9</version>
+        </dependency>
+
+        <!-- Lombok for annotations (used in java_leaflet example) -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- Testing: JUnit 5 -->
         <dependency>
