@@ -31,7 +31,7 @@
 - [ ] T005 [P] Create resources directory: src/main/resources/{map-tiles,css}/
 - [ ] T006 [P] Configure Maven plugins: JavaFX plugin, Surefire (tests), Exec (run)
 - [ ] T007 Verify build with `mvn clean compile` (should succeed with no source files yet)
-- [ ] T008 Create Main.java stub in src/main/java/com/planetmayo/usvsim/ with basic JavaFX Application skeleton
+- [ ] T008 Create Main.java in src/main/java/com/planetmayo/usvsim/ extending Application, with start() method that creates empty Stage and calls show(). Verify `mvn javafx:run` launches a blank window without errors.
 
 **Completion Criteria**: `mvn clean install` succeeds, project structure matches plan.md
 
@@ -101,7 +101,7 @@
 
 ### UI Implementation (After Mockup Approval)
 
-- [ ] T036 [US1] Create MapPanel stub in src/main/java/com/planetmayo/usvsim/view/MapPanel.java (java_leaflet integration, offline tiles)
+- [ ] T036 [US1] Create MapPanel in src/main/java/com/planetmayo/usvsim/view/MapPanel.java with java_leaflet MapView integration, offline tile provider, and POI marker for Portland Harbour. Include pan/zoom controls. Drawing overlay comes in T037.
 - [ ] T037 [US1] Implement DrawingController in src/main/java/com/planetmayo/usvsim/controller/DrawingController.java (polygon drawing, click capture)
 - [ ] T038 [US1] Create MissionPlanPanel in src/main/java/com/planetmayo/usvsim/view/MissionPlanPanel.java (list behaviours, show status)
 - [ ] T039 [US1] Create ParallelTrackSearchDialog in src/main/java/com/planetmayo/usvsim/view/dialogs/ParallelTrackSearchDialog.java
@@ -266,7 +266,7 @@
 - [ ] T088 [US6] Add "Configure Platform" menu item to MainView menu bar
 - [ ] T089 [US6] Wire dialog Save button to PlatformCapabilities.save()
 
-**US6 Completion Criteria**: Can modify platform dynamics, settings persist, simulation behavior changes accordingly
+**US6 Completion Criteria**: Can modify platform dynamics, settings persist, simulation behaviour changes accordingly
 
 ---
 
@@ -277,9 +277,9 @@
 ### Validation & Error Handling
 
 - [ ] T090 [P] Implement polygon validation in PolygonUtils (min 3 vertices, no self-intersection)
-- [ ] T091 [P] Add input validation to all dialogs (numeric ranges, required fields)
-- [ ] T092 [P] Implement error dialogs for invalid inputs (JavaFX Alert)
-- [ ] T093 [P] Add warning dialog for edge cases (small search area, large spacing)
+- [ ] T091 [P] Add input validation to all dialogs (numeric ranges, required fields). Validate angles ∈ [0,360), positive distances/speeds. Show validation errors immediately on field change (red border).
+- [ ] T092 [P] Implement error dialogs for invalid inputs with descriptive JavaFX Alert messages that state field name and valid range (e.g., "Track spacing must be > 0 metres")
+- [ ] T093 [P] Add warning dialogs for edge cases: (1) "Platform may cut outside boundary during turns" if search area < turn radius; (2) "Track spacing is large - only N tracks generated" if spacing > area dimension; (3) "Pattern may terminate early on narrow sides" for elongated polygons in expanding square
 - [ ] T094 Disable mission plan editing during simulation (gray out buttons)
 - [ ] T095 Disable Start button when mission plan is empty
 
@@ -293,9 +293,10 @@
 
 ### Performance Optimization
 
-- [ ] T101 [P] Profile pattern generation with JVisualVM, optimize if >500ms
+- [ ] T101 [P] Profile pattern generation with JVisualVM, optimize if >500ms. Also profile map pan/zoom responsiveness: target >30 FPS and <50ms input-to-response latency. Verify with frame rate profiler.
 - [ ] T102 [P] Implement track history limit (e.g., 1000 points max) to prevent memory growth
-- [ ] T103 Test frame rate at 20× acceleration, cap if <10 FPS
+- [ ] T103 Implement FPS counter overlay (toggle with F3 key) in MapPanel. Test frame rate at 1× (target 60 FPS) and 20× acceleration (minimum 10 FPS). Verify smooth animation at both speeds.
+- [ ] T103a Implement automatic time acceleration capping: if frame rate drops below 10 FPS at current acceleration, automatically cap acceleration at achievable level and show notification
 
 ### Documentation
 
@@ -378,7 +379,7 @@ Phase 9 (Polish) - After all user stories
 
 ## Task Summary
 
-**Total Tasks**: 106
+**Total Tasks**: 107
 
 **By Phase**:
 - Phase 1 (Setup): 8 tasks
@@ -389,7 +390,7 @@ Phase 9 (Polish) - After all user stories
 - Phase 6 (US4 - P2): 7 tasks
 - Phase 7 (US5 - P3): 4 tasks
 - Phase 8 (US6 - P3): 6 tasks
-- Phase 9 (Polish): 17 tasks
+- Phase 9 (Polish): 18 tasks
 
 **Parallel Opportunities**: 47 tasks marked [P] (44% can run in parallel within their phase)
 
@@ -399,4 +400,4 @@ Phase 9 (Polish) - After all user stories
 - E2E tests: 4 tasks
 - Total test tasks: 17 (16% of tasks - aligns with constitution's >80% coverage goal)
 
-**MVP Path** (US1 + US2): 57 tasks (54% of total)
+**MVP Path** (US1 + US2): 57 tasks (53% of total)
