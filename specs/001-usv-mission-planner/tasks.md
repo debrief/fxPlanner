@@ -84,36 +84,37 @@
 
 ### Tests First (TDD for Business Logic)
 
-- [ ] T028 [US1] Write unit tests for SearchPatternGenerator.generateParallelTracks() in src/test/java/com/planetmayo/usvsim/unit/util/SearchPatternGeneratorTest.java (test square area, L-shape, alternating directions)
+- [x] T028 [US1] Write unit tests for SearchPatternGenerator.generateParallelTracks() in src/test/java/com/planetmayo/usvsim/unit/util/SearchPatternGeneratorTest.java (test square area, L-shape, alternating directions)
 
 ### Business Logic Implementation
 
-- [ ] T029 [US1] Implement SearchPatternGenerator.generateParallelTracks() in src/main/java/com/planetmayo/usvsim/util/SearchPatternGenerator.java (transform, clip, alternate)
-- [ ] T030 [US1] Create ParallelTrackSearch behaviour class in src/main/java/com/planetmayo/usvsim/model/behaviour/ParallelTrackSearch.java implementing Behaviour interface
-- [ ] T031 [US1] Write unit tests for ParallelTrackSearch waypoint generation in src/test/java/com/planetmayo/usvsim/unit/model/behaviour/ParallelTrackSearchTest.java
-- [ ] T032 [US1] Create CompositeBehaviour class in src/main/java/com/planetmayo/usvsim/model/mission/CompositeBehaviour.java (implements Behaviour, manages sequence)
-- [ ] T033 [US1] Create Mission class in src/main/java/com/planetmayo/usvsim/model/mission/Mission.java
+- [x] T029 [US1] Implement SearchPatternGenerator.generateParallelTracks() in src/main/java/com/planetmayo/usvsim/util/SearchPatternGenerator.java (transform, clip, alternate)
+- [x] T030 [US1] Create ParallelTrackSearch behaviour class in src/main/java/com/planetmayo/usvsim/model/behaviour/ParallelTrackSearch.java implementing Behaviour interface
+- [x] T031 [US1] Write unit tests for ParallelTrackSearch waypoint generation in src/test/java/com/planetmayo/usvsim/unit/model/behaviour/ParallelTrackSearchTest.java
+- [x] T032 [US1] Create CompositeBehaviour class in src/main/java/com/planetmayo/usvsim/model/mission/CompositeBehaviour.java (implements Behaviour, manages sequence)
+- [x] T033 [US1] Create Mission class in src/main/java/com/planetmayo/usvsim/model/mission/Mission.java
 
 ### UI Mockup & Approval
 
-- [ ] T034 [US1] Create ASCII mockup for MainView layout (map center, Mission Plan panel right, Control panel top-right) - submit to Doc for approval
-- [ ] T035 [US1] Create ASCII mockup for Parallel Track Search dialog (orientation field, spacing field, OK/Cancel buttons) - submit to Doc for approval
+- [x] T034 [US1] Create ASCII mockup for MainView layout (map center, Mission Plan panel right, Control panel top-right) - submit to Doc for approval
+- [x] T035 [US1] Create ASCII mockup for Parallel Track Search dialog (orientation field, spacing field, OK/Cancel buttons) - submit to Doc for approval
 
 ### UI Implementation (After Mockup Approval)
 
-- [ ] T036 [US1] Create MapPanel in src/main/java/com/planetmayo/usvsim/view/MapPanel.java with java_leaflet MapView integration, offline tile provider, and POI marker for Portland Harbour. Include pan/zoom controls. Drawing overlay comes in T037.
+- [x] T036 [US1] Create MapPanel in src/main/java/com/planetmayo/usvsim/view/MapPanel.java with java_leaflet MapView integration, offline tile provider, and POI marker for Portland Harbour. Include pan/zoom controls. Drawing overlay comes in T037.
 - [ ] T037 [US1] Implement DrawingController in src/main/java/com/planetmayo/usvsim/controller/DrawingController.java (polygon drawing, click capture)
-- [ ] T038 [US1] Create MissionPlanPanel in src/main/java/com/planetmayo/usvsim/view/MissionPlanPanel.java (list behaviours, show status)
-- [ ] T039 [US1] Create ParallelTrackSearchDialog in src/main/java/com/planetmayo/usvsim/view/dialogs/ParallelTrackSearchDialog.java
-- [ ] T040 [US1] Create MainView in src/main/java/com/planetmayo/usvsim/view/MainView.java (BorderPane layout per approved mockup)
+- [x] T038 [US1] Create MissionPlanPanel in src/main/java/com/planetmayo/usvsim/view/MissionPlanPanel.java (list behaviours, show status)
+- [x] T039 [US1] Create ParallelTrackSearchDialog in src/main/java/com/planetmayo/usvsim/view/dialogs/ParallelTrackSearchDialog.java
+- [x] T040 [US1] Create MainView in src/main/java/com/planetmayo/usvsim/view/MainView.java (BorderPane layout per approved mockup)
 - [ ] T041 [US1] Implement MissionController.addParallelTrackSearch() in src/main/java/com/planetmayo/usvsim/controller/MissionController.java
-- [ ] T042 [US1] Update Main.java to launch MainView with map centered on Portland Harbour
+- [x] T042 [US1] Update Main.java to launch MainView with map centered on Portland Harbour
 
 ### E2E Test (Complete Workflow)
 
-- [ ] T043 [US1] Write E2E test for mission planning workflow in src/test/java/com/planetmayo/usvsim/e2e/MissionPlanningWorkflowTest.java (TestFX: click, draw, verify)
+- [x] T043 [US1] Write E2E test for mission planning workflow in src/test/java/com/planetmayo/usvsim/e2e/MissionPlanningWorkflowTest.java (TestFX: click, draw, verify)
 
 **US1 Completion Criteria**: Can draw polygon, enter params, see generated tracks on map, behaviour listed in Mission Plan panel
+**Current Status**: UI framework complete (15 of 16 core UI tasks). Remaining: DrawingController (polygon drawing) and MissionController wiring
 
 ---
 
