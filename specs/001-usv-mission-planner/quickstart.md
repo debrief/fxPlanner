@@ -65,7 +65,7 @@ fxPlanner/
 ├── pom.xml                          # Maven configuration
 ├── src/
 │   ├── main/
-│   │   ├── java/com/deepbluec/usvsim/
+│   │   ├── java/com/planetmayo/usvsim/
 │   │   │   ├── model/               # Business logic
 │   │   │   ├── controller/          # Application logic
 │   │   │   ├── view/                # JavaFX UI
@@ -76,7 +76,7 @@ fxPlanner/
 │   │       ├── css/                 # Styling
 │   │       └── application.properties
 │   └── test/
-│       └── java/com/deepbluec/usvsim/
+│       └── java/com/planetmayo/usvsim/
 │           ├── unit/                # Unit tests
 │           ├── integration/         # Integration tests
 │           └── e2e/                 # End-to-end tests

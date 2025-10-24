@@ -193,7 +193,7 @@ A JavaFX desktop application for planning and simulating Unmanned Surface Vehicl
 
 ### 4.2 Package Structure
 ```
-com.deepbluec.usvsim/
+com.planetmayo.usvsim/
 ├── model/
 │   ├── mission/
 │   │   ├── Mission.java              // Mission plan container
