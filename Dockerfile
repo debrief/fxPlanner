@@ -1,6 +1,7 @@
 # Multi-stage Dockerfile for JavaFX application with JPro
 # Stage 1: Build the application with Maven, then package with Gradle+JPro
-FROM maven:3.9-eclipse-temurin-21-alpine AS builder
+# Using Debian-based image for better Gradle compatibility
+FROM maven:3.9-eclipse-temurin-21 AS builder
 
 # Set working directory
 WORKDIR /app
@@ -26,12 +27,13 @@ RUN apk add --no-cache wget unzip && \
 
 # Copy Gradle build files
 COPY build.gradle settings.gradle ./
+COPY gradle.properties .
 
-# Download Gradle dependencies
-RUN gradle dependencies --no-daemon
+# Download Gradle dependencies (with daemon disabled and simpler options)
+RUN gradle dependencies --no-daemon --console=plain || true
 
 # Build JPro release bundle
-RUN gradle jproRelease --no-daemon
+RUN gradle jproRelease --no-daemon --console=plain
 
 # Stage 2: Runtime image
 FROM eclipse-temurin:21-jre-alpine

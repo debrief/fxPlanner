@@ -38,5 +38,12 @@ replay_pid*
 # macOS
 .DS_Store
 
+# Gradle build output
+.gradle/
+build/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+
 # JPro specific
 jpro-server/
