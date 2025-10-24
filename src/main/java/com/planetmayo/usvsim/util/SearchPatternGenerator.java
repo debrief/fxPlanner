@@ -154,10 +154,18 @@ public final class SearchPatternGenerator {
                     current.distanceTo(next) < legLength * 1.1) { // Allow slight overshoot
                     waypoints.add(Waypoint.search(next, speed));
                 }
-            }
 
-            legLength += legIncrement;
-            legCount++;
+                legCount++;
+
+                // Increment leg length every 2 legs (pairs: 1-2, 3-4, 5-6, etc.)
+                // Legs 1-2: legIncrement
+                // Legs 3-4: legIncrement + 2*legIncrement = 3*legIncrement
+                // Legs 5-6: 3*legIncrement + 2*legIncrement = 5*legIncrement
+                // Pattern: legs come in pairs with same length, then add 2*legIncrement
+                if (legCount % 2 == 0) {
+                    legLength += 2 * legIncrement;
+                }
+            }
         }
 
         return waypoints;

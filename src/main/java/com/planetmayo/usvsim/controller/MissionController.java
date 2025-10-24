@@ -153,61 +153,63 @@ public class MissionController implements MainView.MissionControllerCallback {
             // This callback is triggered when the polygon is drawn and confirmed
             System.out.println("✓ Polygon received with " + polygon.getVertices().size() + " vertices");
 
-            // Step 2: Show parameter dialog for search pattern
-            ParallelTrackSearchDialog dialog = new ParallelTrackSearchDialog();
-            dialog.showAndWait().ifPresent(params -> {
+            // Step 2: Show parameter panel for search pattern
+            com.planetmayo.usvsim.view.dialogs.ParallelTrackSearchPanel panel =
+                new com.planetmayo.usvsim.view.dialogs.ParallelTrackSearchPanel();
+
+            panel.setOnComplete(params -> {
+                statePanel.hideDialog();
                 addParallelTrackSearch(polygon, params);
             });
+
+            panel.setOnCancel(() -> {
+                statePanel.hideDialog();
+                drawingController.cancelDrawing();
+            });
+
+            statePanel.showDialog(panel);
         });
 
-        // Step 0: Show instructions dialog (NON-MODAL so user can click on map)
-        com.planetmayo.usvsim.view.dialogs.PolygonDrawingInstructionsDialog instructionsDialog =
-            new com.planetmayo.usvsim.view.dialogs.PolygonDrawingInstructionsDialog();
-        // CRITICAL: Make dialog non-modal so map remains clickable
-        instructionsDialog.initModality(javafx.stage.Modality.NONE);
+        // Step 0: Show instructions panel on StatePanel
+        com.planetmayo.usvsim.view.dialogs.PolygonDrawingInstructionsPanel instructionsPanel =
+            new com.planetmayo.usvsim.view.dialogs.PolygonDrawingInstructionsPanel();
 
-        // Wire the "Done Drawing" button directly (don't use onCloseRequest which fires on Escape/X too)
-        javafx.scene.control.Button doneButton = (javafx.scene.control.Button) instructionsDialog.getDialogPane().lookupButton(javafx.scene.control.ButtonType.OK);
-        if (doneButton != null) {
-            // CRITICAL: Disable button initially to prevent premature clicks
-            doneButton.setDisable(true);
-            doneButton.setText("Done Drawing (draw 1+ vertices first)");
+        // Wire the "Done Drawing" button
+        javafx.scene.control.Button doneButton = instructionsPanel.getDoneButton();
 
-            // Setup button click handler
-            doneButton.setOnAction(event -> {
-                System.out.println("User clicked Done Drawing - finishing polygon");
-                drawingController.finishDrawing();
-                instructionsDialog.close();
-            });
+        instructionsPanel.setOnDoneDrawing(() -> {
+            System.out.println("User clicked Done Drawing - finishing polygon");
+            drawingController.finishDrawing();
+            statePanel.hideDialog();
+        });
 
-            // Setup polling to enable button when vertices are drawn
-            javafx.animation.Timeline enableButtonPoller = new javafx.animation.Timeline(
-                new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), event -> {
-                    Object vertexCountObj = mapPanel.getWebEngine().executeScript("window.vertexCount || 0");
-                    try {
-                        final int vertexCount = vertexCountObj != null ? Integer.parseInt(vertexCountObj.toString()) : 0;
-                        if (vertexCount > 0 && doneButton.isDisable()) {
-                            javafx.application.Platform.runLater(() -> {
-                                doneButton.setDisable(false);
-                                doneButton.setText("Done Drawing");
-                                System.out.println("Done Drawing button enabled - " + vertexCount + " vertices drawn");
-                            });
-                        }
-                    } catch (Exception e) {
-                        // Ignore parse errors
+        instructionsPanel.setOnCancel(() -> {
+            statePanel.hideDialog();
+            drawingController.cancelDrawing();
+        });
+
+        // Setup polling to enable button when vertices are drawn
+        javafx.animation.Timeline enableButtonPoller = new javafx.animation.Timeline(
+            new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), _ -> {
+                Object vertexCountObj = mapPanel.getWebEngine().executeScript("window.vertexCount || 0");
+                try {
+                    final int vertexCount = vertexCountObj != null ? Integer.parseInt(vertexCountObj.toString()) : 0;
+                    if (vertexCount > 0 && doneButton.isDisable()) {
+                        javafx.application.Platform.runLater(() -> {
+                            doneButton.setDisable(false);
+                            doneButton.setText("Done Drawing");
+                            System.out.println("Done Drawing button enabled - " + vertexCount + " vertices drawn");
+                        });
                     }
-                })
-            );
-            enableButtonPoller.setCycleCount(javafx.animation.Animation.INDEFINITE);
-            enableButtonPoller.play();
+                } catch (Exception e) {
+                    // Ignore parse errors
+                }
+            })
+        );
+        enableButtonPoller.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        enableButtonPoller.play();
 
-            // Stop polling when dialog closes
-            instructionsDialog.setOnCloseRequest(event -> {
-                enableButtonPoller.stop();
-            });
-        }
-
-        instructionsDialog.show();
+        statePanel.showDialog(instructionsPanel);
     }
 
     /**
@@ -256,61 +258,63 @@ public class MissionController implements MainView.MissionControllerCallback {
             // This callback is triggered when the polyline is drawn and completed
             System.out.println("✓ Polyline received with " + waypoints.size() + " waypoints");
 
-            // Step 2: Show parameter dialog with the drawn waypoints
-            WaypointTransitDialog dialog = new WaypointTransitDialog(waypoints);
-            dialog.showAndWait().ifPresent(params -> {
+            // Step 2: Show parameter panel with the drawn waypoints
+            com.planetmayo.usvsim.view.dialogs.WaypointTransitPanel panel =
+                new com.planetmayo.usvsim.view.dialogs.WaypointTransitPanel(waypoints);
+
+            panel.setOnComplete(params -> {
+                statePanel.hideDialog();
                 addWaypointTransit(params);
             });
+
+            panel.setOnCancel(() -> {
+                statePanel.hideDialog();
+                drawingController.cancelDrawing();
+            });
+
+            statePanel.showDialog(panel);
         });
 
-        // Step 0: Show instructions dialog (NON-MODAL so user can click on map)
-        com.planetmayo.usvsim.view.dialogs.PolylineDrawingInstructionsDialog instructionsDialog =
-            new com.planetmayo.usvsim.view.dialogs.PolylineDrawingInstructionsDialog();
-        // CRITICAL: Make dialog non-modal so map remains clickable
-        instructionsDialog.initModality(javafx.stage.Modality.NONE);
+        // Step 0: Show instructions panel on StatePanel
+        com.planetmayo.usvsim.view.dialogs.PolylineDrawingInstructionsPanel instructionsPanel =
+            new com.planetmayo.usvsim.view.dialogs.PolylineDrawingInstructionsPanel();
 
-        // Wire the "Done Drawing" button directly
-        javafx.scene.control.Button doneButton = (javafx.scene.control.Button) instructionsDialog.getDialogPane().lookupButton(javafx.scene.control.ButtonType.OK);
-        if (doneButton != null) {
-            // CRITICAL: Disable button initially to prevent premature clicks
-            doneButton.setDisable(true);
-            doneButton.setText("Done Drawing (draw 2+ waypoints first)");
+        // Wire the "Done Drawing" button
+        javafx.scene.control.Button doneButton = instructionsPanel.getDoneButton();
 
-            // Setup button click handler
-            doneButton.setOnAction(_ -> {
-                System.out.println("User clicked Done Drawing - finishing polyline");
-                drawingController.finishDrawing();
-                instructionsDialog.close();
-            });
+        instructionsPanel.setOnDoneDrawing(() -> {
+            System.out.println("User clicked Done Drawing - finishing polyline");
+            drawingController.finishDrawing();
+            statePanel.hideDialog();
+        });
 
-            // Setup polling to enable button when waypoints are drawn
-            javafx.animation.Timeline enableButtonPoller = new javafx.animation.Timeline(
-                new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), _ -> {
-                    Object vertexCountObj = mapPanel.getWebEngine().executeScript("window.vertexCount || 0");
-                    try {
-                        final int vertexCount = vertexCountObj != null ? Integer.parseInt(vertexCountObj.toString()) : 0;
-                        if (vertexCount >= 2 && doneButton.isDisable()) {
-                            javafx.application.Platform.runLater(() -> {
-                                doneButton.setDisable(false);
-                                doneButton.setText("Done Drawing");
-                                System.out.println("Done Drawing button enabled - " + vertexCount + " waypoints drawn");
-                            });
-                        }
-                    } catch (Exception e) {
-                        // Ignore parse errors
+        instructionsPanel.setOnCancel(() -> {
+            statePanel.hideDialog();
+            drawingController.cancelDrawing();
+        });
+
+        // Setup polling to enable button when waypoints are drawn
+        javafx.animation.Timeline enableButtonPoller = new javafx.animation.Timeline(
+            new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), _ -> {
+                Object vertexCountObj = mapPanel.getWebEngine().executeScript("window.vertexCount || 0");
+                try {
+                    final int vertexCount = vertexCountObj != null ? Integer.parseInt(vertexCountObj.toString()) : 0;
+                    if (vertexCount >= 2 && doneButton.isDisable()) {
+                        javafx.application.Platform.runLater(() -> {
+                            doneButton.setDisable(false);
+                            doneButton.setText("Done Drawing");
+                            System.out.println("Done Drawing button enabled - " + vertexCount + " waypoints drawn");
+                        });
                     }
-                })
-            );
-            enableButtonPoller.setCycleCount(javafx.animation.Animation.INDEFINITE);
-            enableButtonPoller.play();
+                } catch (Exception e) {
+                    // Ignore parse errors
+                }
+            })
+        );
+        enableButtonPoller.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        enableButtonPoller.play();
 
-            // Stop polling when dialog closes
-            instructionsDialog.setOnCloseRequest(_ -> {
-                enableButtonPoller.stop();
-            });
-        }
-
-        instructionsDialog.show();
+        statePanel.showDialog(instructionsPanel);
     }
 
     /**
@@ -348,10 +352,19 @@ public class MissionController implements MainView.MissionControllerCallback {
         // Get current platform position as default
         Position currentPos = mission.getPlatform().getState().getPosition();
 
-        ReturnToBaseDialog dialog = new ReturnToBaseDialog(currentPos);
-        dialog.showAndWait().ifPresent(params -> {
+        com.planetmayo.usvsim.view.dialogs.ReturnToBasePanel panel =
+            new com.planetmayo.usvsim.view.dialogs.ReturnToBasePanel(currentPos);
+
+        panel.setOnComplete(params -> {
+            statePanel.hideDialog();
             addReturnToBase(params);
         });
+
+        panel.setOnCancel(() -> {
+            statePanel.hideDialog();
+        });
+
+        statePanel.showDialog(panel);
     }
 
     /**
@@ -579,6 +592,10 @@ public class MissionController implements MainView.MissionControllerCallback {
                 finalSimulationTimeMs = simulationEngine.getSimulationTimeMs();
                 statePanel.setTimestamp(finalSimulationTimeMs);
                 controlPanel.updateSimulationTime(finalSimulationTimeMs);
+
+                // Disable pause button when simulation completes
+                controlPanel.setSimulationComplete();
+
                 System.out.println("Mission complete - final simulation time: " +
                     String.format("%02d:%02d:%02d",
                         finalSimulationTimeMs / 3600000,
@@ -632,61 +649,63 @@ public class MissionController implements MainView.MissionControllerCallback {
         drawingController.startDrawingPolygon(polygon -> {
             System.out.println("✓ Polygon received with " + polygon.getVertices().size() + " vertices");
 
-            // Step 2: Show parameter dialog for search pattern
-            ExpandingSquareSearchDialog dialog = new ExpandingSquareSearchDialog();
-            dialog.showAndWait().ifPresent(params -> {
+            // Step 2: Show parameter panel for search pattern
+            com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchPanel panel =
+                new com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchPanel();
+
+            panel.setOnComplete(params -> {
+                statePanel.hideDialog();
                 addExpandingSquareSearch(polygon, params);
             });
+
+            panel.setOnCancel(() -> {
+                statePanel.hideDialog();
+                drawingController.cancelDrawing();
+            });
+
+            statePanel.showDialog(panel);
         });
 
-        // Step 0: Show instructions dialog (NON-MODAL so user can click on map)
-        com.planetmayo.usvsim.view.dialogs.PolygonDrawingInstructionsDialog instructionsDialog =
-            new com.planetmayo.usvsim.view.dialogs.PolygonDrawingInstructionsDialog();
-        // CRITICAL: Make dialog non-modal so map remains clickable
-        instructionsDialog.initModality(javafx.stage.Modality.NONE);
+        // Step 0: Show instructions panel on StatePanel
+        com.planetmayo.usvsim.view.dialogs.PolygonDrawingInstructionsPanel instructionsPanel =
+            new com.planetmayo.usvsim.view.dialogs.PolygonDrawingInstructionsPanel();
 
-        // Wire the "Done Drawing" button directly (don't use onCloseRequest which fires on Escape/X too)
-        javafx.scene.control.Button doneButton = (javafx.scene.control.Button) instructionsDialog.getDialogPane().lookupButton(javafx.scene.control.ButtonType.OK);
-        if (doneButton != null) {
-            // CRITICAL: Disable button initially to prevent premature clicks
-            doneButton.setDisable(true);
-            doneButton.setText("Done Drawing (draw 1+ vertices first)");
+        // Wire the "Done Drawing" button
+        javafx.scene.control.Button doneButton = instructionsPanel.getDoneButton();
 
-            // Setup button click handler
-            doneButton.setOnAction(event -> {
-                System.out.println("User clicked Done Drawing - finishing polygon");
-                drawingController.finishDrawing();
-                instructionsDialog.close();
-            });
+        instructionsPanel.setOnDoneDrawing(() -> {
+            System.out.println("User clicked Done Drawing - finishing polygon");
+            drawingController.finishDrawing();
+            statePanel.hideDialog();
+        });
 
-            // Setup polling to enable button when vertices are drawn
-            javafx.animation.Timeline enableButtonPoller = new javafx.animation.Timeline(
-                new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), event -> {
-                    Object vertexCountObj = mapPanel.getWebEngine().executeScript("window.vertexCount || 0");
-                    try {
-                        final int vertexCount = vertexCountObj != null ? Integer.parseInt(vertexCountObj.toString()) : 0;
-                        if (vertexCount > 0 && doneButton.isDisable()) {
-                            javafx.application.Platform.runLater(() -> {
-                                doneButton.setDisable(false);
-                                doneButton.setText("Done Drawing");
-                                System.out.println("Done Drawing button enabled - " + vertexCount + " vertices drawn");
-                            });
-                        }
-                    } catch (Exception e) {
-                        // Ignore parse errors
+        instructionsPanel.setOnCancel(() -> {
+            statePanel.hideDialog();
+            drawingController.cancelDrawing();
+        });
+
+        // Setup polling to enable button when vertices are drawn
+        javafx.animation.Timeline enableButtonPoller = new javafx.animation.Timeline(
+            new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), _ -> {
+                Object vertexCountObj = mapPanel.getWebEngine().executeScript("window.vertexCount || 0");
+                try {
+                    final int vertexCount = vertexCountObj != null ? Integer.parseInt(vertexCountObj.toString()) : 0;
+                    if (vertexCount > 0 && doneButton.isDisable()) {
+                        javafx.application.Platform.runLater(() -> {
+                            doneButton.setDisable(false);
+                            doneButton.setText("Done Drawing");
+                            System.out.println("Done Drawing button enabled - " + vertexCount + " vertices drawn");
+                        });
                     }
-                })
-            );
-            enableButtonPoller.setCycleCount(javafx.animation.Animation.INDEFINITE);
-            enableButtonPoller.play();
+                } catch (Exception e) {
+                    // Ignore parse errors
+                }
+            })
+        );
+        enableButtonPoller.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        enableButtonPoller.play();
 
-            // Stop polling when dialog closes
-            instructionsDialog.setOnCloseRequest(event -> {
-                enableButtonPoller.stop();
-            });
-        }
-
-        instructionsDialog.show();
+        statePanel.showDialog(instructionsPanel);
     }
 
     /**
@@ -746,8 +765,12 @@ public class MissionController implements MainView.MissionControllerCallback {
     }
 
     private void editParallelTrackSearch(ParallelTrackSearch behaviour, int index) {
-        ParallelTrackSearchDialog dialog = new ParallelTrackSearchDialog();
-        dialog.showAndWait().ifPresent(params -> {
+        com.planetmayo.usvsim.view.dialogs.ParallelTrackSearchPanel panel =
+            new com.planetmayo.usvsim.view.dialogs.ParallelTrackSearchPanel();
+
+        panel.setOnComplete(params -> {
+            statePanel.hideDialog();
+
             // Remove old behaviour
             mission.getMissionPlan().removeBehaviour(index);
             missionPlanPanel.removeBehavior(behaviour);
@@ -770,6 +793,12 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             System.out.println("Updated parallel track search at index " + index);
         });
+
+        panel.setOnCancel(() -> {
+            statePanel.hideDialog();
+        });
+
+        statePanel.showDialog(panel);
     }
 
     private void editWaypointTransit(WaypointTransit behaviour, int index) {
@@ -786,8 +815,12 @@ public class MissionController implements MainView.MissionControllerCallback {
     }
 
     private void editReturnToBase(ReturnToBase behaviour, int index) {
-        ReturnToBaseDialog dialog = new ReturnToBaseDialog(mission.getPlatform().getState().getPosition());
-        dialog.showAndWait().ifPresent(params -> {
+        com.planetmayo.usvsim.view.dialogs.ReturnToBasePanel panel =
+            new com.planetmayo.usvsim.view.dialogs.ReturnToBasePanel(mission.getPlatform().getState().getPosition());
+
+        panel.setOnComplete(params -> {
+            statePanel.hideDialog();
+
             // Remove old behaviour
             mission.getMissionPlan().removeBehaviour(index);
             missionPlanPanel.removeBehavior(behaviour);
@@ -805,11 +838,21 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             System.out.println("Updated return to base at index " + index);
         });
+
+        panel.setOnCancel(() -> {
+            statePanel.hideDialog();
+        });
+
+        statePanel.showDialog(panel);
     }
 
     private void editExpandingSquareSearch(ExpandingSquareSearch behaviour, int index) {
-        ExpandingSquareSearchDialog dialog = new ExpandingSquareSearchDialog();
-        dialog.showAndWait().ifPresent(params -> {
+        com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchPanel panel =
+            new com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchPanel();
+
+        panel.setOnComplete(params -> {
+            statePanel.hideDialog();
+
             // Remove old behaviour
             mission.getMissionPlan().removeBehaviour(index);
             missionPlanPanel.removeBehavior(behaviour);
@@ -832,6 +875,12 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             System.out.println("Updated expanding square search at index " + index);
         });
+
+        panel.setOnCancel(() -> {
+            statePanel.hideDialog();
+        });
+
+        statePanel.showDialog(panel);
     }
 
     /**

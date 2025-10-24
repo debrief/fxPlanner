@@ -2,8 +2,12 @@ package com.planetmayo.usvsim.view;
 
 import com.planetmayo.usvsim.model.platform.PlatformState;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 
 /**
  * Real-time platform state display panel.
@@ -16,8 +20,10 @@ import javafx.scene.layout.GridPane;
  * - Progress indicator (with "N of M" waypoint count)
  * - Simulation timestamp (elapsed time)
  * - Update frequency (Hz)
+ * - Dialog overlay for inline behaviour configuration
  */
-public class StatePanel extends GridPane {
+public class StatePanel extends StackPane {
+    private final GridPane mainContent;
     private final Label positionLabel;
     private final Label headingLabel;
     private final Label speedLabel;
@@ -26,72 +32,86 @@ public class StatePanel extends GridPane {
     private final Label behaviourProgressLabel;
     private final Label timestampLabel;
     private final Label updateFreqLabel;
+    private final VBox dialogOverlay;
 
     public StatePanel() {
-        setStyle("-fx-border-color: #DDD; -fx-padding: 10; -fx-hgap: 10; -fx-vgap: 5;");
         setPrefHeight(150);
+
+        // Main content grid
+        mainContent = new GridPane();
+        mainContent.setStyle("-fx-border-color: #DDD; -fx-padding: 10; -fx-hgap: 10; -fx-vgap: 5;");
 
         // Title
         Label title = new Label("State Panel");
         title.setStyle("-fx-font-size: 12; -fx-font-weight: bold;");
-        add(title, 0, 0, 2, 1);
+        mainContent.add(title, 0, 0, 2, 1);
 
         // Position
         Label posLabel = new Label("Position:");
         posLabel.setStyle("-fx-font-weight: bold;");
         positionLabel = new Label("50.60°N, 2.40°W");
-        add(posLabel, 0, 1);
-        add(positionLabel, 1, 1);
+        mainContent.add(posLabel, 0, 1);
+        mainContent.add(positionLabel, 1, 1);
 
         // Heading
         Label hdgLabel = new Label("Heading:");
         hdgLabel.setStyle("-fx-font-weight: bold;");
         headingLabel = new Label("0°");
-        add(hdgLabel, 0, 2);
-        add(headingLabel, 1, 2);
+        mainContent.add(hdgLabel, 0, 2);
+        mainContent.add(headingLabel, 1, 2);
 
         // Speed
         Label spdLabel = new Label("Speed:");
         spdLabel.setStyle("-fx-font-weight: bold;");
         speedLabel = new Label("0 knots");
-        add(spdLabel, 0, 3);
-        add(speedLabel, 1, 3);
+        mainContent.add(spdLabel, 0, 3);
+        mainContent.add(speedLabel, 1, 3);
 
         // Status
         Label statLabel = new Label("Status:");
         statLabel.setStyle("-fx-font-weight: bold;");
         statusLabel = new Label("Ready");
-        add(statLabel, 0, 4);
-        add(statusLabel, 1, 4);
+        mainContent.add(statLabel, 0, 4);
+        mainContent.add(statusLabel, 1, 4);
 
         // Progress
         Label progLabel = new Label("Progress:");
         progLabel.setStyle("-fx-font-weight: bold;");
         progressLabel = new Label("0%");
-        add(progLabel, 0, 5);
-        add(progressLabel, 1, 5);
+        mainContent.add(progLabel, 0, 5);
+        mainContent.add(progressLabel, 1, 5);
 
         // Behaviour Progress (N of M waypoints)
         Label behProgLabel = new Label("Behaviour:");
         behProgLabel.setStyle("-fx-font-weight: bold;");
         behaviourProgressLabel = new Label("0 of 0 waypoints");
-        add(behProgLabel, 0, 6);
-        add(behaviourProgressLabel, 1, 6);
+        mainContent.add(behProgLabel, 0, 6);
+        mainContent.add(behaviourProgressLabel, 1, 6);
 
         // Update frequency
         Label freqLabel = new Label("Update Freq:");
         freqLabel.setStyle("-fx-font-weight: bold;");
         updateFreqLabel = new Label("0 Hz");
-        add(freqLabel, 0, 7);
-        add(updateFreqLabel, 1, 7);
+        mainContent.add(freqLabel, 0, 7);
+        mainContent.add(updateFreqLabel, 1, 7);
 
         // Timestamp field still exists for internal use but not displayed
         timestampLabel = new Label("00:00:00");
         timestampLabel.setVisible(false);
 
-        setHgap(10);
-        setVgap(5);
-        setPadding(new Insets(10));
+        mainContent.setHgap(10);
+        mainContent.setVgap(5);
+        mainContent.setPadding(new Insets(10));
+
+        // Dialog overlay (initially hidden)
+        dialogOverlay = new VBox();
+        dialogOverlay.setVisible(false);
+        dialogOverlay.setManaged(false);
+        dialogOverlay.setStyle("-fx-background-color: rgba(255, 255, 255, 0.95); -fx-padding: 10;");
+        dialogOverlay.setAlignment(Pos.TOP_CENTER);
+
+        // Stack main content and overlay
+        getChildren().addAll(mainContent, dialogOverlay);
     }
 
     /**
@@ -160,5 +180,24 @@ public class StatePanel extends GridPane {
         behaviourProgressLabel.setText("0 of 0 waypoints");
         updateFreqLabel.setText("0 Hz");
         // timestampLabel not reset - handled by ControlPanel now
+    }
+
+    /**
+     * Show a dialog panel over the state display
+     */
+    public void showDialog(Node dialogContent) {
+        dialogOverlay.getChildren().clear();
+        dialogOverlay.getChildren().add(dialogContent);
+        dialogOverlay.setVisible(true);
+        dialogOverlay.setManaged(true);
+    }
+
+    /**
+     * Hide the dialog overlay
+     */
+    public void hideDialog() {
+        dialogOverlay.setVisible(false);
+        dialogOverlay.setManaged(false);
+        dialogOverlay.getChildren().clear();
     }
 }

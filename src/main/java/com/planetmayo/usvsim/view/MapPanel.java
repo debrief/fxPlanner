@@ -37,7 +37,6 @@ public class MapPanel extends BorderPane {
     private static final double PORTLAND_LON = -2.4;
     private static final int DEFAULT_ZOOM = 14;
 
-    private Button cancelButton;
     private java.util.function.Consumer<Integer> vertexCountCallback;
 
     public MapPanel() {
@@ -485,15 +484,7 @@ public class MapPanel extends BorderPane {
         resetView.setPrefWidth(100);
         resetView.setOnAction(_ -> handleResetView());
 
-        // Cancel button - only visible during drawing
-        cancelButton = new Button("Cancel Drawing");
-        cancelButton.setPrefWidth(120);
-        cancelButton.setStyle("-fx-text-fill: #cc0000;");
-        cancelButton.setOnAction(_ -> handleCancelDrawing());
-        cancelButton.setVisible(false);
-        cancelButton.setManaged(false);
-
-        box.getChildren().addAll(zoomIn, zoomOut, resetView, cancelButton);
+        box.getChildren().addAll(zoomIn, zoomOut, resetView);
         return box;
     }
 
@@ -761,25 +752,6 @@ public class MapPanel extends BorderPane {
         ));
         clearOverlays();
         System.out.println("Reset view to Portland Harbour");
-    }
-
-    /**
-     * Handle Cancel Drawing button click
-     */
-    private void handleCancelDrawing() {
-        executeMapScript("if (typeof window.cancelDrawing === 'function') { window.cancelDrawing(); }");
-        setCancelButtonVisible(false);
-        System.out.println("Drawing cancelled via Cancel button");
-    }
-
-    /**
-     * Show or hide the Cancel button based on drawing state
-     */
-    public void setCancelButtonVisible(boolean visible) {
-        if (cancelButton != null) {
-            cancelButton.setVisible(visible);
-            cancelButton.setManaged(visible);
-        }
     }
 
     /**

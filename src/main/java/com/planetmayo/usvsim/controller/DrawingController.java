@@ -86,11 +86,6 @@ public class DrawingController {
 
         try {
             webEngine.executeScript(callbackSetup);
-            // Show Cancel button when drawing starts (on JavaFX thread)
-            javafx.application.Platform.runLater(() -> {
-                mapPanel.setCancelButtonVisible(true);
-                System.out.println("Cancel button shown");
-            });
             System.out.println("Polygon drawing mode started - click on map to add vertices");
         } catch (Exception e) {
             System.err.println("Error starting polygon drawing: " + e.getMessage());
@@ -123,11 +118,6 @@ public class DrawingController {
 
         try {
             webEngine.executeScript(callbackSetup);
-            // Show Cancel button when drawing starts
-            javafx.application.Platform.runLater(() -> {
-                mapPanel.setCancelButtonVisible(true);
-                System.out.println("Cancel button shown");
-            });
             System.out.println("Polyline drawing mode started - click map to add waypoints, re-click last point to finish");
         } catch (Exception e) {
             System.err.println("Error starting polyline drawing: " + e.getMessage());
@@ -194,7 +184,6 @@ public class DrawingController {
                             System.out.println("ERROR: onPolygonComplete callback is NULL!");
                         }
                         System.out.println("✓ Polygon complete: " + polygon.getVertices().size() + " vertices");
-                        mapPanel.setCancelButtonVisible(false);
                     } else {
                         System.out.println("ERROR: Polygon needs at least 3 vertices, got: " + vertices.size());
                         showInvalidPolygonDialog(vertices.size());
@@ -235,8 +224,7 @@ public class DrawingController {
                                 System.out.println("ERROR: onWaypointsComplete callback is NULL!");
                             }
                             System.out.println("✓ Polyline complete: " + waypoints.size() + " waypoints");
-                            mapPanel.setCancelButtonVisible(false);
-                        } else {
+                            } else {
                             System.out.println("ERROR: Polyline needs at least 2 waypoints, got: " + waypoints.size());
                             showErrorDialog("Polyline must have at least 2 waypoints. Please add more points.");
                             return;
@@ -249,7 +237,6 @@ public class DrawingController {
                     System.out.println("ERROR: polylineObj is null");
                     showErrorDialog("Failed to capture polyline. Please try again.");
                     mode = DrawingMode.DISABLED;
-                    mapPanel.setCancelButtonVisible(false);
                 }
             } else {
                 System.out.println("ERROR: coordsObj is null or mode is not POLYGON. coordsObj=" + coordsObj + ", mode=" + mode);
@@ -264,7 +251,6 @@ public class DrawingController {
         // Only set to DISABLED if we successfully completed
         if (mode == DrawingMode.POLYGON) {
             mode = DrawingMode.DISABLED;
-            mapPanel.setCancelButtonVisible(false);
         }
     }
 
@@ -364,7 +350,6 @@ public class DrawingController {
         currentVertices.clear();
         onPolygonComplete = null;
         onWaypointsComplete = null;
-        mapPanel.setCancelButtonVisible(false);
         System.out.println("Drawing cancelled");
     }
 

@@ -196,6 +196,17 @@ public class ControlPanel extends VBox {
     }
 
     /**
+     * Disable controls when simulation completes naturally
+     */
+    public void setSimulationComplete() {
+        startBtn.setDisable(false);
+        pauseResumeBtn.setDisable(true);
+        stopBtn.setDisable(true);
+        isPaused = false;
+        pauseResumeBtn.setText("Pause");
+    }
+
+    /**
      * Reset to initial state
      */
     public void reset() {
