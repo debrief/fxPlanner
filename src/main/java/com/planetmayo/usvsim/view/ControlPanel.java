@@ -1,0 +1,164 @@
+package com.planetmayo.usvsim.view;
+
+import javafx.geometry.Insets;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+
+/**
+ * Simulation control panel with start/pause/stop and time acceleration slider.
+ *
+ * Features:
+ * - Start/Pause/Stop buttons
+ * - Time acceleration slider (1× to 10×)
+ * - Visual feedback for active state
+ */
+public class ControlPanel extends VBox {
+    private Button startBtn;
+    private Button pauseBtn;
+    private Button stopBtn;
+    private Slider speedSlider;
+    private Label speedLabel;
+
+    private Runnable onStart;
+    private Runnable onPause;
+    private Runnable onStop;
+    private java.util.function.Consumer<Double> onSpeedChange;
+
+    public ControlPanel() {
+        setStyle("-fx-border-color: #DDD; -fx-padding: 10; -fx-spacing: 10;");
+        setPrefHeight(120);
+
+        // Banner
+        Label banner = new Label("═══ Simulation Control ═══");
+        banner.setStyle("-fx-font-weight: bold; -fx-font-size: 12; -fx-text-alignment: center;");
+
+        // Button row
+        HBox buttonRow = createButtonRow();
+
+        // Speed control row
+        HBox speedRow = createSpeedRow();
+
+        getChildren().addAll(banner, buttonRow, speedRow);
+    }
+
+    private HBox createButtonRow() {
+        HBox box = new HBox(10);
+        box.setStyle("-fx-padding: 5;");
+
+        startBtn = new Button("Start");
+        startBtn.setPrefWidth(80);
+        startBtn.setStyle("-fx-font-size: 12;");
+        startBtn.setOnAction(e -> {
+            if (onStart != null) onStart.run();
+            updateButtonStates(true);
+        });
+
+        pauseBtn = new Button("Pause");
+        pauseBtn.setPrefWidth(80);
+        pauseBtn.setStyle("-fx-font-size: 12;");
+        pauseBtn.setDisable(true);
+        pauseBtn.setOnAction(e -> {
+            if (onPause != null) onPause.run();
+            updateButtonStates(false);
+        });
+
+        stopBtn = new Button("Stop");
+        stopBtn.setPrefWidth(80);
+        stopBtn.setStyle("-fx-font-size: 12;");
+        stopBtn.setDisable(true);
+        stopBtn.setOnAction(e -> {
+            if (onStop != null) onStop.run();
+            updateButtonStates(false);
+        });
+
+        box.getChildren().addAll(startBtn, pauseBtn, stopBtn);
+        return box;
+    }
+
+    private HBox createSpeedRow() {
+        HBox box = new HBox(10);
+        box.setStyle("-fx-padding: 5;");
+
+        Label minLabel = new Label("Speed: 1×");
+        minLabel.setPrefWidth(80);
+
+        speedSlider = new Slider(1, 10, 1);
+        speedSlider.setShowTickLabels(true);
+        speedSlider.setShowTickMarks(true);
+        speedSlider.setMajorTickUnit(1);
+        speedSlider.setMinorTickCount(0);
+        speedSlider.setSnapToTicks(true);
+        speedSlider.setPrefWidth(200);
+        speedSlider.setOnMouseReleased(e -> {
+            double value = speedSlider.getValue();
+            speedLabel.setText(String.format("%.1f×", value));
+            if (onSpeedChange != null) onSpeedChange.accept(value);
+        });
+
+        speedLabel = new Label("1.0×");
+        speedLabel.setPrefWidth(50);
+        speedLabel.setStyle("-fx-font-weight: bold;");
+
+        Label maxLabel = new Label("10×");
+        maxLabel.setPrefWidth(30);
+
+        box.getChildren().addAll(minLabel, speedSlider, speedLabel, maxLabel);
+        return box;
+    }
+
+    /**
+     * Set handler for Start button
+     */
+    public void setOnStart(Runnable handler) {
+        this.onStart = handler;
+    }
+
+    /**
+     * Set handler for Pause button
+     */
+    public void setOnPause(Runnable handler) {
+        this.onPause = handler;
+    }
+
+    /**
+     * Set handler for Stop button
+     */
+    public void setOnStop(Runnable handler) {
+        this.onStop = handler;
+    }
+
+    /**
+     * Set handler for speed change
+     */
+    public void setOnSpeedChange(java.util.function.Consumer<Double> handler) {
+        this.onSpeedChange = handler;
+    }
+
+    /**
+     * Get current speed multiplier from slider
+     */
+    public double getSpeedMultiplier() {
+        return speedSlider.getValue();
+    }
+
+    /**
+     * Update button enabled states based on simulation state
+     */
+    private void updateButtonStates(boolean isRunning) {
+        startBtn.setDisable(isRunning);
+        pauseBtn.setDisable(!isRunning);
+        stopBtn.setDisable(!isRunning);
+    }
+
+    /**
+     * Reset to initial state
+     */
+    public void reset() {
+        speedSlider.setValue(1.0);
+        speedLabel.setText("1.0×");
+        updateButtonStates(false);
+    }
+}
