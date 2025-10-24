@@ -9,12 +9,12 @@ import javafx.scene.layout.GridPane;
  * Real-time platform state display panel.
  *
  * Shows:
- * - Platform ID
  * - Current position (lat/lon)
  * - Heading (degrees)
  * - Speed (knots)
  * - Current behavior status
- * - Progress indicator
+ * - Progress indicator (with "N of M" waypoint count)
+ * - Simulation timestamp (elapsed time)
  * - Update frequency (Hz)
  */
 public class StatePanel extends GridPane {
@@ -23,6 +23,8 @@ public class StatePanel extends GridPane {
     private final Label speedLabel;
     private final Label statusLabel;
     private final Label progressLabel;
+    private final Label behaviourProgressLabel;
+    private final Label timestampLabel;
     private final Label updateFreqLabel;
 
     public StatePanel() {
@@ -69,12 +71,27 @@ public class StatePanel extends GridPane {
         add(progLabel, 0, 5);
         add(progressLabel, 1, 5);
 
+        // Behaviour Progress (N of M waypoints)
+        Label behProgLabel = new Label("Behaviour:");
+        behProgLabel.setStyle("-fx-font-weight: bold;");
+        behaviourProgressLabel = new Label("0 of 0 waypoints");
+        add(behProgLabel, 0, 6);
+        add(behaviourProgressLabel, 1, 6);
+
+        // Timestamp
+        Label timeLabel = new Label("Sim Time:");
+        timeLabel.setStyle("-fx-font-weight: bold;");
+        timestampLabel = new Label("00:00:00");
+        timestampLabel.setStyle("-fx-font-family: 'Courier New'; -fx-font-size: 11;");
+        add(timeLabel, 0, 7);
+        add(timestampLabel, 1, 7);
+
         // Update frequency
         Label freqLabel = new Label("Update Freq:");
         freqLabel.setStyle("-fx-font-weight: bold;");
         updateFreqLabel = new Label("0 Hz");
-        add(freqLabel, 0, 6);
-        add(updateFreqLabel, 1, 6);
+        add(freqLabel, 0, 8);
+        add(updateFreqLabel, 1, 8);
 
         setHgap(10);
         setVgap(5);
@@ -110,6 +127,25 @@ public class StatePanel extends GridPane {
     }
 
     /**
+     * Update behavior progress with "N of M" waypoint count
+     */
+    public void setBehaviourProgress(int current, int total) {
+        behaviourProgressLabel.setText(String.format("%d of %d waypoints", current, total));
+    }
+
+    /**
+     * Update simulation timestamp display (in milliseconds)
+     */
+    public void setTimestamp(long elapsedMillis) {
+        long seconds = elapsedMillis / 1000;
+        long hours = seconds / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long secs = seconds % 60;
+
+        timestampLabel.setText(String.format("%02d:%02d:%02d", hours, minutes, secs));
+    }
+
+    /**
      * Update update frequency display
      */
     public void setUpdateFrequency(double hz) {
@@ -125,6 +161,8 @@ public class StatePanel extends GridPane {
         speedLabel.setText("0 knots");
         statusLabel.setText("Ready");
         progressLabel.setText("0%");
+        behaviourProgressLabel.setText("0 of 0 waypoints");
+        timestampLabel.setText("00:00:00");
         updateFreqLabel.setText("0 Hz");
     }
 }

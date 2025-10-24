@@ -136,14 +136,14 @@
 
 ### UI Mockup & Approval
 
-- [ ] T048 [US2] Create ASCII mockup for ControlPanel (Start/Pause/Stop buttons, time acceleration slider) - submit to Doc for approval
-- [ ] T049 [US2] Create ASCII mockup for StatePanel (platform ID, position, heading, speed, current behaviour) - submit to Doc for approval
+- [x] T048 [US2] Create ASCII mockup for ControlPanel (Start/Pause/Stop buttons, time acceleration slider) - submit to Doc for approval
+- [x] T049 [US2] Create ASCII mockup for StatePanel (platform ID, position, heading, speed, current behaviour) - submit to Doc for approval
 
 ### UI Implementation (After Mockup Approval)
 
 - [x] T050 [US2] Create ControlPanel in src/main/java/com/planetmayo/usvsim/view/ControlPanel.java per approved mockup
 - [x] T051 [US2] Create StatePanel in src/main/java/com/planetmayo/usvsim/view/StatePanel.java with JavaFX property bindings
-- [ ] T052 [US2] Update MapPanel to render USV icon (oriented marker) and track history (polyline)
+- [x] T052 [US2] Update MapPanel to render USV icon (oriented marker) and track history (polyline)
 - [x] T053 [US2] Wire ControlPanel buttons to SimulationEngine.start/pause/stop() in MissionController
 - [x] T054 [US2] Wire time acceleration slider to SimulationEngine.setTimeAcceleration()
 - [x] T055 [US2] Implement Platform.runLater() calls in SimulationEngine for UI updates
@@ -168,33 +168,33 @@
 
 ### Tests First (TDD for New Behaviours)
 
-- [ ] T058 [P] [US3] Write unit tests for WaypointTransit in src/test/java/com/planetmayo/usvsim/unit/model/behaviour/WaypointTransitTest.java
-- [ ] T059 [P] [US3] Write unit tests for ReturnToBase in src/test/java/com/planetmayo/usvsim/unit/model/behaviour/ReturnToBaseTest.java
+- [x] T058 [P] [US3] Write unit tests for WaypointTransit in src/test/java/com/planetmayo/usvsim/unit/model/behaviour/WaypointTransitTest.java
+- [x] T059 [P] [US3] Write unit tests for ReturnToBase in src/test/java/com/planetmayo/usvsim/unit/model/behaviour/ReturnToBaseTest.java
 
 ### Business Logic Implementation
 
-- [ ] T060 [P] [US3] Implement WaypointTransit behaviour in src/main/java/com/planetmayo/usvsim/model/behaviour/WaypointTransit.java
-- [ ] T061 [P] [US3] Implement ReturnToBase behaviour in src/main/java/com/planetmayo/usvsim/model/behaviour/ReturnToBase.java
-- [ ] T062 [US3] Implement CompositeBehaviour.reorderBehaviour() in CompositeBehaviour.java
-- [ ] T063 [US3] Implement CompositeBehaviour.removeBehaviour() in CompositeBehaviour.java
+- [x] T060 [P] [US3] Implement WaypointTransit behaviour in src/main/java/com/planetmayo/usvsim/model/behaviour/WaypointTransit.java
+- [x] T061 [P] [US3] Implement ReturnToBase behaviour in src/main/java/com/planetmayo/usvsim/model/behaviour/ReturnToBase.java
+- [x] T062 [US3] Implement CompositeBehaviour.reorderBehaviour() in CompositeBehaviour.java
+- [x] T063 [US3] Implement CompositeBehaviour.removeBehaviour() in CompositeBehaviour.java
 
 ### UI Mockup & Approval
 
-- [ ] T064 [US3] Create ASCII mockup for Waypoint Transit mode (click-to-place, "Done" button) - submit to Doc for approval
-- [ ] T065 [US3] Create ASCII mockup for Return to Base dialog (use current position vs. specify coordinates) - submit to Doc for approval
+- [x] T064 [US3] Create ASCII mockup for Waypoint Transit mode (click-to-place, "Done" button) - submit to Doc for approval
+- [x] T065 [US3] Create ASCII mockup for Return to Base dialog (use current position vs. specify coordinates) - submit to Doc for approval
 
 ### UI Implementation (After Mockup Approval)
 
-- [ ] T066 [US3] Create WaypointTransitDialog in src/main/java/com/planetmayo/usvsim/view/dialogs/WaypointTransitDialog.java
-- [ ] T067 [US3] Create ReturnToBaseDialog in src/main/java/com/planetmayo/usvsim/view/dialogs/ReturnToBaseDialog.java
-- [ ] T068 [US3] Add "Add Behaviour" dropdown to MissionPlanPanel (Parallel Track, Waypoint Transit, Return to Base options)
-- [ ] T069 [US3] Implement reorder buttons (up/down) in MissionPlanPanel
-- [ ] T070 [US3] Implement delete button in MissionPlanPanel
-- [ ] T071 [US3] Update DrawingController to support waypoint placement mode
+- [x] T066 [US3] Create WaypointTransitDialog in src/main/java/com/planetmayo/usvsim/view/dialogs/WaypointTransitDialog.java
+- [x] T067 [US3] Create ReturnToBaseDialog in src/main/java/com/planetmayo/usvsim/view/dialogs/ReturnToBaseDialog.java
+- [x] T068 [US3] Add "Add Behaviour" dropdown to MissionPlanPanel (Parallel Track, Waypoint Transit, Return to Base options)
+- [x] T069 [US3] Implement reorder buttons (up/down) in MissionPlanPanel
+- [x] T070 [US3] Implement delete button in MissionPlanPanel
+- [x] T071 [US3] Update DrawingController to support waypoint placement mode
 
 ### E2E Test (Complete Workflow)
 
-- [ ] T072 [US3] Write E2E test for multi-behaviour mission in src/test/java/com/planetmayo/usvsim/e2e/MultiBehaviourMissionTest.java (add 3 behaviours, reorder, simulate, verify sequential execution)
+- [x] T072 [US3] Write E2E test for multi-behaviour mission in src/test/java/com/planetmayo/usvsim/e2e/MultiBehaviourMissionTest.java (add 3 behaviours, reorder, simulate, verify sequential execution)
 
 **US3 Completion Criteria**: Can add/reorder/delete behaviours, simulation executes them sequentially with status updates
 
@@ -208,22 +208,22 @@
 
 ### Tests First (TDD for Pattern Generation)
 
-- [ ] T073 [P] [US4] Write unit tests for SearchPatternGenerator.generateExpandingSquare() in SearchPatternGeneratorTest.java (test centroid calculation, leg lengths, 90° turns)
+- [x] T073 [P] [US4] Write unit tests for SearchPatternGenerator.generateExpandingSquare() in SearchPatternGeneratorTest.java (test centroid calculation, leg lengths, 90° turns)
 
 ### Business Logic Implementation
 
-- [ ] T074 [US4] Implement SearchPatternGenerator.generateExpandingSquare() in SearchPatternGenerator.java (centroid, expanding spiral, clip to polygon)
-- [ ] T075 [US4] Create ExpandingSquareSearch behaviour in src/main/java/com/planetmayo/usvsim/model/behaviour/ExpandingSquareSearch.java
-- [ ] T076 [US4] Write unit tests for ExpandingSquareSearch waypoint generation in src/test/java/com/planetmayo/usvsim/unit/model/behaviour/ExpandingSquareSearchTest.java
+- [x] T074 [US4] Implement SearchPatternGenerator.generateExpandingSquare() in SearchPatternGenerator.java (centroid, expanding spiral, clip to polygon)
+- [x] T075 [US4] Create ExpandingSquareSearch behaviour in src/main/java/com/planetmayo/usvsim/model/behaviour/ExpandingSquareSearch.java
+- [x] T076 [US4] Write unit tests for ExpandingSquareSearch waypoint generation in src/test/java/com/planetmayo/usvsim/unit/model/behaviour/ExpandingSquareSearchTest.java
 
 ### UI Mockup & Approval
 
-- [ ] T077 [US4] Create ASCII mockup for Expanding Square Search dialog (initial direction field, leg increment field) - submit to Doc for approval
+- [x] T077 [US4] Create ASCII mockup for Expanding Square Search dialog (initial direction field, leg increment field) - submit to Doc for approval
 
 ### UI Implementation (After Mockup Approval)
 
-- [ ] T078 [US4] Create ExpandingSquareSearchDialog in src/main/java/com/planetmayo/usvsim/view/dialogs/ExpandingSquareSearchDialog.java
-- [ ] T079 [US4] Add "Expanding Square Search" option to "Add Behaviour" dropdown in MissionPlanPanel
+- [x] T078 [US4] Create ExpandingSquareSearchDialog in src/main/java/com/planetmayo/usvsim/view/dialogs/ExpandingSquareSearchDialog.java
+- [x] T079 [US4] Add "Expanding Square Search" option to "Add Behaviour" dropdown in MissionPlanPanel
 
 **US4 Completion Criteria**: Can create expanding square search, pattern generates from centroid, displays on map
 
@@ -237,10 +237,10 @@
 
 ### UI Enhancement (No New Mockup - Expand StatePanel)
 
-- [ ] T080 [P] [US5] Add progress indicator to StatePanel (Behaviour N of M display)
-- [ ] T081 [P] [US5] Add timestamp display to StatePanel
-- [ ] T082 [US5] Implement property bindings from PlatformState to StatePanel labels (auto-update on change)
-- [ ] T083 [US5] Add update frequency indicator (display actual Hz) to StatePanel
+- [x] T080 [P] [US5] Add progress indicator to StatePanel (Behaviour N of M display)
+- [x] T081 [P] [US5] Add timestamp display to StatePanel
+- [x] T082 [US5] Implement property bindings from PlatformState to StatePanel labels (auto-update on change)
+- [x] T083 [US5] Add update frequency indicator (display actual Hz) to StatePanel
 
 **US5 Completion Criteria**: StatePanel shows all required fields, updates in real-time (>=1Hz)
 
