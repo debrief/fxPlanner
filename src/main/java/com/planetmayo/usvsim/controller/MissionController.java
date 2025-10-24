@@ -153,6 +153,9 @@ public class MissionController implements MainView.MissionControllerCallback {
             // This callback is triggered when the polygon is drawn and confirmed
             System.out.println("✓ Polygon received with " + polygon.getVertices().size() + " vertices");
 
+            // Hide instructions panel, show parameter panel
+            statePanel.hideDialog();
+
             // Step 2: Show parameter panel for search pattern
             com.planetmayo.usvsim.view.dialogs.ParallelTrackSearchPanel panel =
                 new com.planetmayo.usvsim.view.dialogs.ParallelTrackSearchPanel();
@@ -180,7 +183,7 @@ public class MissionController implements MainView.MissionControllerCallback {
         instructionsPanel.setOnDoneDrawing(() -> {
             System.out.println("User clicked Done Drawing - finishing polygon");
             drawingController.finishDrawing();
-            statePanel.hideDialog();
+            // Note: callback will hide instructions and show config panel
         });
 
         instructionsPanel.setOnCancel(() -> {
@@ -261,6 +264,9 @@ public class MissionController implements MainView.MissionControllerCallback {
             // This callback is triggered when the polyline is drawn and completed
             System.out.println("✓ Polyline received with " + waypoints.size() + " waypoints");
 
+            // Hide instructions panel, show parameter panel
+            statePanel.hideDialog();
+
             // Step 2: Show parameter panel with the drawn waypoints
             com.planetmayo.usvsim.view.dialogs.WaypointTransitPanel panel =
                 new com.planetmayo.usvsim.view.dialogs.WaypointTransitPanel(waypoints);
@@ -288,7 +294,7 @@ public class MissionController implements MainView.MissionControllerCallback {
         instructionsPanel.setOnDoneDrawing(() -> {
             System.out.println("User clicked Done Drawing - finishing polyline");
             drawingController.finishDrawing();
-            statePanel.hideDialog();
+            // Note: callback will hide instructions and show config panel
         });
 
         instructionsPanel.setOnCancel(() -> {
@@ -661,6 +667,9 @@ public class MissionController implements MainView.MissionControllerCallback {
         drawingController.startDrawingPolygon(polygon -> {
             System.out.println("✓ Polygon received with " + polygon.getVertices().size() + " vertices");
 
+            // Hide instructions panel, show parameter panel
+            statePanel.hideDialog();
+
             // Step 2: Show parameter panel for search pattern
             com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchPanel panel =
                 new com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchPanel();
@@ -688,7 +697,7 @@ public class MissionController implements MainView.MissionControllerCallback {
         instructionsPanel.setOnDoneDrawing(() -> {
             System.out.println("User clicked Done Drawing - finishing polygon");
             drawingController.finishDrawing();
-            statePanel.hideDialog();
+            // Note: callback will hide instructions and show config panel
         });
 
         instructionsPanel.setOnCancel(() -> {
