@@ -45,6 +45,11 @@
             <artifactId>javafx-swing</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-web</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
 
         <!-- JTS Topology Suite for geometry -->
         <dependency>
@@ -52,6 +57,7 @@
             <artifactId>jts-core</artifactId>
             <version>${jts.version}</version>
         </dependency>
+
 
         <!-- Testing: JUnit 5 -->
         <dependency>
