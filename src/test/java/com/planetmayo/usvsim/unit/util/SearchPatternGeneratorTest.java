@@ -4,6 +4,7 @@ import com.planetmayo.usvsim.model.geometry.Position;
 import com.planetmayo.usvsim.model.geometry.Polygon;
 import com.planetmayo.usvsim.model.geometry.Waypoint;
 import com.planetmayo.usvsim.util.SearchPatternGenerator;
+import com.planetmayo.usvsim.util.PolygonUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -143,6 +144,205 @@ class SearchPatternGeneratorTest {
         for (Waypoint wp : waypoints) {
             assertEquals(speed, wp.getSpeed(), 0.001,
                 "Waypoint should have correct speed");
+        }
+    }
+
+    // ========== Expanding Square Search Tests ==========
+
+    @Test
+    void testGenerateExpandingSquareBasic() {
+        // Simple square area centered at Portland
+        List<Position> square = List.of(
+            Position.of(50.60, -2.40),
+            Position.of(50.62, -2.40),
+            Position.of(50.62, -2.38),
+            Position.of(50.60, -2.38)
+        );
+        Polygon area = new Polygon(square);
+
+        List<Waypoint> waypoints = SearchPatternGenerator.generateExpandingSquare(
+            area, 0.0, 500.0, 5.0
+        );
+
+        // Should generate waypoints starting from centroid
+        assertFalse(waypoints.isEmpty(), "Should generate expanding square waypoints");
+        assertTrue(waypoints.size() >= 1, "Should have at least starting waypoint at centroid");
+    }
+
+    @Test
+    void testGenerateExpandingSquareStartsAtCentroid() {
+        List<Position> square = List.of(
+            Position.of(50.60, -2.40),
+            Position.of(50.62, -2.40),
+            Position.of(50.62, -2.38),
+            Position.of(50.60, -2.38)
+        );
+        Polygon area = new Polygon(square);
+
+        List<Waypoint> waypoints = SearchPatternGenerator.generateExpandingSquare(
+            area, 45.0, 500.0, 6.0
+        );
+
+        // First waypoint should be at centroid
+        assertFalse(waypoints.isEmpty());
+        Position centroid = PolygonUtils.calculateCentroid(area);
+        Position firstWaypoint = waypoints.get(0).getPosition();
+
+        // Allow small tolerance for centroid calculation
+        assertTrue(Math.abs(firstWaypoint.getLatitude() - centroid.getLatitude()) < 0.01,
+            "First waypoint should be at centroid latitude");
+        assertTrue(Math.abs(firstWaypoint.getLongitude() - centroid.getLongitude()) < 0.01,
+            "First waypoint should be at centroid longitude");
+    }
+
+    @Test
+    void testGenerateExpandingSquareLegIncrement() {
+        List<Position> square = List.of(
+            Position.of(50.60, -2.40),
+            Position.of(50.65, -2.40),
+            Position.of(50.65, -2.35),
+            Position.of(50.60, -2.35)
+        );
+        Polygon area = new Polygon(square);
+
+        // Small leg increment should produce more waypoints
+        List<Waypoint> smallIncrement = SearchPatternGenerator.generateExpandingSquare(
+            area, 0.0, 200.0, 5.0
+        );
+
+        // Larger leg increment should produce fewer waypoints
+        List<Waypoint> largeIncrement = SearchPatternGenerator.generateExpandingSquare(
+            area, 0.0, 1000.0, 5.0
+        );
+
+        assertTrue(smallIncrement.size() > largeIncrement.size(),
+            "Smaller leg increment should produce more waypoints");
+    }
+
+    @Test
+    void testGenerateExpandingSquareVariousInitialDirections() {
+        List<Position> square = List.of(
+            Position.of(50.60, -2.40),
+            Position.of(50.62, -2.40),
+            Position.of(50.62, -2.38),
+            Position.of(50.60, -2.38)
+        );
+        Polygon area = new Polygon(square);
+
+        // Test multiple initial directions (0°, 90°, 180°, 270°)
+        for (double direction : new double[]{0, 90, 180, 270}) {
+            List<Waypoint> waypoints = SearchPatternGenerator.generateExpandingSquare(
+                area, direction, 500.0, 5.0
+            );
+            assertFalse(waypoints.isEmpty(),
+                "Should generate waypoints for direction " + direction + "°");
+        }
+    }
+
+    @Test
+    void testGenerateExpandingSquareValidSpeed() {
+        List<Position> square = List.of(
+            Position.of(50.60, -2.40),
+            Position.of(50.62, -2.40),
+            Position.of(50.62, -2.38),
+            Position.of(50.60, -2.38)
+        );
+        Polygon area = new Polygon(square);
+
+        double speed = 7.5; // knots
+        List<Waypoint> waypoints = SearchPatternGenerator.generateExpandingSquare(
+            area, 0.0, 400.0, speed
+        );
+
+        // All waypoints should have correct speed
+        for (Waypoint wp : waypoints) {
+            assertEquals(speed, wp.getSpeed(), 0.001,
+                "Waypoint should have correct speed");
+        }
+    }
+
+    @Test
+    void testGenerateExpandingSquareLargeArea() {
+        // Larger area to ensure more legs are generated
+        List<Position> large = List.of(
+            Position.of(50.55, -2.50),
+            Position.of(50.75, -2.50),
+            Position.of(50.75, -2.20),
+            Position.of(50.55, -2.20)
+        );
+        Polygon area = new Polygon(large);
+
+        List<Waypoint> waypoints = SearchPatternGenerator.generateExpandingSquare(
+            area, 0.0, 500.0, 5.0
+        );
+
+        // Should generate multiple legs
+        assertTrue(waypoints.size() > 4,
+            "Large area should generate multiple legs (at least 5 waypoints)");
+    }
+
+    @Test
+    void testGenerateExpandingSquareSmallArea() {
+        // Small area - should still generate at least centroid
+        List<Position> small = List.of(
+            Position.of(50.60, -2.40),
+            Position.of(50.601, -2.40),
+            Position.of(50.601, -2.399),
+            Position.of(50.60, -2.399)
+        );
+        Polygon area = new Polygon(small);
+
+        List<Waypoint> waypoints = SearchPatternGenerator.generateExpandingSquare(
+            area, 0.0, 100.0, 5.0
+        );
+
+        // Should at least have centroid
+        assertTrue(waypoints.size() >= 1,
+            "Even small area should generate at least centroid waypoint");
+    }
+
+    @Test
+    void testGenerateExpandingSquareComplexPolygon() {
+        // L-shaped polygon
+        List<Position> lshape = List.of(
+            Position.of(50.60, -2.40),
+            Position.of(50.62, -2.40),
+            Position.of(50.62, -2.38),
+            Position.of(50.61, -2.38),
+            Position.of(50.61, -2.39),
+            Position.of(50.60, -2.39)
+        );
+        Polygon area = new Polygon(lshape);
+
+        List<Waypoint> waypoints = SearchPatternGenerator.generateExpandingSquare(
+            area, 0.0, 300.0, 6.0
+        );
+
+        assertFalse(waypoints.isEmpty(),
+            "Complex polygon should generate expanding square waypoints");
+    }
+
+    @Test
+    void testGenerateExpandingSquareMaxLegLimit() {
+        // Test that spiral respects upper limit
+        List<Position> square = List.of(
+            Position.of(50.60, -2.40),
+            Position.of(50.62, -2.40),
+            Position.of(50.62, -2.38),
+            Position.of(50.60, -2.38)
+        );
+        Polygon area = new Polygon(square);
+
+        List<Waypoint> waypoints = SearchPatternGenerator.generateExpandingSquare(
+            area, 0.0, 500.0, 5.0
+        );
+
+        // Verify no waypoint leg is unreasonably large
+        for (int i = 0; i < waypoints.size() - 1; i++) {
+            double legDistance = waypoints.get(i).getPosition()
+                .distanceTo(waypoints.get(i + 1).getPosition());
+            assertTrue(legDistance < 100000.0, // 100km max
+                "Leg distance should be within reasonable limit");
         }
     }
 }

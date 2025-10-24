@@ -25,6 +25,7 @@ public class MainView extends BorderPane {
     private final ControlPanel controlPanel;
     private final MissionPlanPanel missionPlanPanel;
     private final StatePanel statePanel;
+    private MissionControllerCallback missionController;
 
     public MainView(Stage stage) {
         this.stage = stage;
@@ -126,28 +127,33 @@ public class MainView extends BorderPane {
     }
 
     private void showParallelTrackSearchDialog() {
-        // TODO: Implement dialog
-        System.out.println("Showing Parallel Track Search dialog");
+        if (missionController != null) {
+            missionController.onParallelTrackSearchRequested();
+        }
     }
 
     private void showExpandingSquareDialog() {
-        // TODO: Implement dialog
-        System.out.println("Showing Expanding Square dialog");
+        if (missionController != null) {
+            missionController.onExpandingSquareSearchRequested();
+        }
     }
 
     private void showWaypointTransitDialog() {
-        // TODO: Implement dialog
-        System.out.println("Showing Waypoint Transit dialog");
+        if (missionController != null) {
+            missionController.onWaypointTransitRequested();
+        }
     }
 
     private void showReturnToBaseDialog() {
-        // TODO: Implement dialog
-        System.out.println("Showing Return to Base dialog");
+        if (missionController != null) {
+            missionController.onReturnToBaseRequested();
+        }
     }
 
     private void showPlatformConfigDialog() {
-        // TODO: Implement dialog
-        System.out.println("Showing Platform Configuration dialog");
+        if (missionController != null) {
+            missionController.onPlatformConfigRequested();
+        }
     }
 
     public MapPanel getMapPanel() {
@@ -171,5 +177,23 @@ public class MainView extends BorderPane {
         stage.setScene(scene);
         stage.setTitle("USV Mission Planner");
         stage.show();
+    }
+
+    /**
+     * Set the mission controller callback for behaviour dialog requests
+     */
+    public void setMissionControllerCallback(MissionControllerCallback controller) {
+        this.missionController = controller;
+    }
+
+    /**
+     * Callback interface for MainView to request actions from MissionController
+     */
+    public interface MissionControllerCallback {
+        void onParallelTrackSearchRequested();
+        void onExpandingSquareSearchRequested();
+        void onWaypointTransitRequested();
+        void onReturnToBaseRequested();
+        void onPlatformConfigRequested();
     }
 }

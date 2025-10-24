@@ -3,6 +3,7 @@ package com.planetmayo.usvsim.controller;
 import com.planetmayo.usvsim.model.behaviour.ParallelTrackSearch;
 import com.planetmayo.usvsim.model.behaviour.WaypointTransit;
 import com.planetmayo.usvsim.model.behaviour.ReturnToBase;
+import com.planetmayo.usvsim.model.behaviour.ExpandingSquareSearch;
 import com.planetmayo.usvsim.model.geometry.Polygon;
 import com.planetmayo.usvsim.model.geometry.Position;
 import com.planetmayo.usvsim.model.mission.Mission;
@@ -17,6 +18,8 @@ import com.planetmayo.usvsim.view.dialogs.WaypointTransitDialog;
 import com.planetmayo.usvsim.view.dialogs.WaypointTransitParams;
 import com.planetmayo.usvsim.view.dialogs.ReturnToBaseDialog;
 import com.planetmayo.usvsim.view.dialogs.ReturnToBaseParams;
+import com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchDialog;
+import com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchParams;
 
 import java.util.List;
 
@@ -30,8 +33,9 @@ import java.util.List;
  * - Update MapPanel with generated patterns
  * - Manage mission state (start, pause, stop)
  */
-public class MissionController {
+public class MissionController implements MainView.MissionControllerCallback {
     private final Mission mission;
+    private final MainView mainView;
     private final MapPanel mapPanel;
     private final MissionPlanPanel missionPlanPanel;
     private final ControlPanel controlPanel;
@@ -41,6 +45,7 @@ public class MissionController {
 
     public MissionController(Mission mission, MainView mainView) {
         this.mission = mission;
+        this.mainView = mainView;
         this.mapPanel = mainView.getMapPanel();
         this.missionPlanPanel = mainView.getMissionPlanPanel();
         this.controlPanel = mainView.getControlPanel();
@@ -297,5 +302,85 @@ public class MissionController {
                 statePanel.updateState(mission.getPlatform().getState());
             });
         });
+
+        // Register this controller as the callback for MainView (T068)
+        mainView.setMissionControllerCallback(this);
+    }
+
+    // ========== MainView.MissionControllerCallback Implementation ==========
+
+    @Override
+    public void onParallelTrackSearchRequested() {
+        startParallelTrackSearchDialog();
+    }
+
+    @Override
+    public void onExpandingSquareSearchRequested() {
+        startExpandingSquareSearchDialog();
+    }
+
+    @Override
+    public void onWaypointTransitRequested() {
+        startWaypointTransitDialog();
+    }
+
+    @Override
+    public void onReturnToBaseRequested() {
+        startReturnToBaseDialog();
+    }
+
+    @Override
+    public void onPlatformConfigRequested() {
+        // TODO: Implement platform configuration dialog
+        System.out.println("Platform configuration requested");
+    }
+
+    /**
+     * Start the Expanding Square Search workflow
+     */
+    private void startExpandingSquareSearchDialog() {
+        System.out.println("Starting Expanding Square Search workflow");
+
+        // Step 1: Start polygon drawing
+        drawingController.startDrawingPolygon(polygon -> {
+            System.out.println("Polygon drawn with " + polygon.getVertices().size() + " vertices");
+
+            // Step 2: Show parameter dialog
+            ExpandingSquareSearchDialog dialog = new ExpandingSquareSearchDialog();
+            dialog.showAndWait().ifPresent(params -> {
+                addExpandingSquareSearch(polygon, params);
+            });
+        });
+
+        // Prompt user
+        System.out.println("Please draw a polygon on the map. Click to add vertices. Press Enter or click 'Done' when finished.");
+    }
+
+    /**
+     * Add an ExpandingSquareSearch behaviour to the mission
+     */
+    public void addExpandingSquareSearch(Polygon searchArea, ExpandingSquareSearchParams params) {
+        try {
+            // Create the behaviour
+            ExpandingSquareSearch behavior = new ExpandingSquareSearch(
+                searchArea,
+                params.initialDirection,
+                params.legIncrement,
+                params.speed
+            );
+
+            // Add to mission
+            mission.getMissionPlan().addBehaviour(behavior);
+            System.out.println("Added expanding square search: " + params.initialDirection + "°, " +
+                             params.legIncrement + "m increment");
+
+            // Update UI
+            missionPlanPanel.addBehavior(behavior);
+            mapPanel.renderPolygon(searchArea);
+            mapPanel.renderTracks(behavior.getWaypoints());
+
+        } catch (IllegalArgumentException e) {
+            System.err.println("Failed to create expanding square search: " + e.getMessage());
+        }
     }
 }

@@ -21,6 +21,7 @@ public class ControlPanel extends VBox {
     private Button stopBtn;
     private Slider speedSlider;
     private Label speedLabel;
+    private Label timeLabel;
 
     private Runnable onStart;
     private Runnable onPause;
@@ -29,7 +30,7 @@ public class ControlPanel extends VBox {
 
     public ControlPanel() {
         setStyle("-fx-border-color: #DDD; -fx-padding: 10; -fx-spacing: 10;");
-        setPrefHeight(120);
+        setPrefHeight(150);
 
         // Banner
         Label banner = new Label("═══ Simulation Control ═══");
@@ -41,7 +42,10 @@ public class ControlPanel extends VBox {
         // Speed control row
         HBox speedRow = createSpeedRow();
 
-        getChildren().addAll(banner, buttonRow, speedRow);
+        // Time display row
+        HBox timeRow = createTimeRow();
+
+        getChildren().addAll(banner, buttonRow, speedRow, timeRow);
     }
 
     private HBox createButtonRow() {
@@ -109,6 +113,22 @@ public class ControlPanel extends VBox {
         return box;
     }
 
+    private HBox createTimeRow() {
+        HBox box = new HBox(10);
+        box.setStyle("-fx-padding: 5;");
+
+        Label timeDisplayLabel = new Label("Simulation Time:");
+        timeDisplayLabel.setStyle("-fx-font-weight: bold;");
+        timeDisplayLabel.setPrefWidth(120);
+
+        timeLabel = new Label("00:00:00");
+        timeLabel.setStyle("-fx-font-family: 'Courier New'; -fx-font-size: 13; -fx-text-fill: #1976D2;");
+        timeLabel.setPrefWidth(100);
+
+        box.getChildren().addAll(timeDisplayLabel, timeLabel);
+        return box;
+    }
+
     /**
      * Set handler for Start button
      */
@@ -160,5 +180,18 @@ public class ControlPanel extends VBox {
         speedSlider.setValue(1.0);
         speedLabel.setText("1.0×");
         updateButtonStates(false);
+        updateSimulationTime(0);
+    }
+
+    /**
+     * Update simulation time display (in milliseconds)
+     */
+    public void updateSimulationTime(long elapsedMillis) {
+        long seconds = elapsedMillis / 1000;
+        long hours = seconds / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long secs = seconds % 60;
+
+        timeLabel.setText(String.format("%02d:%02d:%02d", hours, minutes, secs));
     }
 }
