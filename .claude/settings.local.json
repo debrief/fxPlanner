@@ -15,6 +15,8 @@
       "Bash(mvn clean test:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [
+      "Bash(git add:*)"
+    ]
   }
 }
