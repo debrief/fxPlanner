@@ -136,6 +136,9 @@ A JavaFX desktop application for planning and simulating Unmanned Surface Vehicl
 - **NFR-PERF-001**: Simulation update rate: minimum 1Hz (1 update/second simulation time)
 - **NFR-PERF-002**: UI responsiveness: maximum 100ms for user interactions
 - **NFR-PERF-003**: Map rendering: smooth pan/zoom with no visible lag
+- **NFR-PERF-004**: Application startup < 3 seconds
+- **NFR-PERF-005**: Pattern generation < 500ms for typical area (1km²)
+- **NFR-PERF-006**: Memory usage < 512MB during normal operation
 
 ### 3.2 Usability
 - **NFR-USE-001**: Intuitive workflow: plan → simulate → review
@@ -155,6 +158,27 @@ A JavaFX desktop application for planning and simulating Unmanned Surface Vehicl
 - **NFR-DOC-002**: JavaDoc for public APIs
 - **NFR-DOC-003**: Screenshots of key features
 
+### 3.5 Visual Design
+- **NFR-VIS-001**: Smooth 60 FPS animations for USV movement and map transitions
+- **NFR-VIS-002**: Professional Material Design-inspired UI theme
+- **NFR-VIS-003**: Real-time mission dashboard with:
+  - Speed/heading gauge with animated needle
+  - Coverage percentage indicator with progress bar
+  - Time-to-completion estimate with live updates
+  - Distance traveled counter
+- **NFR-VIS-004**: Animated transitions between behaviors (fade/slide effects)
+- **NFR-VIS-005**: Consistent color scheme for behavior types
+- **NFR-VIS-006**: Smooth bezier curves for turn visualization
+- **NFR-VIS-007**: Platform wake trail animation (optional toggle)
+
+### 3.6 Robustness
+- **NFR-ROB-001**: Graceful handling of invalid polygons (self-intersecting, insufficient vertices)
+- **NFR-ROB-002**: Recovery from simulation exceptions without data loss
+- **NFR-ROB-003**: Input validation with descriptive user feedback
+- **NFR-ROB-004**: Automatic state saving every 30 seconds
+- **NFR-ROB-005**: Handling of extreme values (very small/large areas, speeds)
+- **NFR-ROB-006**: Thread-safe simulation engine with proper synchronization
+
 ---
 
 ## 4. Technical Architecture
@@ -171,27 +195,42 @@ A JavaFX desktop application for planning and simulating Unmanned Surface Vehicl
 ```
 com.deepbluec.usvsim/
 ├── model/
-│   ├── Mission.java              // Mission plan container
-│   ├── Behaviour.java            // Abstract behaviour base class
-│   ├── ParallelTrackSearch.java
-│   ├── ExpandingSquareSearch.java
-│   ├── WaypointTransit.java
-│   ├── ReturnToBase.java
-│   ├── Platform.java             // USV state and dynamics
-│   └── Waypoint.java
+│   ├── mission/
+│   │   ├── Mission.java              // Mission plan container
+│   │   └── CompositeBehaviour.java   // Behaviour sequencer
+│   ├── behaviour/
+│   │   ├── Behaviour.java            // Core behaviour interface
+│   │   ├── ParallelTrackSearch.java  // Implements Behaviour
+│   │   ├── ExpandingSquareSearch.java
+│   │   ├── WaypointTransit.java
+│   │   └── ReturnToBase.java
+│   ├── platform/
+│   │   ├── Platform.java             // Platform manager
+│   │   ├── PlatformCapabilities.java // Static capabilities
+│   │   ├── PlatformState.java        // Dynamic state
+│   │   └── PlatformDemand.java       // Control demands
+│   ├── geometry/
+│   │   ├── Position.java             // Lat/lon position
+│   │   ├── Waypoint.java             // Navigation waypoint
+│   │   └── Polygon.java              // Search area polygon
+│   └── samples/
+│       └── SampleBehaviours.java     // Hard-coded test behaviors
 ├── controller/
-│   ├── MissionController.java    // Main application controller
-│   ├── SimulationEngine.java    // Simulation execution thread
-│   └── DrawingController.java   // Handle map drawing interactions
+│   ├── MissionController.java        // Main application controller
+│   ├── SimulationEngine.java        // Simulation execution thread
+│   ├── BehaviourExecutor.java       // Behaviour state machine
+│   └── DrawingController.java       // Handle map drawing interactions
 ├── view/
-│   ├── MainView.java            // Primary UI layout
-│   ├── MapPanel.java            // Map display component
-│   ├── MissionPlanPanel.java   // Behaviour list panel
-│   ├── ControlPanel.java       // Simulation controls
-│   └── StatePanel.java         // Platform state display
+│   ├── MainView.java                // Primary UI layout
+│   ├── MapPanel.java                // Map display component
+│   ├── MissionPlanPanel.java       // Behaviour list panel
+│   ├── ControlPanel.java           // Simulation controls
+│   ├── StatePanel.java             // Platform state display
+│   └── DashboardPanel.java         // Real-time gauges/indicators
 ├── util/
-│   ├── GeoUtils.java           // Great circle calculations
-│   ├── SearchPatternGenerator.java  // Pattern generation algorithms
+│   ├── GeoUtils.java               // Great circle calculations
+│   ├── SearchPatternGenerator.java // Pattern generation algorithms
+│   ├── PolygonUtils.java          // Polygon clipping/intersection
 │   └── Constants.java
 └── Main.java
 ```
@@ -224,18 +263,67 @@ com.deepbluec.usvsim/
 #### 4.3.3 Platform Navigation
 ```
 For each simulation time step (dt):
-  1. Calculate bearing to next waypoint
-  2. Calculate angle difference: Δθ = target_bearing - current_heading
-  3. If |Δθ| > threshold:
-       heading_rate = speed / turn_radius
-       current_heading += sign(Δθ) × heading_rate × dt
-  4. Else:
-       current_heading = target_bearing
-  5. Calculate distance traveled: d = speed × dt
-  6. Update position along current heading
-  7. If distance_to_waypoint < acceptance_radius:
-       Advance to next waypoint
+  1. Get current platform state
+  2. Pass state to current behavior
+  3. Receive demanded state (heading, speed, depth)
+  4. Apply platform dynamics constraints:
+     a. Calculate angle difference: Δθ = demanded_heading - current_heading
+     b. If |Δθ| > threshold:
+          heading_rate = speed / turn_radius
+          current_heading += sign(Δθ) × heading_rate × dt
+     c. Else:
+          current_heading = demanded_heading
+  5. Apply speed changes with acceleration limits
+  6. Calculate distance traveled: d = speed × dt
+  7. Update position along current heading
+  8. Update behavior progress
+  9. If behavior.isComplete():
+       Advance to next behavior in composite
 ```
+
+#### 4.3.4 Behavior Execution Model
+```
+SimulationEngine (runs at fixed timestep):
+  1. Get current PlatformState
+  2. CompositeBehavior.getDemandedState(currentState)
+     → Returns PlatformDemand from active behavior
+  3. Apply platform dynamics to demanded state
+  4. Update PlatformState
+  5. CompositeBehavior.updateProgress(newState)
+  6. Check for behavior completion
+  7. Render updated state to UI
+```
+
+### 4.4 Offline Map Strategy
+
+#### 4.4.1 Tile Caching
+- **OFFLINE-001**: Pre-bundle OpenStreetMap tiles for Portland Harbour area (zoom levels 10-18)
+- **OFFLINE-002**: Include tiles in resources/ folder (~50MB for the region)
+- **OFFLINE-003**: Coverage area: 20km radius around 50.6°N, 2.4°W
+- **OFFLINE-004**: Implement custom TileProvider that reads from local cache first
+
+#### 4.4.2 Implementation Approach
+- **OFFLINE-005**: Use java_leaflet's offline mode configuration
+- **OFFLINE-006**: Package tiles in JAR for single-file distribution
+- **OFFLINE-007**: Fallback to simple vector map if tiles unavailable
+- **OFFLINE-008**: Support for both online and offline modes via configuration toggle
+
+### 4.5 Data Formats
+
+#### 4.5.1 Mission Persistence
+- **DATA-001**: Mission files stored as JSON for save/load functionality
+- **DATA-002**: Include version field for forward compatibility
+- **DATA-003**: Support export/import of mission plans
+
+#### 4.5.2 Configuration Storage
+- **DATA-004**: User preferences in properties file (.properties)
+- **DATA-005**: Platform dynamics settings persisted between sessions
+- **DATA-006**: Window size and position remembered
+
+#### 4.5.3 Telemetry Export
+- **DATA-007**: Optional CSV export of simulation data
+- **DATA-008**: Include timestamp, position, heading, speed, current behavior
+- **DATA-009**: Support for KML export for Google Earth visualization
 
 ---
 
@@ -349,90 +437,199 @@ For each simulation time step (dt):
 #### Mission
 ```java
 class Mission {
-    List<Behaviour> behaviours;
+    CompositeBehaviour missionPlan;
     Platform platform;
-    int currentBehaviourIndex;
+    PlatformCapabilities capabilities;
     MissionState state;  // PLANNING, EXECUTING, PAUSED, COMPLETE
 }
 ```
 
-#### Behaviour (Abstract)
+#### Behaviour (Core Interface)
 ```java
-abstract class Behaviour {
-    String name;
-    List<Waypoint> waypoints;
-    BehaviourState state;  // PENDING, EXECUTING, COMPLETE
-    abstract List<Waypoint> generateWaypoints();
+interface Behaviour {
+    String getName();
+    String getDescription();
+    BehaviourState getState();  // PENDING, EXECUTING, COMPLETE
+    double getProgress();        // 0.0 to 1.0
+
+    // Core behavior execution
+    PlatformDemand getDemandedState(PlatformState currentState);
+    void updateProgress(PlatformState currentState);
+    boolean isComplete();
+
+    // Visualization
+    List<Waypoint> getWaypoints();
+    Color getDisplayColor();
 }
 ```
 
-#### Platform
+#### CompositeBehaviour
 ```java
-class Platform {
+class CompositeBehaviour implements Behaviour {
+    List<Behaviour> behaviours;
+    int currentBehaviourIndex;
+
+    void addBehaviour(Behaviour behaviour);
+    void removeBehaviour(int index);
+    void reorderBehaviour(int from, int to);
+    Behaviour getCurrentBehaviour();
+
+    // Implements Behaviour interface
+    PlatformDemand getDemandedState(PlatformState currentState) {
+        return getCurrentBehaviour().getDemandedState(currentState);
+    }
+}
+```
+
+#### Concrete Behaviour Types
+```java
+class ParallelTrackSearch implements Behaviour {
+    Polygon searchArea;
+    double trackOrientation;  // 0-360°
+    double trackSpacing;       // metres
+    double platformSpeed;      // knots
+    int currentWaypointIndex;
+    List<Waypoint> generatedWaypoints;
+}
+
+class ExpandingSquareSearch implements Behaviour {
+    Polygon searchArea;
+    Position centerPoint;
+    double initialDirection;   // 0-360°
+    double legIncrement;       // metres
+    double platformSpeed;      // knots
+    int currentLegNumber;
+    List<Waypoint> generatedWaypoints;
+}
+
+class WaypointTransit implements Behaviour {
+    List<Position> userDefinedWaypoints;
+    double transitSpeed;       // knots
+    int currentWaypointIndex;
+}
+
+class ReturnToBase implements Behaviour {
+    Position baseLocation;
+    double transitSpeed;       // knots
+    boolean reachedBase;
+}
+```
+
+#### Platform Classes
+```java
+class PlatformCapabilities {
+    String platformType;       // "USV", "AUV", etc
+    double maxSpeed;           // knots
+    double minSpeed;           // knots
+    double maxDepth;           // metres (0 for surface vehicles)
+    double turnRadius;         // metres at max speed
+    double acceleration;       // m/s²
+    double deceleration;       // m/s²
+    double fuelCapacity;       // litres (optional)
+}
+
+class PlatformState {
     String id;
-    double lat, lon;          // Current position
-    double heading;           // 0-360°
-    double speed;             // knots
-    double maxSpeed;          // knots
-    double turnRadius;        // metres
-    double acceleration;      // m/s²
-    double deceleration;      // m/s²
+    Position position;         // lat, lon
+    double heading;            // 0-360°
+    double speed;              // knots
+    double depth;              // metres (0 for surface)
+    double fuelRemaining;      // litres (optional)
     List<Position> trackHistory;
+    Instant timestamp;
+}
+
+class PlatformDemand {
+    double demandedHeading;    // 0-360°
+    double demandedSpeed;      // knots
+    double demandedDepth;      // metres (0 for surface, included for AUV extensibility)
+    TurnDirection turnDirection; // PORT, STARBOARD, SHORTEST
 }
 ```
 
-#### Waypoint
+#### Supporting Classes
 ```java
 class Waypoint {
-    double lat, lon;
-    double speed;  // target speed at this waypoint
-    WaypointType type;  // TRANSIT, SEARCH, BASE
+    Position position;         // lat, lon
+    double speed;              // target speed at this waypoint
+    double acceptanceRadius;   // metres
+    WaypointType type;         // TRANSIT, SEARCH, BASE, TURN
+}
+
+class Position {
+    double latitude;
+    double longitude;
 }
 ```
 
 ---
 
-## 7. Development Phases
+## 7. Development Phases (MVP-First Approach)
 
-### Phase 1: Project Setup & Basic Map (Day 1)
+### Phase 1: Core Foundation
+**Priority**: Critical - Must complete first
 - **Deliverables**:
-  - Maven project with JavaFX and java_leaflet dependencies
-  - Basic application window
-  - Map view displaying Portland Harbour area
-  - Verify pan/zoom functionality
+  - Maven project setup with JavaFX and java_leaflet
+  - Basic application window with layout structure
+  - Offline map implementation with Portland Harbour tiles
+  - Platform model and basic data structures
+  - Mission class hierarchy
+- **Validation**: Map displays offline, basic UI renders
+- **Estimated Effort**: 10-15% of total time
 
-### Phase 2: Simulation Engine (Day 2)
+### Phase 2: MVP Features
+**Priority**: Critical - Basic working system
 - **Deliverables**:
-  - Platform class with dynamics model
-  - SimulationEngine with time-stepping loop
-  - Basic waypoint following (no behaviours yet)
-  - Platform renders as marker on map
-  - Track history visualization
+  - All 4 behavior types with basic implementation
+  - Simple waypoint generation (no complex algorithms yet)
+  - Hard-coded sample behaviors for immediate testing:
+    - Pre-defined Portland Harbour search area polygon
+    - Sample parallel track search (045°, 100m spacing)
+    - Sample waypoint transit route (5 waypoints)
+    - Sample expanding square (090°, 50m increment)
+  - Basic simulation engine with simple movement
+  - Minimal UI panels (unstyled but functional)
+  - Platform marker on map
+- **Validation**: Can create mission with all behaviors and run basic simulation
+- **Estimated Effort**: 20-25% of total time
 
-### Phase 3: Drawing Tools & Mission Planning (Day 3)
+### Phase 3: Complete Functionality
+**Priority**: High - Full feature implementation
 - **Deliverables**:
-  - Custom drawing overlay (polygon, points)
-  - Mission Plan panel UI
-  - Add/delete behaviours
-  - Property dialogs for each behaviour type
-  - Planned routes display on map
+  - Proper pattern generation algorithms
+  - Polygon clipping and intersection
+  - Realistic platform dynamics (turn radius, acceleration)
+  - Full simulation control (start/pause/stop/speed)
+  - Drawing tools for polygons and waypoints
+  - Mission plan management (add/delete/reorder)
+- **Validation**: All functional requirements met, behaviors execute correctly
+- **Estimated Effort**: 30-35% of total time
 
-### Phase 4: Search Pattern Generation (Day 4)
+### Phase 4: Visual Polish & UX
+**Priority**: Medium - Professional presentation
 - **Deliverables**:
-  - ParallelTrackSearch implementation
-  - ExpandingSquareSearch implementation
-  - SearchPatternGenerator utility
-  - Verify patterns clip to polygon correctly
-  - Visual differentiation of behaviour types
+  - Smooth 60 FPS animations
+  - Professional Material Design styling
+  - Real-time dashboard components
+  - Animated behavior transitions
+  - Track history with smooth curves
+  - Color coding and visual hierarchy
+  - Input validation and error dialogs
+- **Validation**: Application looks professional and feels responsive
+- **Estimated Effort**: 25-30% of total time
 
-### Phase 5: Simulation Execution & Polish (Day 5)
+### Phase 5: Demo Preparation & Optimization
+**Priority**: Medium - Interview readiness
 - **Deliverables**:
-  - Control panel (start/pause/stop)
-  - Time acceleration
-  - Platform state panel with real-time updates
-  - Smooth turn dynamics
-  - Mission execution: sequential behaviour processing
-  - Generate compelling screenshots
+  - Performance optimization
+  - Bug fixes from testing
+  - Compelling demo scenarios
+  - Screenshot generation
+  - Backup demo videos
+  - README and documentation
+  - Final testing on target platform
+- **Validation**: Ready for interview demonstration
+- **Estimated Effort**: 10-15% of total time
 
 ---
 
@@ -510,9 +707,110 @@ class Waypoint {
 - ✓ Be able to discuss architecture and algorithms confidently
 - ✓ Demonstrate understanding of autonomous systems concepts
 
+### 10.4 Technical Risks & Mitigations
+
+#### Critical Risks
+- **Risk**: java_leaflet offline mode not working as expected
+  - **Mitigation**: Phase 1 proof-of-concept, fallback to JXMapViewer2 or GMapsFX
+  - **Backup**: Pre-rendered static map images for worst case
+
+- **Risk**: Performance issues with large search areas (>100 tracks)
+  - **Mitigation**: Implement level-of-detail rendering for distant tracks
+  - **Backup**: Limit maximum search area size with user warning
+
+- **Risk**: Complex polygon intersection mathematics
+  - **Mitigation**: Use JTS Topology Suite from start, not custom implementation
+  - **Backup**: Simplified rectangular areas if polygon math fails
+
+#### Moderate Risks
+- **Risk**: JavaFX version compatibility issues
+  - **Mitigation**: Target JavaFX 21 LTS, test on multiple JDK versions
+  - **Backup**: Bundle JRE with application using jpackage
+
+- **Risk**: Time overrun on visual polish
+  - **Mitigation**: MVP-first approach ensures functionality by Phase 3
+  - **Backup**: Focus on one perfect behavior type rather than all four
+
+- **Risk**: Drawing tools complexity
+  - **Mitigation**: Start with simple click-based polygon creation
+  - **Backup**: Pre-defined test areas for demo if drawing fails
+
 ---
 
-## 11. References
+## 11. Demo Scenarios
+
+### 11.1 Scenario 1: Mine Clearance Operation
+**Duration**: 5 minutes
+**Location**: Portland Harbour entrance
+**Narrative**: "Demonstrating a typical mine clearance mission in a strategic waterway"
+
+**Sequence**:
+1. Draw search area at harbour entrance (1km × 2km polygon)
+2. Add Parallel Track Search (045°, 100m spacing)
+3. Start simulation, show systematic coverage
+4. Pause mid-search, simulate "contact detected"
+5. Draw 200m × 200m box around contact
+6. Add Expanding Square Search for detailed investigation
+7. Resume simulation, show transition between behaviors
+8. Add Return to Base behavior
+9. Complete mission execution
+
+**Key Highlights**:
+- Pattern generation algorithms
+- Smooth behavior transitions
+- Realistic turn dynamics
+- Mission progress tracking
+
+### 11.2 Scenario 2: Multi-Area Maritime Survey
+**Duration**: 3 minutes
+**Location**: Three separate areas in Weymouth Bay
+**Narrative**: "Coordinated survey of multiple areas of interest"
+
+**Sequence**:
+1. Create three distinct polygons of different sizes
+2. Apply different search patterns:
+   - Area 1: Parallel Track Search (000°, 150m)
+   - Area 2: Expanding Square Search (090°, 50m)
+   - Area 3: Parallel Track Search (270°, 200m)
+3. Add Waypoint Transit behaviors between areas
+4. Execute at 10× speed
+
+**Key Highlights**:
+- Complex mission planning
+- Multiple behavior types
+- Efficient route planning
+- Time acceleration capability
+
+### 11.3 Scenario 3: Emergency Response & Replanning
+**Duration**: 4 minutes
+**Location**: Portland Harbour
+**Narrative**: "Dynamic mission adjustment for emergency tasking"
+
+**Sequence**:
+1. Start with ongoing Parallel Track Search
+2. Pause simulation after 30% completion
+3. Insert high-priority Waypoint Transit (simulated emergency location)
+4. Add small Expanding Square Search at emergency site
+5. Insert Return to Original Mission behavior
+6. Resume and show seamless mission adaptation
+
+**Key Highlights**:
+- Dynamic replanning capability
+- Mission state preservation
+- Priority task insertion
+- Operational flexibility
+
+### 11.4 Screenshot Opportunities
+1. **Planning View**: Full mission with multiple colored behaviors
+2. **Execution View**: USV mid-turn with track history
+3. **Dashboard Close-up**: Real-time gauges and progress indicators
+4. **Pattern Generation**: Complex search pattern fully rendered
+5. **Split View**: Plan on left, execution on right
+6. **Time Acceleration**: Motion blur effect at 20× speed
+
+---
+
+## 12. References
 
 - **Search Patterns**: https://en.wikipedia.org/wiki/Water_surface_searches
 - **java_leaflet**: https://github.com/makbn/java_leaflet
@@ -521,7 +819,7 @@ class Waypoint {
 
 ---
 
-## 12. Glossary
+## 13. Glossary
 
 - **USV**: Unmanned Surface Vehicle
 - **Waypoint**: Geographic position (lat/lon) that platform navigates to
@@ -533,5 +831,14 @@ class Waypoint {
 
 ---
 
-**Document Status**: Draft v1.0  
+**Document Status**: Draft v1.2
+**Last Updated**: October 2025
 **Next Review**: After Phase 1 completion
+
+**Change Log v1.2**:
+- Added hard-coded sample behaviors for rapid MVP testing
+- Redesigned behavior architecture with core Behaviour interface
+- Introduced CompositeBehaviour for mission sequencing
+- Separated PlatformCapabilities from PlatformState
+- Added behavior progress tracking mechanism
+- Defined clear behavior execution model with demanded state pattern
