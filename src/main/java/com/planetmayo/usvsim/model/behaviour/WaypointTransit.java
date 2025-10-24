@@ -113,4 +113,17 @@ public class WaypointTransit implements Behaviour {
     public Color getDisplayColor() {
         return Color.web("#FF9800");  // Orange
     }
+
+    // Getters for editing support
+    public double getPlatformSpeed() {
+        return platformSpeed;
+    }
+
+    public List<Position> getUserWaypoints() {
+        List<Position> positions = new ArrayList<>();
+        for (Waypoint wp : waypoints) {
+            positions.add(wp.getPosition());
+        }
+        return positions;
+    }
 }

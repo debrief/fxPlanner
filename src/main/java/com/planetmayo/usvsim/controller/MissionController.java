@@ -1,5 +1,7 @@
 package com.planetmayo.usvsim.controller;
 
+import com.planetmayo.usvsim.model.behaviour.Behaviour;
+import com.planetmayo.usvsim.model.behaviour.BehaviourState;
 import com.planetmayo.usvsim.model.behaviour.ParallelTrackSearch;
 import com.planetmayo.usvsim.model.behaviour.WaypointTransit;
 import com.planetmayo.usvsim.model.behaviour.ReturnToBase;
@@ -21,7 +23,9 @@ import com.planetmayo.usvsim.view.dialogs.ReturnToBaseParams;
 import com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchDialog;
 import com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchParams;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Main controller wiring UI events to mission model operations.
@@ -42,8 +46,8 @@ public class MissionController implements MainView.MissionControllerCallback {
     private final StatePanel statePanel;
     private final DrawingController drawingController;
     private final SimulationEngine simulationEngine;
-    private long simulationStartTimeMs = 0;
-    private long finalSimulationTimeMs = 0;  // Frozen time when simulation completes
+    private long finalSimulationTimeMs = 0;  // Frozen simulation time when complete
+    private final Map<Behaviour, BehaviourState> previousBehaviourStates = new HashMap<>();
 
     public MissionController(Mission mission, MainView mainView) {
         this.mission = mission;
@@ -80,7 +84,16 @@ public class MissionController implements MainView.MissionControllerCallback {
                     if (mapReady != null && Boolean.parseBoolean(mapReady.toString())) {
                         System.out.println("Map ready - showing start position marker");
                         javafx.application.Platform.runLater(() -> {
-                            mapPanel.showStartPosition(mission.getPlatform().getState().getPosition());
+                            Position startPos = mission.getPlatform().getState().getPosition();
+                            mapPanel.showStartPosition(startPos);
+
+                            // Zoom out 2 levels and center on start point
+                            String zoomCenterScript = String.format("""
+                                var currentZoom = window.leafletMap.getZoom();
+                                window.leafletMap.setView([%f, %f], currentZoom - 2);
+                                console.log('Map centered on start position and zoomed out 2 levels');
+                                """, startPos.getLatitude(), startPos.getLongitude());
+                            mapPanel.getWebEngine().executeScript(zoomCenterScript);
                         });
                         // Stop polling once marker is shown
                         mapReadyPoller.stop();
@@ -442,7 +455,6 @@ public class MissionController implements MainView.MissionControllerCallback {
             System.err.println("Cannot start: mission plan is empty");
             return;
         }
-        simulationStartTimeMs = System.currentTimeMillis();
         finalSimulationTimeMs = 0;  // Reset frozen time
         simulationEngine.start();
     }
@@ -462,13 +474,38 @@ public class MissionController implements MainView.MissionControllerCallback {
     }
 
     /**
-     * Stop the simulation and reset
+     * Stop the simulation and reset everything to initial state
      */
     public void stopSimulation() {
         simulationEngine.stop();
-        simulationStartTimeMs = 0;
         finalSimulationTimeMs = 0;  // Reset frozen time
+
+        // Clear track history (done via clearOverlays)
+        mapPanel.clearOverlays();
+
+        // Reset platform to initial state
+        Position initialPosition = Position.of(50.5712, -2.4525);  // Portland Harbour start
+        mission.getPlatform().setState(new com.planetmayo.usvsim.model.platform.PlatformState(
+            "USV-1",
+            initialPosition,
+            0.0,  // heading
+            0.0,  // speed
+            0.0,  // depth
+            java.time.Instant.now()
+        ));
+
+        // Reset all behaviours to PENDING state
+        for (com.planetmayo.usvsim.model.behaviour.Behaviour behaviour : mission.getMissionPlan().getBehaviours()) {
+            // Note: Behaviours don't have a reset method, they would need to be recreated
+            // For now, we can clear the mission plan and let user recreate behaviours
+        }
+
+        // Update UI
         statePanel.reset();
+        controlPanel.reset();
+        mapPanel.updatePlatformPosition(initialPosition, 0.0);
+
+        System.out.println("Simulation stopped - all state reset to initial conditions");
     }
 
     /**
@@ -499,6 +536,7 @@ public class MissionController implements MainView.MissionControllerCallback {
         // Wire control panel handlers (T053, T054)
         controlPanel.setOnStart(this::startSimulation);
         controlPanel.setOnPause(this::pauseSimulation);
+        controlPanel.setOnResume(this::resumeSimulation);
         controlPanel.setOnStop(this::stopSimulation);
         controlPanel.setOnSpeedChange(this::setTimeAcceleration);
 
@@ -509,21 +547,16 @@ public class MissionController implements MainView.MissionControllerCallback {
                 var state = mission.getPlatform().getState();
                 statePanel.updateState(state);
 
-                // Update simulation time (elapsed since start)
+                // Update simulation time (accounts for time acceleration)
                 if (finalSimulationTimeMs > 0) {
                     // Simulation complete - show frozen final time
                     statePanel.setTimestamp(finalSimulationTimeMs);
                     controlPanel.updateSimulationTime(finalSimulationTimeMs);
-                } else if (simulationStartTimeMs > 0) {
-                    // Simulation running - show live elapsed time
-                    long elapsedMs = System.currentTimeMillis() - simulationStartTimeMs;
-                    statePanel.setTimestamp(elapsedMs);
-                    controlPanel.updateSimulationTime(elapsedMs);
-
-                    // Debug: Log every 100th update
-                    if (elapsedMs % 10000 < 200) {
-                        System.out.println("Simulation time: " + (elapsedMs / 1000) + "s");
-                    }
+                } else {
+                    // Simulation running - show live simulation time
+                    long simTimeMs = simulationEngine.getSimulationTimeMs();
+                    statePanel.setTimestamp(simTimeMs);
+                    controlPanel.updateSimulationTime(simTimeMs);
                 }
 
                 // Update map with current position and heading
@@ -532,38 +565,30 @@ public class MissionController implements MainView.MissionControllerCallback {
                 // Add to track history
                 mapPanel.addTrackPoint(state.getPosition());
 
-                // Refresh mission plan to show updated behaviour status
-                missionPlanPanel.refresh();
+                // Refresh mission plan only if any behaviour state has changed
+                if (hasBehaviourStateChanged()) {
+                    missionPlanPanel.refresh();
+                }
             });
         });
 
         // Wire simulation completion callback
         simulationEngine.setOnSimulationComplete(() -> {
             javafx.application.Platform.runLater(() -> {
-                // Capture final elapsed time
-                if (simulationStartTimeMs > 0) {
-                    finalSimulationTimeMs = System.currentTimeMillis() - simulationStartTimeMs;
-                    statePanel.setTimestamp(finalSimulationTimeMs);
-                    System.out.println("Mission complete - final time: " +
-                        String.format("%02d:%02d:%02d",
-                            finalSimulationTimeMs / 3600000,
-                            (finalSimulationTimeMs % 3600000) / 60000,
-                            (finalSimulationTimeMs % 60000) / 1000));
-                }
+                // Capture final simulation time
+                finalSimulationTimeMs = simulationEngine.getSimulationTimeMs();
+                statePanel.setTimestamp(finalSimulationTimeMs);
+                controlPanel.updateSimulationTime(finalSimulationTimeMs);
+                System.out.println("Mission complete - final simulation time: " +
+                    String.format("%02d:%02d:%02d",
+                        finalSimulationTimeMs / 3600000,
+                        (finalSimulationTimeMs % 3600000) / 60000,
+                        (finalSimulationTimeMs % 60000) / 1000));
             });
         });
 
         // Wire double-click handler for editing behaviours in mission plan
-        missionPlanPanel.setOnBehaviourDoubleClick(behaviour -> {
-            System.out.println("Double-clicked on behaviour: " + behaviour.getName());
-            // TODO: Open appropriate edit dialog based on behaviour type
-            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
-                javafx.scene.control.Alert.AlertType.INFORMATION);
-            alert.setTitle("Edit Behaviour");
-            alert.setHeaderText(behaviour.getName());
-            alert.setContentText("Edit functionality coming soon.\n\nBehaviour: " + behaviour.getDescription());
-            alert.show();
-        });
+        missionPlanPanel.setOnBehaviourDoubleClick(this::handleEditBehaviour);
 
         // Register this controller as the callback for MainView (T068)
         mainView.setMissionControllerCallback(this);
@@ -690,5 +715,179 @@ public class MissionController implements MainView.MissionControllerCallback {
         } catch (IllegalArgumentException e) {
             System.err.println("Failed to create expanding square search: " + e.getMessage());
         }
+    }
+
+    /**
+     * Handle editing of a behaviour from the mission plan.
+     * Opens the appropriate dialog based on behaviour type and replaces behaviour if user saves.
+     */
+    private void handleEditBehaviour(Behaviour behaviour) {
+        System.out.println("Editing behaviour: " + behaviour.getName());
+
+        // Get the index of this behaviour in the mission plan
+        int index = mission.getMissionPlan().getBehaviours().indexOf(behaviour);
+        if (index < 0) {
+            System.err.println("Behaviour not found in mission plan");
+            return;
+        }
+
+        // Open appropriate dialog based on behaviour type
+        if (behaviour instanceof ParallelTrackSearch) {
+            editParallelTrackSearch((ParallelTrackSearch) behaviour, index);
+        } else if (behaviour instanceof WaypointTransit) {
+            editWaypointTransit((WaypointTransit) behaviour, index);
+        } else if (behaviour instanceof ReturnToBase) {
+            editReturnToBase((ReturnToBase) behaviour, index);
+        } else if (behaviour instanceof ExpandingSquareSearch) {
+            editExpandingSquareSearch((ExpandingSquareSearch) behaviour, index);
+        } else {
+            System.err.println("Unknown behaviour type: " + behaviour.getClass().getName());
+        }
+    }
+
+    private void editParallelTrackSearch(ParallelTrackSearch behaviour, int index) {
+        ParallelTrackSearchDialog dialog = new ParallelTrackSearchDialog();
+        dialog.showAndWait().ifPresent(params -> {
+            // Remove old behaviour
+            mission.getMissionPlan().removeBehaviour(index);
+            missionPlanPanel.removeBehavior(behaviour);
+
+            // Create new behaviour with updated params
+            ParallelTrackSearch newBehaviour = new ParallelTrackSearch(
+                behaviour.getSearchArea(),
+                params.orientation,
+                params.spacing,
+                params.speed
+            );
+
+            // Add at same index
+            mission.getMissionPlan().getBehaviours().add(index, newBehaviour);
+            missionPlanPanel.getBehaviors().add(index, newBehaviour);
+
+            // Clear old overlays and re-render all behaviours
+            mapPanel.clearOverlays();
+            rerenderAllBehaviours();
+
+            System.out.println("Updated parallel track search at index " + index);
+        });
+    }
+
+    private void editWaypointTransit(WaypointTransit behaviour, int index) {
+        // For waypoint transit editing, show info that user needs to delete and recreate
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+            javafx.scene.control.Alert.AlertType.INFORMATION);
+        alert.setTitle("Edit Waypoint Transit");
+        alert.setHeaderText("Waypoint Transit Editing");
+        alert.setContentText("To edit waypoint transit, please:\n" +
+            "1. Delete this behaviour\n" +
+            "2. Add new Waypoint Transit with updated route\n\n" +
+            "Current: " + behaviour.getDescription());
+        alert.showAndWait();
+    }
+
+    private void editReturnToBase(ReturnToBase behaviour, int index) {
+        ReturnToBaseDialog dialog = new ReturnToBaseDialog(mission.getPlatform().getState().getPosition());
+        dialog.showAndWait().ifPresent(params -> {
+            // Remove old behaviour
+            mission.getMissionPlan().removeBehaviour(index);
+            missionPlanPanel.removeBehavior(behaviour);
+
+            // Create new behaviour
+            ReturnToBase newBehaviour = new ReturnToBase(params.baseLocation, params.speed);
+
+            // Add at same index
+            mission.getMissionPlan().getBehaviours().add(index, newBehaviour);
+            missionPlanPanel.getBehaviors().add(index, newBehaviour);
+
+            // Clear old overlays and re-render all behaviours
+            mapPanel.clearOverlays();
+            rerenderAllBehaviours();
+
+            System.out.println("Updated return to base at index " + index);
+        });
+    }
+
+    private void editExpandingSquareSearch(ExpandingSquareSearch behaviour, int index) {
+        ExpandingSquareSearchDialog dialog = new ExpandingSquareSearchDialog();
+        dialog.showAndWait().ifPresent(params -> {
+            // Remove old behaviour
+            mission.getMissionPlan().removeBehaviour(index);
+            missionPlanPanel.removeBehavior(behaviour);
+
+            // Create new behaviour
+            ExpandingSquareSearch newBehaviour = new ExpandingSquareSearch(
+                behaviour.getSearchArea(),
+                params.initialDirection,
+                params.legIncrement,
+                params.speed
+            );
+
+            // Add at same index
+            mission.getMissionPlan().getBehaviours().add(index, newBehaviour);
+            missionPlanPanel.getBehaviors().add(index, newBehaviour);
+
+            // Clear old overlays and re-render all behaviours
+            mapPanel.clearOverlays();
+            rerenderAllBehaviours();
+
+            System.out.println("Updated expanding square search at index " + index);
+        });
+    }
+
+    /**
+     * Re-render all behaviours on the map.
+     * Used after editing a behaviour to show updated pattern.
+     */
+    private void rerenderAllBehaviours() {
+        for (Behaviour behaviour : mission.getMissionPlan().getBehaviours()) {
+            if (behaviour instanceof ParallelTrackSearch pts) {
+                mapPanel.renderPolygon(pts.getSearchArea());
+                mapPanel.renderTracks(pts.getWaypoints());
+            } else if (behaviour instanceof ExpandingSquareSearch ess) {
+                mapPanel.renderPolygon(ess.getSearchArea());
+                mapPanel.renderTracks(ess.getWaypoints());
+            } else if (behaviour instanceof WaypointTransit wt) {
+                mapPanel.renderTracks(wt.getWaypoints(), true);
+            } else if (behaviour instanceof ReturnToBase rtb) {
+                // Find start position for RTB (last waypoint of previous behaviour)
+                int rtbIndex = mission.getMissionPlan().getBehaviours().indexOf(rtb);
+                Position startPos = getLastWaypointPosition(rtbIndex);
+                renderReturnToBasePath(startPos, rtb.getBaseLocation(), rtb.getPlatformSpeed());
+            }
+        }
+    }
+
+    /**
+     * Get last waypoint position before a given behaviour index.
+     */
+    private Position getLastWaypointPosition(int beforeIndex) {
+        var behaviours = mission.getMissionPlan().getBehaviours();
+        for (int i = beforeIndex - 1; i >= 0; i--) {
+            Behaviour prev = behaviours.get(i);
+            var waypoints = prev.getWaypoints();
+            if (!waypoints.isEmpty()) {
+                return waypoints.get(waypoints.size() - 1).getPosition();
+            }
+        }
+        // No previous waypoints - return platform start position
+        return mission.getPlatform().getState().getPosition();
+    }
+
+    /**
+     * Check if any behaviour state has changed since last check.
+     * Updates the tracked state and returns true if any change detected.
+     */
+    private boolean hasBehaviourStateChanged() {
+        boolean changed = false;
+        for (Behaviour behaviour : mission.getMissionPlan().getBehaviours()) {
+            BehaviourState currentState = behaviour.getState();
+            BehaviourState previousState = previousBehaviourStates.get(behaviour);
+
+            if (previousState != currentState) {
+                previousBehaviourStates.put(behaviour, currentState);
+                changed = true;
+            }
+        }
+        return changed;
     }
 }

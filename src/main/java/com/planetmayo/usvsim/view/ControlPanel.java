@@ -17,14 +17,16 @@ import javafx.scene.layout.VBox;
  */
 public class ControlPanel extends VBox {
     private Button startBtn;
-    private Button pauseBtn;
+    private Button pauseResumeBtn;
     private Button stopBtn;
     private Slider speedSlider;
     private Label speedLabel;
     private Label timeLabel;
+    private boolean isPaused = false;
 
     private Runnable onStart;
     private Runnable onPause;
+    private Runnable onResume;
     private Runnable onStop;
     private java.util.function.Consumer<Double> onSpeedChange;
 
@@ -57,16 +59,27 @@ public class ControlPanel extends VBox {
         startBtn.setStyle("-fx-font-size: 12;");
         startBtn.setOnAction(e -> {
             if (onStart != null) onStart.run();
-            updateButtonStates(true);
+            isPaused = false;
+            pauseResumeBtn.setText("Pause");
+            updateButtonStates(true, false);
         });
 
-        pauseBtn = new Button("Pause");
-        pauseBtn.setPrefWidth(80);
-        pauseBtn.setStyle("-fx-font-size: 12;");
-        pauseBtn.setDisable(true);
-        pauseBtn.setOnAction(e -> {
-            if (onPause != null) onPause.run();
-            updateButtonStates(false);
+        pauseResumeBtn = new Button("Pause");
+        pauseResumeBtn.setPrefWidth(80);
+        pauseResumeBtn.setStyle("-fx-font-size: 12;");
+        pauseResumeBtn.setDisable(true);
+        pauseResumeBtn.setOnAction(e -> {
+            if (!isPaused) {
+                // Currently running - pause it
+                if (onPause != null) onPause.run();
+                isPaused = true;
+                pauseResumeBtn.setText("Resume");
+            } else {
+                // Currently paused - resume it
+                if (onResume != null) onResume.run();
+                isPaused = false;
+                pauseResumeBtn.setText("Pause");
+            }
         });
 
         stopBtn = new Button("Stop");
@@ -75,10 +88,12 @@ public class ControlPanel extends VBox {
         stopBtn.setDisable(true);
         stopBtn.setOnAction(e -> {
             if (onStop != null) onStop.run();
-            updateButtonStates(false);
+            isPaused = false;
+            pauseResumeBtn.setText("Pause");
+            updateButtonStates(false, false);
         });
 
-        box.getChildren().addAll(startBtn, pauseBtn, stopBtn);
+        box.getChildren().addAll(startBtn, pauseResumeBtn, stopBtn);
         return box;
     }
 
@@ -144,6 +159,13 @@ public class ControlPanel extends VBox {
     }
 
     /**
+     * Set handler for Resume button
+     */
+    public void setOnResume(Runnable handler) {
+        this.onResume = handler;
+    }
+
+    /**
      * Set handler for Stop button
      */
     public void setOnStop(Runnable handler) {
@@ -167,9 +189,9 @@ public class ControlPanel extends VBox {
     /**
      * Update button enabled states based on simulation state
      */
-    private void updateButtonStates(boolean isRunning) {
+    private void updateButtonStates(boolean isRunning, boolean isPaused) {
         startBtn.setDisable(isRunning);
-        pauseBtn.setDisable(!isRunning);
+        pauseResumeBtn.setDisable(!isRunning);
         stopBtn.setDisable(!isRunning);
     }
 
@@ -179,7 +201,9 @@ public class ControlPanel extends VBox {
     public void reset() {
         speedSlider.setValue(1.0);
         speedLabel.setText("1.0×");
-        updateButtonStates(false);
+        isPaused = false;
+        pauseResumeBtn.setText("Pause");
+        updateButtonStates(false, false);
         updateSimulationTime(0);
     }
 

@@ -42,6 +42,7 @@ public class SimulationEngine {
 
     private double timeAcceleration = 1.0;  // 1× = real-time, up to 500× faster
     private long lastStepTimeMs;
+    private double simulationTimeSeconds = 0.0;  // Accumulated simulation time
     private Runnable onStateChanged;
     private Runnable onSimulationComplete;
 
@@ -67,6 +68,7 @@ public class SimulationEngine {
         paused.set(false);
         mission.start();
         lastStepTimeMs = System.currentTimeMillis();
+        simulationTimeSeconds = 0.0;  // Reset simulation time
 
         System.out.println("Starting simulation");
 
@@ -147,6 +149,13 @@ public class SimulationEngine {
     }
 
     /**
+     * Get accumulated simulation time in milliseconds (accounts for time acceleration)
+     */
+    public long getSimulationTimeMs() {
+        return (long) (simulationTimeSeconds * 1000.0);
+    }
+
+    /**
      * Main simulation loop (runs on background thread)
      */
     private void simulationStep() {
@@ -164,6 +173,9 @@ public class SimulationEngine {
             long nowMs = System.currentTimeMillis();
             double dtSeconds = ((nowMs - lastStepTimeMs) / 1000.0) * timeAcceleration;
             lastStepTimeMs = nowMs;
+
+            // Accumulate simulation time
+            simulationTimeSeconds += dtSeconds;
 
             Platform platform = mission.getPlatform();
             CompositeBehaviour missionPlan = mission.getMissionPlan();

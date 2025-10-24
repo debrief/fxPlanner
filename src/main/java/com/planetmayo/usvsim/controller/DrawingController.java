@@ -173,6 +173,17 @@ public class DrawingController {
                     System.out.println("Parsed " + vertices.size() + " vertices from coordinates");
 
                     if (!vertices.isEmpty() && vertices.size() >= 3) {
+                        // Auto-close polygon if not already closed
+                        Position first = vertices.get(0);
+                        Position last = vertices.get(vertices.size() - 1);
+                        double distance = first.distanceTo(last);
+
+                        if (distance > 1.0) {  // More than 1m apart - not closed
+                            vertices.add(first);
+                            System.out.println("Auto-closed polygon by adding first point at end (gap was " +
+                                String.format("%.1fm", distance) + ")");
+                        }
+
                         Polygon polygon = new Polygon(vertices);
                         mode = DrawingMode.DISABLED;
 

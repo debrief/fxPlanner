@@ -113,4 +113,21 @@ public class ParallelTrackSearch implements Behaviour {
     public Color getDisplayColor() {
         return Color.BLUE;
     }
+
+    // Getters for editing support
+    public Polygon getSearchArea() {
+        return searchArea;
+    }
+
+    public double getTrackOrientation() {
+        return trackOrientation;
+    }
+
+    public double getTrackSpacing() {
+        return trackSpacing;
+    }
+
+    public double getPlatformSpeed() {
+        return platformSpeed;
+    }
 }

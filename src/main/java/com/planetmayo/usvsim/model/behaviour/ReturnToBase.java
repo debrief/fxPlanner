@@ -31,6 +31,7 @@ public class ReturnToBase implements Behaviour {
     private BehaviourState state;
     private boolean reachedBase;
     private boolean completionLogged = false;
+    private long lastLogTime = 0;
 
     /**
      * Create return to base behaviour.
@@ -142,5 +143,14 @@ public class ReturnToBase implements Behaviour {
     @Override
     public Color getDisplayColor() {
         return Color.web("#F44336");  // Red
+    }
+
+    // Getters for editing support
+    public Position getBaseLocation() {
+        return baseLocation;
+    }
+
+    public double getPlatformSpeed() {
+        return platformSpeed;
     }
 }

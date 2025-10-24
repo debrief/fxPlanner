@@ -128,4 +128,21 @@ public class ExpandingSquareSearch implements Behaviour {
     public Color getDisplayColor() {
         return Color.web("#9C27B0");  // Purple
     }
+
+    // Getters for editing support
+    public Polygon getSearchArea() {
+        return searchArea;
+    }
+
+    public double getInitialDirection() {
+        return initialDirection;
+    }
+
+    public double getLegIncrement() {
+        return legIncrement;
+    }
+
+    public double getPlatformSpeed() {
+        return platformSpeed;
+    }
 }
