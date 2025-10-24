@@ -1,34 +1,49 @@
 <!-- Sync Impact Report
-Version change: 0.0.0 → 1.1.0 (Initial constitution with enhanced testing principles)
+Version change: 0.0.0 → 1.2.0 (Initial constitution with clarified testing principles)
 Added principles:
-  - I. Test-First Development (TDD)
-  - II. Model-View-Controller Architecture
-  - III. Behavior-Driven Design
-  - IV. Incremental Development
-  - V. Visual Feedback & User Experience
-  - VI. Testable Business Logic Isolation
-  - VII. End-to-End Testing Coverage
+  - I. Test-First Development for Business Logic
+  - II. Mockup-First UI Development
+  - III. Model-View-Controller Architecture
+  - IV. Behavior-Driven Design
+  - V. Incremental Development
+  - VI. Visual Feedback & User Experience
+  - VII. Testable Business Logic Isolation
+  - VIII. End-to-End Testing Coverage
 Added sections:
   - Quality Standards
   - Development Workflow
 Templates requiring updates: None (initial constitution)
 Follow-up TODOs: None
+Clarifications: TDD applies only to business logic; UI requires ASCII mockup approval first
 -->
 
 # fxPlanner Constitution
 
 ## Core Principles
 
-### I. Test-First Development (TDD)
+### I. Test-First Development for Business Logic
 
-Every feature implementation MUST begin with tests that define expected behavior.
-Tests are written first, reviewed and approved, then implementation follows the
-Red-Green-Refactor cycle. No feature is considered complete without passing tests.
+All business logic (algorithms, calculations, state machines, data transformations)
+MUST begin with tests that define expected behavior. Tests are written first,
+reviewed and approved, then implementation follows the Red-Green-Refactor cycle.
+This principle applies ONLY to business logic, NOT to UI code.
 
-**Rationale**: Tests serve as living documentation and ensure code quality. TDD
-prevents regression and ensures features work as specified before moving forward.
+**Rationale**: Tests serve as living documentation and ensure correctness of
+critical algorithms. TDD for business logic prevents regression in core
+functionality while allowing UI to evolve separately.
 
-### II. Model-View-Controller Architecture
+### II. Mockup-First UI Development
+
+All UI components MUST begin with an ASCII mockup approved by the product owner
+(Doc) before implementation. The mockup defines layout, controls, and visual
+hierarchy. Implementation follows approved design without requiring test-first
+approach for UI code itself.
+
+**Rationale**: UI development benefits from visual design approval rather than
+test-first methodology. ASCII mockups enable rapid iteration and clear
+communication of intent before coding begins.
+
+### III. Model-View-Controller Architecture
 
 The application MUST maintain strict separation between data models, user
 interface views, and controller logic. The simulation engine runs independently
@@ -39,7 +54,7 @@ direct coupling.
 allows parallel development of UI and business logic. Thread separation
 prevents UI blocking during intensive calculations.
 
-### III. Behavior-Driven Design
+### IV. Behavior-Driven Design
 
 All USV behaviors MUST implement the common Behaviour interface with consistent
 state management, progress tracking, and demand generation. CompositeBehaviour
@@ -49,7 +64,7 @@ waypoint generation and completion logic.
 **Rationale**: The behavior pattern enables extensibility for new mission types
 while maintaining consistent execution semantics across all behavior types.
 
-### IV. Incremental Development
+### V. Incremental Development
 
 Development MUST follow the MVP-first approach defined in Phase 1 (Core Foundation),
 Phase 2 (MVP Features), Phase 3 (Complete Functionality), Phase 4 (Visual Polish),
@@ -59,7 +74,7 @@ criteria before proceeding.
 **Rationale**: Incremental delivery ensures a working system early, allows for
 course correction, and guarantees core functionality even if time runs short.
 
-### V. Visual Feedback & User Experience
+### VI. Visual Feedback & User Experience
 
 The application MUST provide real-time visual feedback for all user actions and
 simulation states. This includes smooth 60 FPS animations, clear behavior
@@ -69,7 +84,7 @@ with <100ms interaction latency.
 **Rationale**: As a demonstration application for an interview, professional
 visual presentation and smooth user experience are critical success factors.
 
-### VI. Testable Business Logic Isolation
+### VII. Testable Business Logic Isolation
 
 All business logic MUST be placed in dedicated, framework-independent modules
 that can be thoroughly unit tested without UI or external dependencies. Core
@@ -80,7 +95,7 @@ where possible. Business logic modules must achieve >80% unit test coverage.
 Pure functions are easier to test, debug, and maintain. High coverage ensures
 reliability of critical mission planning algorithms.
 
-### VII. End-to-End Testing Coverage
+### VIII. End-to-End Testing Coverage
 
 High-level components and complete user workflows MUST be covered by end-to-end
 tests. This includes mission creation workflows, behavior sequencing, simulation
@@ -131,23 +146,28 @@ issues and validate real user scenarios.
 ## Development Workflow
 
 ### Feature Implementation Process
-1. Define behavior in specification
-2. Write unit tests for business logic
-3. Write E2E tests for user workflows
-4. Implement business logic in testable modules
-5. Implement UI integration following Behaviour interface
-6. Integrate with CompositeBehaviour sequencer
-7. Add UI controls and visualization
-8. Verify all tests pass (unit, integration, E2E)
-9. Verify against acceptance criteria
+1. Define feature in specification
+2. **For Business Logic**:
+   - Write unit tests first
+   - Implement in framework-independent modules
+   - Follow Red-Green-Refactor cycle
+3. **For UI Components**:
+   - Create ASCII mockup
+   - Get product owner (Doc) approval
+   - Implement approved design
+4. Write E2E tests for complete workflows
+5. Integrate business logic with UI via controllers
+6. Verify all tests pass (unit, integration, E2E)
+7. Verify against acceptance criteria
 
 ### Code Review Gates
 - All tests pass before merging (unit, integration, E2E)
 - Business logic modules have >80% test coverage
+- UI components have approved ASCII mockup on record
 - No business logic in UI components
 - No blocking operations on UI thread
 - Behavior contract compliance verified
-- Visual elements match design specifications
+- Visual elements match approved mockup
 - Performance metrics within defined limits
 
 ### Documentation Requirements
@@ -177,4 +197,4 @@ Changes to this constitution require:
 - Deviations require explicit justification in code comments
 - Phase gates enforce principle adherence before progression
 
-**Version**: 1.1.0 | **Ratified**: 2025-10-24 | **Last Amended**: 2025-10-24
+**Version**: 1.2.0 | **Ratified**: 2025-10-24 | **Last Amended**: 2025-10-24
