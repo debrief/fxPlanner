@@ -76,15 +76,52 @@ To create a JAR file:
 mvn package
 ```
 
-## Future Phases
+## PR Preview System
+
+This project features an **automated browser-based PR preview system** that deploys your JavaFX application changes to a web browser for easy review, without requiring local setup.
+
+### How It Works
+
+1. 🔄 **Open a Pull Request** - The system automatically deploys your changes
+2. ⏱️ **Wait ~5-7 minutes** - Docker builds and deploys to Fly.io
+3. 🌐 **Click the preview link** - Access your JavaFX app directly in the browser
+4. 🧹 **PR closes** - Preview environment is automatically destroyed
+
+### Features
+
+- ✅ **Zero local setup** - Review PRs from any device with a browser
+- ✅ **Automatic deployment** - Triggered on every PR update
+- ✅ **Isolated environments** - Each PR gets its own preview instance
+- ✅ **Auto-cleanup** - Resources are cleaned up when PRs close
+- ✅ **Cost-effective** - Runs only when needed (~$0.03-$0.58/month)
+
+### Setup
+
+For repository maintainers, see [Setup Guide](docs/SETUP.md) for configuration instructions.
+
+### Technology Stack
+
+- **JPro** - Renders JavaFX applications in web browsers (no plugins)
+- **Docker** - Containerizes the application for consistent deployment
+- **Fly.io** - Provides ephemeral hosting for preview environments
+- **GitHub Actions** - Automates deployment and cleanup workflows
+
+## Development Phases
 
 This project follows a phased development approach as outlined in [Issue #1](https://github.com/debrief/fxPlanner/issues/1):
 
-- **Phase 0: Foundation** ✅ (Current) - Basic JavaFX Hello World application with Maven build
-- **Phase 1: MVP** - JPro integration for browser-based preview
-- **Phase 2: Automation** - GitHub Actions workflow for PR previews
-- **Phase 3: Refinement** - Security, performance, and reliability improvements
-- **Phase 4: Enhancements** - Advanced features and optimizations
+- **Phase 0: Foundation** ✅ - Basic JavaFX Hello World application with Maven build
+- **Phase 1: MVP** ✅ - JPro integration and Docker containerization
+- **Phase 2: Automation** ✅ - GitHub Actions workflow for PR previews
+- **Phase 3: Refinement** ✅ - Security, error handling, and monitoring
+- **Phase 4: Enhancements** ⏳ - Advanced features and optimizations
+
+## Documentation
+
+- **[Quick Start Guide](docs/QUICKSTART.md)** - Get started as a contributor or maintainer
+- **[Setup Guide](docs/SETUP.md)** - Detailed setup instructions for the PR preview system
+- **[Architecture](docs/ARCHITECTURE.md)** - Technical architecture and system design
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 
 ## Troubleshooting
 

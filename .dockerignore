@@ -1,0 +1,50 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# GitHub files
+.github
+
+# Documentation
+docs/
+*.md
+README.md
+LICENSE
+
+# IDE files
+.idea
+.vscode
+.settings
+.project
+.classpath
+*.iml
+.DS_Store
+
+# Build output (will be rebuilt in container)
+target/
+
+# Test files
+src/test/
+
+# Scripts (not needed in container)
+scripts/
+
+# Fly.io config (already copied via Dockerfile)
+fly.toml
+
+# CI/CD files
+.travis.yml
+.circleci/
+.gitlab-ci.yml
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.swp
+*~
+
+# OS files
+Thumbs.db
+.DS_Store
