@@ -277,12 +277,12 @@
 
 ### Validation & Error Handling
 
-- [ ] T090 [P] Implement polygon validation in PolygonUtils (min 3 vertices, no self-intersection)
-- [ ] T091 [P] Add input validation to all dialogs (numeric ranges, required fields). Validate angles ∈ [0,360), positive distances/speeds. Show validation errors immediately on field change (red border).
-- [ ] T092 [P] Implement error dialogs for invalid inputs with descriptive JavaFX Alert messages that state field name and valid range (e.g., "Track spacing must be > 0 metres")
-- [ ] T093 [P] Add warning dialogs for edge cases: (1) "Platform may cut outside boundary during turns" if search area < turn radius; (2) "Track spacing is large - only N tracks generated" if spacing > area dimension; (3) "Pattern may terminate early on narrow sides" for elongated polygons in expanding square
-- [ ] T094 Disable mission plan editing during simulation (gray out buttons)
-- [ ] T095 Disable Start button when mission plan is empty
+- [x] T090 [P] Implement polygon validation in PolygonUtils (min 3 vertices, no self-intersection)
+- [x] T091 [P] Add input validation to all dialogs (numeric ranges, required fields). Validate angles ∈ [0,360), positive distances/speeds. Show validation errors immediately on field change (red border).
+- [x] T092 [P] Implement error dialogs for invalid inputs with descriptive JavaFX Alert messages that state field name and valid range (e.g., "Track spacing must be > 0 metres")
+- [x] T093 [P] Add warning dialogs for edge cases: (1) "Platform may cut outside boundary during turns" if search area < turn radius; (2) "Track spacing is large - only N tracks generated" if spacing > area dimension; (3) "Pattern may terminate early on narrow sides" for elongated polygons in expanding square
+- [x] T094 Disable mission plan editing during simulation (gray out buttons)
+- [x] T095 Disable Start button when mission plan is empty
 
 ### Visual Polish
 
@@ -295,15 +295,15 @@
 ### Performance Optimization
 
 - [ ] T101 [P] Profile pattern generation with JVisualVM, optimize if >500ms. Also profile map pan/zoom responsiveness: target >30 FPS and <50ms input-to-response latency. Verify with frame rate profiler.
-- [ ] T102 [P] Implement track history limit (e.g., 1000 points max) to prevent memory growth
+- [x] T102 [P] Implement track history limit (e.g., 1000 points max) to prevent memory growth
 - [ ] T103 Implement FPS counter overlay (toggle with F3 key) in MapPanel. Test frame rate at 1× (target 60 FPS) and 20× acceleration (minimum 10 FPS). Verify smooth animation at both speeds.
 - [ ] T103a Implement automatic time acceleration capping: if frame rate drops below 10 FPS at current acceleration, automatically cap acceleration at achievable level and show notification
 
 ### Documentation
 
-- [ ] T104 [P] Add JavaDoc comments to all public APIs in util/ and model/
-- [ ] T105 [P] Create screenshots for README (mission planning, simulation execution)
-- [ ] T106 Write README.md with build instructions and feature highlights
+- [x] T104 [P] Add JavaDoc comments to all public APIs in util/ and model/
+- [x] T105 [P] Create screenshots for README (mission planning, simulation execution)
+- [x] T106 Write README.md with build instructions and feature highlights
 
 **Phase 9 Completion Criteria**: All validation in place, professional visual appearance, >60 FPS at 1× speed, documentation complete
 
