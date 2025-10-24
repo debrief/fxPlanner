@@ -18,12 +18,15 @@ COPY src ./src
 # Build the application with Maven (creates target/*.jar)
 RUN mvn clean package -DskipTests -B
 
-# Install Gradle for JPro packaging
-RUN apk add --no-cache wget unzip && \
+# Install Gradle for JPro packaging (using apt-get for Debian-based image)
+RUN apt-get update && \
+    apt-get install -y wget unzip && \
     wget https://services.gradle.org/distributions/gradle-8.5-bin.zip && \
     unzip gradle-8.5-bin.zip -d /opt && \
     rm gradle-8.5-bin.zip && \
-    ln -s /opt/gradle-8.5/bin/gradle /usr/bin/gradle
+    ln -s /opt/gradle-8.5/bin/gradle /usr/bin/gradle && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy Gradle build files
 COPY build.gradle settings.gradle ./

@@ -1,9 +1,21 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url = uri('https://sandec.jfrog.io/artifactory/repo') }
+    }
+    dependencies {
+        // JPro Gradle plugin artifact - using 2024.4.1 (confirmed available)
+        classpath 'one.jpro:jpro-gradle-plugin:2024.4.1'
+    }
+}
+
 plugins {
     id 'java'
     id 'application'
-    // JPro Gradle plugin for web deployment
-    id 'one.jpro' version '2025.1.0'
 }
+
+// Apply JPro plugin using the published plugin ID
+apply plugin: 'jpro'
 
 java {
     toolchain {
