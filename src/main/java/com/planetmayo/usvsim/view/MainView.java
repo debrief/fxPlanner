@@ -91,12 +91,12 @@ public class MainView extends BorderPane {
             "Return to Base"
         );
         addBehaviorDropdown.setPrefWidth(180);
-        addBehaviorDropdown.setOnAction(e -> handleAddBehavior(addBehaviorDropdown.getValue()));
+        addBehaviorDropdown.setOnAction(event -> handleAddBehavior(addBehaviorDropdown.getValue()));
 
         // Configure button
         Button configureBtn = new Button("⚙ Configure");
         configureBtn.setPrefWidth(100);
-        configureBtn.setOnAction(e -> handleConfigure());
+        configureBtn.setOnAction(event -> handleConfigure());
 
         box.getChildren().addAll(addBehaviorDropdown, configureBtn);
         return box;

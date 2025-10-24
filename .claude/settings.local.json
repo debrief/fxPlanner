@@ -12,7 +12,9 @@
       "Read(//Users/ian/.claude/commands/**)",
       "Bash(mvn clean compile:*)",
       "Bash(mvn test:*)",
-      "Bash(mvn clean test:*)"
+      "Bash(mvn clean test:*)",
+      "Bash(mvn:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": [

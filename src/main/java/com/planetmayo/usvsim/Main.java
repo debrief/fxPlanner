@@ -1,5 +1,8 @@
 package com.planetmayo.usvsim;
 
+import com.planetmayo.usvsim.controller.MissionController;
+import com.planetmayo.usvsim.model.geometry.Position;
+import com.planetmayo.usvsim.model.mission.Mission;
 import com.planetmayo.usvsim.view.MainView;
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -22,6 +25,12 @@ public class Main extends Application {
     public void start(Stage stage) throws Exception {
         // Create main application view
         MainView mainView = new MainView(stage);
+
+        // Create mission model (default: start at Portland Harbour)
+        Mission mission = Mission.createDefault(Position.of(50.6, -2.4));
+
+        // Create controller to wire UI to model
+        MissionController controller = new MissionController(mission, mainView);
 
         // Display the application
         mainView.show();

@@ -102,11 +102,11 @@
 ### UI Implementation (After Mockup Approval)
 
 - [x] T036 [US1] Create MapPanel in src/main/java/com/planetmayo/usvsim/view/MapPanel.java with java_leaflet MapView integration, offline tile provider, and POI marker for Portland Harbour. Include pan/zoom controls. Drawing overlay comes in T037.
-- [ ] T037 [US1] Implement DrawingController in src/main/java/com/planetmayo/usvsim/controller/DrawingController.java (polygon drawing, click capture)
+- [x] T037 [US1] Implement DrawingController in src/main/java/com/planetmayo/usvsim/controller/DrawingController.java (polygon drawing, click capture)
 - [x] T038 [US1] Create MissionPlanPanel in src/main/java/com/planetmayo/usvsim/view/MissionPlanPanel.java (list behaviours, show status)
 - [x] T039 [US1] Create ParallelTrackSearchDialog in src/main/java/com/planetmayo/usvsim/view/dialogs/ParallelTrackSearchDialog.java
 - [x] T040 [US1] Create MainView in src/main/java/com/planetmayo/usvsim/view/MainView.java (BorderPane layout per approved mockup)
-- [ ] T041 [US1] Implement MissionController.addParallelTrackSearch() in src/main/java/com/planetmayo/usvsim/controller/MissionController.java
+- [x] T041 [US1] Implement MissionController.addParallelTrackSearch() in src/main/java/com/planetmayo/usvsim/controller/MissionController.java
 - [x] T042 [US1] Update Main.java to launch MainView with map centered on Portland Harbour
 
 ### E2E Test (Complete Workflow)
@@ -126,13 +126,13 @@
 
 ### Tests First (TDD for Simulation Engine)
 
-- [ ] T044 [P] [US2] Write unit tests for platform dynamics (turn radius, acceleration) in src/test/java/com/planetmayo/usvsim/unit/controller/DynamicsTest.java
+- [x] T044 [P] [US2] Write unit tests for platform dynamics (turn radius, acceleration) in src/test/java/com/planetmayo/usvsim/unit/controller/DynamicsTest.java
 
 ### Business Logic Implementation
 
-- [ ] T045 [US2] Implement SimulationEngine in src/main/java/com/planetmayo/usvsim/controller/SimulationEngine.java per contracts/ (ScheduledExecutorService, time-stepped loop)
-- [ ] T046 [US2] Implement applyDynamics() method in SimulationEngine (turn radius, acceleration limits, great circle position update)
-- [ ] T047 [US2] Create BehaviourExecutor in src/main/java/com/planetmayo/usvsim/controller/BehaviourExecutor.java (getDemandedState, updateProgress logic)
+- [x] T045 [US2] Implement SimulationEngine in src/main/java/com/planetmayo/usvsim/controller/SimulationEngine.java per contracts/ (ScheduledExecutorService, time-stepped loop)
+- [x] T046 [US2] Implement applyDynamics() method in SimulationEngine (turn radius, acceleration limits, great circle position update)
+- [x] T047 [US2] Create BehaviourExecutor in src/main/java/com/planetmayo/usvsim/controller/BehaviourExecutor.java (getDemandedState, updateProgress logic)
 
 ### UI Mockup & Approval
 
@@ -141,12 +141,12 @@
 
 ### UI Implementation (After Mockup Approval)
 
-- [ ] T050 [US2] Create ControlPanel in src/main/java/com/planetmayo/usvsim/view/ControlPanel.java per approved mockup
-- [ ] T051 [US2] Create StatePanel in src/main/java/com/planetmayo/usvsim/view/StatePanel.java with JavaFX property bindings
+- [x] T050 [US2] Create ControlPanel in src/main/java/com/planetmayo/usvsim/view/ControlPanel.java per approved mockup
+- [x] T051 [US2] Create StatePanel in src/main/java/com/planetmayo/usvsim/view/StatePanel.java with JavaFX property bindings
 - [ ] T052 [US2] Update MapPanel to render USV icon (oriented marker) and track history (polyline)
-- [ ] T053 [US2] Wire ControlPanel buttons to SimulationEngine.start/pause/stop() in MissionController
-- [ ] T054 [US2] Wire time acceleration slider to SimulationEngine.setTimeAcceleration()
-- [ ] T055 [US2] Implement Platform.runLater() calls in SimulationEngine for UI updates
+- [x] T053 [US2] Wire ControlPanel buttons to SimulationEngine.start/pause/stop() in MissionController
+- [x] T054 [US2] Wire time acceleration slider to SimulationEngine.setTimeAcceleration()
+- [x] T055 [US2] Implement Platform.runLater() calls in SimulationEngine for UI updates
 
 ### Integration Test
 
