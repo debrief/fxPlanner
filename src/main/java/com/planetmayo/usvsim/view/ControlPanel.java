@@ -137,7 +137,7 @@ public class ControlPanel extends VBox {
         timeDisplayLabel.setPrefWidth(120);
 
         timeLabel = new Label("00:00:00");
-        timeLabel.setStyle("-fx-font-family: 'Courier New'; -fx-font-size: 13; -fx-text-fill: #1976D2;");
+        timeLabel.setStyle("-fx-font-family: 'Courier New'; -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: black;");
         timeLabel.setPrefWidth(100);
 
         box.getChildren().addAll(timeDisplayLabel, timeLabel);

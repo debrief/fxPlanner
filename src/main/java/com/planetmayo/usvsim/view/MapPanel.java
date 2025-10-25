@@ -307,8 +307,9 @@ public class MapPanel extends BorderPane {
                     // Fallback: simple click-to-draw using Leaflet's built-in features
                     function enableClickToDrawMode() {
                         updateStatus('FALLBACK: Click-to-draw enabled');
-                        var isDrawing = false;
+                        window.isDrawing = false;  // Expose globally for Java cleanup
                         var currentPolyline = null;
+                        var firstVertexMarker = null;  // Track first vertex marker for polygon mode
                         var vertices = [];
                         var CLOSE_THRESHOLD = 5; // pixels
 
@@ -316,7 +317,7 @@ public class MapPanel extends BorderPane {
                         window.vertexCount = 0;
 
                         window.leafletMap.on('click', function(e) {
-                            if (!isDrawing && window.currentDrawingMode !== 'polygon' && window.currentDrawingMode !== 'polyline') {
+                            if (!window.isDrawing && window.currentDrawingMode !== 'polygon' && window.currentDrawingMode !== 'polyline') {
                                 return;
                             }
 
@@ -353,6 +354,26 @@ public class MapPanel extends BorderPane {
                             vertices.push([e.latlng.lat, e.latlng.lng]);
                             window.vertexCount = vertices.length;
 
+                            // For polygon mode: show blue marker on first click
+                            if (window.currentDrawingMode === 'polygon' && vertices.length === 1) {
+                                firstVertexMarker = L.circleMarker([e.latlng.lat, e.latlng.lng], {
+                                    radius: 6,
+                                    fillColor: 'blue',
+                                    color: 'darkblue',
+                                    weight: 2,
+                                    opacity: 0.9,
+                                    fillOpacity: 0.7
+                                }).addTo(window.leafletMap);
+                                updateStatus('Vertex 1 added (click to continue)');
+                                return;  // Don't draw polyline yet
+                            }
+
+                            // Remove first vertex marker when drawing polyline (2+ vertices)
+                            if (firstVertexMarker && vertices.length >= 2) {
+                                window.leafletMap.removeLayer(firstVertexMarker);
+                                firstVertexMarker = null;
+                            }
+
                             if (currentPolyline) {
                                 window.leafletMap.removeLayer(currentPolyline);
                             }
@@ -379,36 +400,57 @@ public class MapPanel extends BorderPane {
                                     window.leafletMap.removeLayer(currentPolyline);
                                     currentPolyline = null;
                                 }
+                                if (firstVertexMarker) {
+                                    window.leafletMap.removeLayer(firstVertexMarker);
+                                    firstVertexMarker = null;
+                                }
+                                // Reset cursor to default (hand/grab)
+                                document.getElementById('map').style.cursor = '';
                             }
                         };
 
                         window.startDrawing = function() {
-                            isDrawing = true;
+                            window.isDrawing = true;
                             vertices = [];
+                            // Clean up any existing first vertex marker
+                            if (firstVertexMarker) {
+                                window.leafletMap.removeLayer(firstVertexMarker);
+                                firstVertexMarker = null;
+                            }
+                            // Change cursor to crosshair for drawing mode
+                            document.getElementById('map').style.cursor = 'crosshair';
                             updateStatus('Click map to add vertices. Click near first vertex to close polygon.');
                         };
 
                         window.cancelDrawing = function() {
-                            isDrawing = false;
+                            window.isDrawing = false;
                             vertices = [];
                             window.vertexCount = 0;
                             if (currentPolyline) {
                                 window.leafletMap.removeLayer(currentPolyline);
                                 currentPolyline = null;
                             }
+                            if (firstVertexMarker) {
+                                window.leafletMap.removeLayer(firstVertexMarker);
+                                firstVertexMarker = null;
+                            }
+                            // Reset cursor to default (hand/grab)
+                            document.getElementById('map').style.cursor = '';
                             updateStatus('Drawing cancelled');
                         };
 
                         // Polyline drawing mode (for waypoint transit)
                         window.startDrawingPolyline = function() {
                             window.currentDrawingMode = 'polyline';
-                            isDrawing = true;
+                            window.isDrawing = true;
                             vertices = [];
                             window.vertexCount = 0;
                             if (currentPolyline) {
                                 window.leafletMap.removeLayer(currentPolyline);
                                 currentPolyline = null;
                             }
+                            // Change cursor to crosshair for drawing mode
+                            document.getElementById('map').style.cursor = 'crosshair';
                             updateStatus('Click map to add waypoints. Re-click last point to finish.');
                         };
 
@@ -426,7 +468,7 @@ public class MapPanel extends BorderPane {
                                 // Clean up drawing artifacts
                                 vertices = [];
                                 window.vertexCount = 0;
-                                isDrawing = false;
+                                window.isDrawing = false;
                                 window.currentDrawingMode = null;
 
                                 // Remove temporary orange polyline
@@ -434,6 +476,9 @@ public class MapPanel extends BorderPane {
                                     window.leafletMap.removeLayer(currentPolyline);
                                     currentPolyline = null;
                                 }
+
+                                // Reset cursor to default (hand/grab)
+                                document.getElementById('map').style.cursor = '';
                             }
                         };
                     }

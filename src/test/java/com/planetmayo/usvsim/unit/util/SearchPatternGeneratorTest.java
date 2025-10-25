@@ -345,4 +345,55 @@ class SearchPatternGeneratorTest {
                 "Leg distance should be within reasonable limit");
         }
     }
+
+    @Test
+    void testGenerateExpandingSquareRegressionTest() {
+        // Regression test: verify exact waypoint generation for known inputs
+        // This ensures the expanding square algorithm doesn't change unexpectedly
+
+        // Input: 2km x 2km square, 0° initial direction, 500m increment, 5 knots
+        List<Position> square = List.of(
+            Position.of(50.60, -2.40),
+            Position.of(50.62, -2.40),
+            Position.of(50.62, -2.38),
+            Position.of(50.60, -2.38)
+        );
+        Polygon area = new Polygon(square);
+
+        List<Waypoint> waypoints = SearchPatternGenerator.generateExpandingSquare(
+            area, 0.0, 500.0, 5.0
+        );
+
+        // Expected waypoints captured from correct algorithm implementation
+        // Pattern: centroid, then spiral outward with legs incrementing every 2 legs
+        List<Position> expectedPositions = List.of(
+            Position.of(50.610000, -2.390000),  // WP 0 - centroid
+            Position.of(50.610000, -2.382910),  // WP 1 - bearing 90°, leg 500m
+            Position.of(50.605501, -2.382910),  // WP 2 - bearing 180°, leg 500m
+            Position.of(50.605501, -2.397083),  // WP 3 - bearing 270°, leg 1000m
+            Position.of(50.614499, -2.397083),  // WP 4 - bearing 0°, leg 1000m
+            Position.of(50.601006, -2.397083),  // WP 5 - bearing 180°, leg 1500m
+            Position.of(50.618993, -2.397083)   // WP 6 - bearing 0°, leg 2000m
+        );
+
+        // Verify exact waypoint count
+        assertEquals(expectedPositions.size(), waypoints.size(),
+            "Waypoint count should match expected (regression test)");
+
+        // Verify each waypoint position matches expected (within 1m tolerance)
+        for (int i = 0; i < expectedPositions.size(); i++) {
+            Position expected = expectedPositions.get(i);
+            Position actual = waypoints.get(i).getPosition();
+
+            double distance = expected.distanceTo(actual);
+            assertTrue(distance < 1.0,
+                String.format("WP %d should match expected position (distance: %.2fm)", i, distance));
+        }
+
+        // Verify all waypoints have correct speed
+        for (Waypoint wp : waypoints) {
+            assertEquals(5.0, wp.getSpeed(), 0.001,
+                "All waypoints should have speed 5.0 knots");
+        }
+    }
 }

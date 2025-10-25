@@ -934,14 +934,21 @@ public class MissionController implements MainView.MissionControllerCallback {
         com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchPanel panel =
             new com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchPanel();
 
+        // Populate panel with current values
+        panel.setValues(
+            behaviour.getInitialDirection(),
+            behaviour.getLegIncrement(),
+            behaviour.getPlatformSpeed()
+        );
+
         panel.setOnComplete(params -> {
             statePanel.hideDialog();
 
-            // Remove old behaviour
-            mission.getMissionPlan().removeBehaviour(index);
-            missionPlanPanel.removeBehavior(behaviour);
+            System.out.println("=== Editing Expanding Square Search ===");
+            System.out.println("Before edit - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
+            System.out.println("Before edit - UI behaviours: " + missionPlanPanel.getBehaviors().size());
 
-            // Create new behaviour
+            // Create new behaviour with updated params
             ExpandingSquareSearch newBehaviour = new ExpandingSquareSearch(
                 behaviour.getSearchArea(),
                 params.initialDirection,
@@ -949,16 +956,22 @@ public class MissionController implements MainView.MissionControllerCallback {
                 params.speed
             );
 
-            // Add at same index
-            mission.getMissionPlan().getBehaviours().add(index, newBehaviour);
-            missionPlanPanel.getBehaviors().add(index, newBehaviour);
+            // Replace at same index (instead of remove+add to maintain references)
+            mission.getMissionPlan().getBehaviours().set(index, newBehaviour);
+            missionPlanPanel.getBehaviors().set(index, newBehaviour);
+
+            System.out.println("After edit - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
+            System.out.println("After edit - UI behaviours: " + missionPlanPanel.getBehaviors().size());
+            System.out.println("New behaviour waypoints: " + newBehaviour.getWaypoints().size());
 
             // Refresh mission plan UI
             missionPlanPanel.refresh();
 
             // Clear old overlays and re-render all behaviours
             mapPanel.clearOverlays();
+            System.out.println("Starting rerender of all behaviours...");
             rerenderAllBehaviours();
+            System.out.println("Rerender complete");
 
             // Update Start button state
             updateStartButtonState();

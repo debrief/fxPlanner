@@ -202,6 +202,9 @@ public class DrawingController {
                         String cleanupScript = """
                             window.currentDrawingMode = null;
                             window.vertexCount = 0;
+                            if (typeof window.isDrawing !== 'undefined') {
+                                window.isDrawing = false;
+                            }
                             console.log('Polygon drawing completed and cleaned up');
                             """;
                         webEngine.executeScript(cleanupScript);

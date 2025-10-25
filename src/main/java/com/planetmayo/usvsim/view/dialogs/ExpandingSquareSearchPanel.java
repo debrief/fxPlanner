@@ -121,4 +121,13 @@ public class ExpandingSquareSearchPanel extends VBox {
     public void setOnCancel(Runnable handler) {
         this.onCancel = handler;
     }
+
+    /**
+     * Set initial values in the form (for editing existing behaviour)
+     */
+    public void setValues(double initialDirection, double legIncrement, double speed) {
+        directionSpinner.getValueFactory().setValue(initialDirection);
+        legIncrementSpinner.getValueFactory().setValue(legIncrement);
+        speedSpinner.getValueFactory().setValue(speed);
+    }
 }
