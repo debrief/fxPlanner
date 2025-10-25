@@ -17,7 +17,8 @@
       "Bash(curl:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:stackoverflow.com)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(awk:*)"
     ],
     "deny": [],
     "ask": [
