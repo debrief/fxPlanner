@@ -25,6 +25,15 @@ public class MissionPlanPanel extends VBox {
     private final Label emptyLabel;
     private final HBox buttonBar;
     private java.util.function.Consumer<Behaviour> onBehaviourDelete;
+    private ReorderHandler onBehaviourReorder;
+
+    /**
+     * Callback interface for behavior reordering
+     */
+    @FunctionalInterface
+    public interface ReorderHandler {
+        void onReorder(int fromIndex, int toIndex);
+    }
 
     public MissionPlanPanel() {
         setStyle("-fx-border-color: #DDD; -fx-padding: 8; -fx-spacing: 8;");
@@ -104,6 +113,13 @@ public class MissionPlanPanel extends VBox {
     }
 
     /**
+     * Get the underlying ListView (for selection management)
+     */
+    public ListView<Behaviour> getBehaviorListView() {
+        return behaviorList;
+    }
+
+    /**
      * Refresh the ListView to show updated behaviour states
      */
     public void refresh() {
@@ -131,14 +147,27 @@ public class MissionPlanPanel extends VBox {
         this.onBehaviourDelete = handler;
     }
 
+    /**
+     * Set reorder handler for moving behaviours up/down
+     */
+    public void setOnBehaviourReorder(ReorderHandler handler) {
+        this.onBehaviourReorder = handler;
+    }
+
     private void handleMoveUp() {
         Behaviour selected = getSelectedBehavior();
         if (selected == null) return;
         int index = behaviorList.getItems().indexOf(selected);
         if (index > 0) {
+            // Update UI list
             behaviorList.getItems().remove(index);
             behaviorList.getItems().add(index - 1, selected);
             behaviorList.getSelectionModel().select(index - 1);
+
+            // Notify controller to update mission model
+            if (onBehaviourReorder != null) {
+                onBehaviourReorder.onReorder(index, index - 1);
+            }
         }
     }
 
@@ -147,9 +176,15 @@ public class MissionPlanPanel extends VBox {
         if (selected == null) return;
         int index = behaviorList.getItems().indexOf(selected);
         if (index < behaviorList.getItems().size() - 1) {
+            // Update UI list
             behaviorList.getItems().remove(index);
             behaviorList.getItems().add(index + 1, selected);
             behaviorList.getSelectionModel().select(index + 1);
+
+            // Notify controller to update mission model
+            if (onBehaviourReorder != null) {
+                onBehaviourReorder.onReorder(index, index + 1);
+            }
         }
     }
 

@@ -39,6 +39,16 @@ public class CompositeBehaviour implements Behaviour {
         }
     }
 
+    /**
+     * Replace a behaviour at a specific index.
+     * Used for editing behaviours without changing mission structure.
+     */
+    public void setBehaviour(int index, Behaviour behaviour) {
+        if (index >= 0 && index < behaviours.size()) {
+            behaviours.set(index, behaviour);
+        }
+    }
+
     public void reorderBehaviour(int from, int to) {
         if (from >= 0 && from < behaviours.size() && to >= 0 && to < behaviours.size()) {
             Behaviour behaviour = behaviours.remove(from);

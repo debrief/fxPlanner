@@ -184,18 +184,53 @@ public class DrawingController {
                     System.out.println("Parsed " + vertices.size() + " vertices from coordinates");
 
                     if (!vertices.isEmpty() && vertices.size() >= 3) {
-                        // Auto-close polygon if not already closed
+                        // Remove duplicate closing point if present (Polygon constructor handles closing)
                         Position first = vertices.get(0);
                         Position last = vertices.get(vertices.size() - 1);
                         double distance = first.distanceTo(last);
 
-                        if (distance > 1.0) {  // More than 1m apart - not closed
-                            vertices.add(first);
-                            System.out.println("Auto-closed polygon by adding first point at end (gap was " +
-                                String.format("%.1fm", distance) + ")");
+                        if (distance < 1.0) {  // Already closed - remove duplicate
+                            vertices.remove(vertices.size() - 1);
+                            System.out.println("Removed duplicate closing point (was " +
+                                String.format("%.1fm", distance) + " from start)");
+                        } else {
+                            System.out.println("Polygon vertices ready (gap " +
+                                String.format("%.1fm", distance) + " - will be closed by Polygon constructor)");
                         }
 
-                        Polygon polygon = new Polygon(vertices);
+                        Polygon polygon;
+                        try {
+                            polygon = new Polygon(vertices);
+                        } catch (IllegalArgumentException e) {
+                            System.err.println("Error creating polygon: " + e.getMessage());
+
+                            // Provide helpful diagnostics
+                            System.err.println("Polygon diagnostics:");
+                            System.err.println("  Vertices: " + vertices.size());
+                            for (int i = 0; i < vertices.size(); i++) {
+                                Position v = vertices.get(i);
+                                System.err.println(String.format("    [%d] %.6f°N, %.6f°W",
+                                    i, v.getLatitude(), Math.abs(v.getLongitude())));
+                            }
+
+                            // Clean up drawing state on error
+                            String cleanupScript = """
+                                window.currentDrawingMode = null;
+                                window.vertexCount = 0;
+                                if (typeof window.isDrawing !== 'undefined') {
+                                    window.isDrawing = false;
+                                }
+                                if (typeof window.clearDrawing === 'function') {
+                                    window.clearDrawing();
+                                }
+                                console.log('Drawing state cleaned up after error');
+                                """;
+                            webEngine.executeScript(cleanupScript);
+
+                            mode = DrawingMode.DISABLED;
+                            throw e; // Re-throw to propagate to UI
+                        }
+
                         mode = DrawingMode.DISABLED;
 
                         // Clean up JavaScript drawing state

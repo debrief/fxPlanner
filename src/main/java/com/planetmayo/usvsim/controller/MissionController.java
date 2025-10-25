@@ -628,6 +628,9 @@ public class MissionController implements MainView.MissionControllerCallback {
         // Wire delete button handler for removing behaviours
         missionPlanPanel.setOnBehaviourDelete(this::handleDeleteBehaviour);
 
+        // Wire reorder handler for moving behaviours up/down
+        missionPlanPanel.setOnBehaviourReorder(this::handleReorderBehaviour);
+
         // Register this controller as the callback for MainView (T068)
         mainView.setMissionControllerCallback(this);
     }
@@ -796,17 +799,43 @@ public class MissionController implements MainView.MissionControllerCallback {
     }
 
     /**
+     * Handle reordering of behaviours in the mission plan.
+     * Synchronizes the mission model with the UI list order.
+     */
+    private void handleReorderBehaviour(int fromIndex, int toIndex) {
+        System.out.println("=== Reordering Behaviour ===");
+        System.out.println("Moving behaviour from index " + fromIndex + " to " + toIndex);
+
+        // Update mission model to match UI order
+        mission.getMissionPlan().reorderBehaviour(fromIndex, toIndex);
+
+        System.out.println("Mission plan order synchronized");
+
+        // Re-render map to show updated order (if needed for visual feedback)
+        mapPanel.clearOverlays();
+        rerenderAllBehaviours();
+    }
+
+    /**
      * Handle editing of a behaviour from the mission plan.
      * Opens the appropriate dialog based on behaviour type and replaces behaviour if user saves.
      */
     private void handleEditBehaviour(Behaviour behaviour) {
         System.out.println("Editing behaviour: " + behaviour.getName());
 
-        // Get the index of this behaviour in the mission plan
-        int index = mission.getMissionPlan().getBehaviours().indexOf(behaviour);
+        // Get the index from UI list (more reliable than mission plan since UI may have stale references)
+        int index = missionPlanPanel.getBehaviors().indexOf(behaviour);
         if (index < 0) {
-            System.err.println("Behaviour not found in mission plan");
-            return;
+            System.err.println("Behaviour not found in UI list: " + behaviour);
+            // Try mission plan as fallback
+            index = mission.getMissionPlan().getBehaviours().indexOf(behaviour);
+            if (index < 0) {
+                System.err.println("Behaviour not found in mission plan either - cannot edit");
+                return;
+            }
+            System.out.println("Found in mission plan at index " + index);
+        } else {
+            System.out.println("Found in UI list at index " + index);
         }
 
         // Open appropriate dialog based on behaviour type
@@ -840,6 +869,9 @@ public class MissionController implements MainView.MissionControllerCallback {
             System.out.println("=== Editing Parallel Track Search ===");
             System.out.println("Before edit - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
             System.out.println("Before edit - UI behaviours: " + missionPlanPanel.getBehaviors().size());
+            System.out.println("Old params - Orientation: " + behaviour.getTrackOrientation() +
+                "°, Spacing: " + behaviour.getTrackSpacing() + "m, Speed: " + behaviour.getPlatformSpeed() + "kts");
+            System.out.println("Old waypoints: " + behaviour.getWaypoints().size());
 
             // Create new behaviour with updated params
             ParallelTrackSearch newBehaviour = new ParallelTrackSearch(
@@ -849,16 +881,32 @@ public class MissionController implements MainView.MissionControllerCallback {
                 params.speed
             );
 
+            System.out.println("New params - Orientation: " + params.orientation +
+                "°, Spacing: " + params.spacing + "m, Speed: " + params.speed + "kts");
+            System.out.println("New waypoints: " + newBehaviour.getWaypoints().size());
+
             // Replace at same index (instead of remove+add to maintain references)
-            mission.getMissionPlan().getBehaviours().set(index, newBehaviour);
+            mission.getMissionPlan().setBehaviour(index, newBehaviour);
             missionPlanPanel.getBehaviors().set(index, newBehaviour);
 
             System.out.println("After edit - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
             System.out.println("After edit - UI behaviours: " + missionPlanPanel.getBehaviors().size());
-            System.out.println("New behaviour waypoints: " + newBehaviour.getWaypoints().size());
+
+            // Verify the replacement worked
+            Behaviour verifyBehaviour = mission.getMissionPlan().getBehaviours().get(index);
+            if (verifyBehaviour instanceof ParallelTrackSearch verifyPts) {
+                System.out.println("VERIFY - Behaviour at index " + index + ": Orientation=" +
+                    verifyPts.getTrackOrientation() + "°, Spacing=" + verifyPts.getTrackSpacing() +
+                    "m, Waypoints=" + verifyPts.getWaypoints().size());
+            }
 
             // Refresh mission plan UI
             missionPlanPanel.refresh();
+
+            // CRITICAL: Update selection to new behavior to prevent stale reference
+            javafx.application.Platform.runLater(() -> {
+                missionPlanPanel.getBehaviorListView().getSelectionModel().clearAndSelect(index);
+            });
 
             // Clear old overlays and re-render all behaviours
             mapPanel.clearOverlays();
@@ -909,11 +957,16 @@ public class MissionController implements MainView.MissionControllerCallback {
             ReturnToBase newBehaviour = new ReturnToBase(params.baseLocation, params.speed);
 
             // Replace at same index (instead of remove+add to maintain references)
-            mission.getMissionPlan().getBehaviours().set(index, newBehaviour);
+            mission.getMissionPlan().setBehaviour(index, newBehaviour);
             missionPlanPanel.getBehaviors().set(index, newBehaviour);
 
             // Refresh mission plan UI
             missionPlanPanel.refresh();
+
+            // CRITICAL: Update selection to new behavior to prevent stale reference
+            javafx.application.Platform.runLater(() -> {
+                missionPlanPanel.getBehaviorListView().getSelectionModel().clearAndSelect(index);
+            });
 
             // Clear old overlays and re-render all behaviours
             mapPanel.clearOverlays();
@@ -959,7 +1012,7 @@ public class MissionController implements MainView.MissionControllerCallback {
             );
 
             // Replace at same index (instead of remove+add to maintain references)
-            mission.getMissionPlan().getBehaviours().set(index, newBehaviour);
+            mission.getMissionPlan().setBehaviour(index, newBehaviour);
             missionPlanPanel.getBehaviors().set(index, newBehaviour);
 
             System.out.println("After edit - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
@@ -968,6 +1021,11 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             // Refresh mission plan UI
             missionPlanPanel.refresh();
+
+            // CRITICAL: Update selection to new behavior to prevent stale reference
+            javafx.application.Platform.runLater(() -> {
+                missionPlanPanel.getBehaviorListView().getSelectionModel().clearAndSelect(index);
+            });
 
             // Clear old overlays and re-render all behaviours
             mapPanel.clearOverlays();

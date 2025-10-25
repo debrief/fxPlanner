@@ -768,21 +768,29 @@ public class MapPanel extends BorderPane {
     public void clearOverlays() {
         String script = """
             // Clear drawnItems FeatureGroup (used by Leaflet.Draw and fallback drawing)
-            window.drawnItems.clearLayers();
+            if (typeof window.drawnItems !== 'undefined' && window.drawnItems) {
+                window.drawnItems.clearLayers();
+            }
 
             // Clear all polygons
-            window.drawnPolygons.forEach(p => window.leafletMap.removeLayer(p));
-            window.drawnPolygons = [];
+            if (window.drawnPolygons) {
+                window.drawnPolygons.forEach(p => window.leafletMap.removeLayer(p));
+                window.drawnPolygons = [];
+            }
 
             // Clear all polylines
-            window.drawnPolylines.forEach(p => window.leafletMap.removeLayer(p));
-            window.drawnPolylines = [];
+            if (window.drawnPolylines) {
+                window.drawnPolylines.forEach(p => window.leafletMap.removeLayer(p));
+                window.drawnPolylines = [];
+            }
 
             // Clear all markers (except start position marker)
-            window.markers.forEach(m => window.leafletMap.removeLayer(m));
-            window.markers = [];
+            if (window.markers) {
+                window.markers.forEach(m => window.leafletMap.removeLayer(m));
+                window.markers = [];
+            }
 
-            console.log('Map overlays cleared (including drawnItems)');
+            console.log('Map overlays cleared (polygons/polylines/markers)');
             """;
 
         executeMapScript(script);
