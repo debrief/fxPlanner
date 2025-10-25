@@ -22,10 +22,19 @@ import com.planetmayo.usvsim.view.dialogs.ReturnToBaseDialog;
 import com.planetmayo.usvsim.view.dialogs.ReturnToBaseParams;
 import com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchDialog;
 import com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchParams;
+import com.planetmayo.usvsim.util.MissionSerializer;
 
+import javafx.stage.FileChooser;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Main controller wiring UI events to mission model operations.
@@ -631,6 +640,10 @@ public class MissionController implements MainView.MissionControllerCallback {
         // Wire reorder handler for moving behaviours up/down
         missionPlanPanel.setOnBehaviourReorder(this::handleReorderBehaviour);
 
+        // Wire save/load mission handlers (T116, T117)
+        missionPlanPanel.setOnSaveMission(this::handleSaveMission);
+        missionPlanPanel.setOnLoadMission(this::handleLoadMission);
+
         // Register this controller as the callback for MainView (T068)
         mainView.setMissionControllerCallback(this);
     }
@@ -1116,5 +1129,166 @@ public class MissionController implements MainView.MissionControllerCallback {
             }
         }
         return changed;
+    }
+
+    // ========== Mission Persistence (T116, T117) ==========
+
+    /**
+     * Handle Save Mission button click.
+     * Shows file chooser and serializes mission to GeoJSON.
+     */
+    private void handleSaveMission() {
+        System.out.println("Save mission requested");
+
+        // Check if mission has behaviours
+        if (mission.getMissionPlan().getBehaviours().isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Save Mission");
+            alert.setHeaderText("Mission is empty");
+            alert.setContentText("Cannot save an empty mission. Please add at least one behaviour.");
+            alert.showAndWait();
+            return;
+        }
+
+        // Show file chooser
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Mission");
+        fileChooser.setInitialFileName("mission.geojson");
+        fileChooser.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter("GeoJSON Files", "*.geojson")
+        );
+
+        File file = fileChooser.showSaveDialog(mainView.getScene().getWindow());
+        if (file == null) {
+            System.out.println("Save cancelled by user");
+            return;
+        }
+
+        try {
+            // Serialize mission to GeoJSON
+            String geoJson = MissionSerializer.serializeToGeoJSON(mission.getMissionPlan());
+
+            // Write to file
+            Files.writeString(file.toPath(), geoJson);
+
+            // Clear dirty flag
+            mission.clearDirty();
+
+            // Show success message
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Save Mission");
+            alert.setHeaderText("Mission saved successfully");
+            alert.setContentText("Saved to: " + file.getAbsolutePath());
+            alert.showAndWait();
+
+            System.out.println("Mission saved to: " + file.getAbsolutePath());
+
+        } catch (IOException e) {
+            // Show error dialog
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Save Mission Failed");
+            alert.setHeaderText("Could not save mission");
+            alert.setContentText("Error: " + e.getMessage());
+            alert.showAndWait();
+
+            System.err.println("Failed to save mission: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Handle Load Mission button click.
+     * Shows file chooser, deserializes mission from GeoJSON, and updates UI.
+     */
+    private void handleLoadMission() {
+        System.out.println("Load mission requested");
+
+        // Warn if current mission has unsaved changes
+        if (mission.isDirty()) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Load Mission");
+            alert.setHeaderText("Unsaved changes");
+            alert.setContentText("Current mission has unsaved changes. Continue loading?");
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isEmpty() || result.get() != ButtonType.OK) {
+                System.out.println("Load cancelled by user (unsaved changes)");
+                return;
+            }
+        }
+
+        // Show file chooser
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Load Mission");
+        fileChooser.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter("GeoJSON Files", "*.geojson")
+        );
+
+        File file = fileChooser.showOpenDialog(mainView.getScene().getWindow());
+        if (file == null) {
+            System.out.println("Load cancelled by user");
+            return;
+        }
+
+        try {
+            // Read file
+            String geoJson = Files.readString(file.toPath());
+
+            // Deserialize mission
+            var loadedMissionPlan = MissionSerializer.deserializeFromGeoJSON(geoJson);
+
+            // Clear current mission
+            var currentBehaviours = new java.util.ArrayList<>(mission.getMissionPlan().getBehaviours());
+            for (int i = currentBehaviours.size() - 1; i >= 0; i--) {
+                mission.getMissionPlan().removeBehaviour(i);
+            }
+            missionPlanPanel.getBehaviors().clear();
+
+            // Add loaded behaviours to mission
+            for (Behaviour behaviour : loadedMissionPlan.getBehaviours()) {
+                mission.getMissionPlan().addBehaviour(behaviour);
+                missionPlanPanel.addBehavior(behaviour);
+            }
+
+            // Update map
+            mapPanel.clearOverlays();
+            rerenderAllBehaviours();
+
+            // Update Start button state
+            updateStartButtonState();
+
+            // Clear dirty flag
+            mission.clearDirty();
+
+            // Show success message
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Load Mission");
+            alert.setHeaderText("Mission loaded successfully");
+            alert.setContentText("Loaded " + loadedMissionPlan.getBehaviours().size() +
+                " behaviours from: " + file.getName());
+            alert.showAndWait();
+
+            System.out.println("Mission loaded from: " + file.getAbsolutePath());
+
+        } catch (IOException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Load Mission Failed");
+            alert.setHeaderText("Could not read file");
+            alert.setContentText("Error: " + e.getMessage());
+            alert.showAndWait();
+
+            System.err.println("Failed to load mission: " + e.getMessage());
+            e.printStackTrace();
+
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Load Mission Failed");
+            alert.setHeaderText("Invalid mission file");
+            alert.setContentText("Error: " + e.getMessage());
+            alert.showAndWait();
+
+            System.err.println("Failed to deserialize mission: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

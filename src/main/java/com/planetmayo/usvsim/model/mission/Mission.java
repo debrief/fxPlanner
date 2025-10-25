@@ -20,6 +20,7 @@ public class Mission {
     private final CompositeBehaviour missionPlan;
     private final Platform platform;
     private final ObjectProperty<Instant> startTime;
+    private boolean isDirty = false;
 
     public Mission(String missionName, Platform platform) {
         this.name = new SimpleStringProperty(missionName);
@@ -88,6 +89,12 @@ public class Mission {
 
     public Instant getStartTime() { return startTime.get(); }
     public ObjectProperty<Instant> startTimeProperty() { return startTime; }
+
+    // Dirty state tracking for unsaved changes
+    public boolean isDirty() { return isDirty; }
+    public void setDirty(boolean dirty) { this.isDirty = dirty; }
+    public void markDirty() { this.isDirty = true; }
+    public void clearDirty() { this.isDirty = false; }
 
     @Override
     public String toString() {

@@ -26,6 +26,8 @@ public class MissionPlanPanel extends VBox {
     private final HBox buttonBar;
     private java.util.function.Consumer<Behaviour> onBehaviourDelete;
     private ReorderHandler onBehaviourReorder;
+    private Runnable onSaveMission;
+    private Runnable onLoadMission;
 
     /**
      * Callback interface for behavior reordering
@@ -80,7 +82,13 @@ public class MissionPlanPanel extends VBox {
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        box.getChildren().addAll(upBtn, downBtn, deleteBtn, spacer);
+        Button saveBtn = new Button("Save Mission");
+        saveBtn.setOnAction(e -> handleSaveMission());
+
+        Button loadBtn = new Button("Load Mission");
+        loadBtn.setOnAction(e -> handleLoadMission());
+
+        box.getChildren().addAll(upBtn, downBtn, deleteBtn, spacer, saveBtn, loadBtn);
         return box;
     }
 
@@ -154,6 +162,20 @@ public class MissionPlanPanel extends VBox {
         this.onBehaviourReorder = handler;
     }
 
+    /**
+     * Set save mission handler
+     */
+    public void setOnSaveMission(Runnable handler) {
+        this.onSaveMission = handler;
+    }
+
+    /**
+     * Set load mission handler
+     */
+    public void setOnLoadMission(Runnable handler) {
+        this.onLoadMission = handler;
+    }
+
     private void handleMoveUp() {
         Behaviour selected = getSelectedBehavior();
         if (selected == null) return;
@@ -197,6 +219,18 @@ public class MissionPlanPanel extends VBox {
                 // Fallback to direct removal if no handler set
                 removeBehavior(selected);
             }
+        }
+    }
+
+    private void handleSaveMission() {
+        if (onSaveMission != null) {
+            onSaveMission.run();
+        }
+    }
+
+    private void handleLoadMission() {
+        if (onLoadMission != null) {
+            onLoadMission.run();
         }
     }
 
