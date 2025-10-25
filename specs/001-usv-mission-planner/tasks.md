@@ -271,6 +271,37 @@
 
 ---
 
+## Phase 8A: User Story 7 - Save and Load Mission Plans (P2)
+
+**Goal**: Enable users to save mission plans to GeoJSON files and load them later for reuse and sharing.
+
+**Independent Test**: Create multi-behaviour mission, save to file, close/reopen app, load file, verify all behaviours restored.
+
+### Tests First (TDD for Serialization Logic)
+
+- [x] T110 [P] [US7] Write unit tests for MissionSerializer.serializeToGeoJSON() in src/test/java/com/planetmayo/usvsim/unit/util/MissionSerializerTest.java (test FeatureCollection format, each behaviour type as Feature, polygon geometries, properties encoding)
+- [x] T111 [P] [US7] Write unit tests for MissionSerializer.deserializeFromGeoJSON() in MissionSerializerTest.java (test behaviour reconstruction, parameter restoration, error handling for invalid JSON)
+
+### Business Logic Implementation
+
+- [x] T112 [US7] Implement MissionSerializer.serializeToGeoJSON() in src/main/java/com/planetmayo/usvsim/util/MissionSerializer.java (convert Mission to GeoJSON FeatureCollection, encode polygon-based behaviours with polygon geometry + properties, encode waypoint-based behaviours with Point geometries or properties)
+- [x] T113 [US7] Implement MissionSerializer.deserializeFromGeoJSON() in MissionSerializer.java (parse FeatureCollection, reconstruct behaviours from Features based on type property, recalculate routes for polygon-based behaviours)
+- [x] T114 [US7] Add dirty state tracking to Mission class (boolean isDirty flag, setDirty() on addBehaviour/reorder/delete, clearDirty() on save/load)
+
+### UI Implementation
+
+- [x] T115 [US7] Add "Save Mission" and "Load Mission" buttons to MissionPlanPanel toolbar (next to "Add Behaviour" dropdown)
+- [x] T116 [US7] Wire Save button to FileChooser dialog (filter: *.geojson) and MissionSerializer.serializeToGeoJSON(), handle IOException with error dialog
+- [x] T117 [US7] Wire Load button to FileChooser dialog, MissionSerializer.deserializeFromGeoJSON(), warn if mission isDirty before loading, update MapPanel and MissionPlanPanel with loaded behaviours
+
+### E2E Test (Complete Workflow)
+
+- [x] T118 [US7] Write E2E test for mission save/load in src/test/java/com/planetmayo/usvsim/e2e/MissionPersistenceE2ETest.java (6 comprehensive tests: create 3-behaviour mission, save to temp file, clear mission, load file, verify behaviours match, round-trip testing, error handling)
+
+**US7 Completion Criteria**: ✅ COMPLETE - Can save/load missions, GeoJSON format correct, routes recalculated on load, dirty state tracking works, 169/169 tests pass
+
+---
+
 ## Phase 9: Polish & Cross-Cutting Concerns
 
 **Purpose**: Visual polish, error handling, validation, performance optimization

@@ -123,6 +123,30 @@ As a mission planner, I need to configure platform dynamics (turn radius, max sp
 
 ---
 
+### User Story 7 - Save and Load Mission Plans (Priority: P2)
+
+As a mission planner, I need to save mission plans to files and load them later so that I can reuse mission templates, share plans with colleagues, and avoid recreating complex missions each session.
+
+**Why this priority**: Without persistence, users lose all work when closing the application. This is a critical usability feature for a mission planning tool, enabling reusable mission templates and iterative refinement. Essential for practical use but not needed for initial demonstration of core algorithms.
+
+**Independent Test**: Can be fully tested by creating a multi-behaviour mission, saving it to a GeoJSON file, closing/reopening the application, loading the file, and verifying all behaviours are restored with correct parameters. Delivers value by preserving user work and enabling mission template libraries.
+
+**Acceptance Scenarios**:
+
+1. **Given** a mission plan exists with one or more behaviours, **When** I click the "Save Mission" button in the Mission Plan panel and select a file location, **Then** the system saves the mission as a GeoJSON FeatureCollection file with each behaviour as a Feature
+
+2. **Given** a saved mission file exists, **When** I click "Load Mission" and select the file, **Then** the system loads all behaviours from the file, recalculates routes for polygon-based behaviours (parallel track, expanding square), and displays them in the Mission Plan panel and on the map
+
+3. **Given** I save a parallel track search behaviour, **When** I examine the GeoJSON file, **Then** the polygon geometry is stored as the Feature geometry, and the track orientation and spacing are stored in the Feature properties
+
+4. **Given** I save a waypoint transit or return to base behaviour, **When** I examine the GeoJSON file, **Then** the waypoint positions are stored as Point geometries or in the Feature properties
+
+5. **Given** I have unsaved changes to a mission plan, **When** I attempt to load a different mission or create a new mission, **Then** the system warns me about losing unsaved work and asks for confirmation
+
+6. **Given** I load a mission file with invalid or corrupted data, **When** the system attempts to deserialize the file, **Then** it displays a descriptive error message and does not modify the current mission plan
+
+---
+
 ### Edge Cases
 
 - **What happens when the search area is smaller than the USV turn radius?**
@@ -197,6 +221,22 @@ As a mission planner, I need to configure platform dynamics (turn radius, max sp
 - **FR-RTB-002**: System MUST present a dialog offering: "Use current position" or "Specify coordinates"
 - **FR-RTB-003**: System MUST create a direct transit to the base location
 - **FR-RTB-004**: System MUST display the return route on the map with a behaviour label
+
+#### Mission Persistence
+
+- **FR-PERSIST-001**: System MUST provide a "Save Mission" button in the Mission Plan panel toolbar
+- **FR-PERSIST-002**: System MUST provide a "Load Mission" button in the Mission Plan panel toolbar
+- **FR-PERSIST-003**: System MUST save missions as GeoJSON FeatureCollection files with .geojson extension
+- **FR-PERSIST-004**: Each behaviour MUST be serialized as a GeoJSON Feature within the FeatureCollection
+- **FR-PERSIST-005**: For polygon-based behaviours (Parallel Track Search, Expanding Square Search), the polygon MUST be stored as the Feature geometry, and configuration parameters (orientation, spacing, leg increment) MUST be stored in Feature properties
+- **FR-PERSIST-006**: For waypoint-based behaviours (Waypoint Transit, Return to Base), waypoint positions MUST be stored as Point geometries or in Feature properties
+- **FR-PERSIST-007**: Feature properties MUST include behaviour type identifier to enable correct deserialization
+- **FR-PERSIST-008**: System MUST recalculate routes from stored parameters when loading polygon-based behaviours (waypoints are NOT persisted, only polygon and parameters)
+- **FR-PERSIST-009**: System MUST display a file chooser dialog when Save/Load buttons are clicked
+- **FR-PERSIST-010**: System MUST validate loaded files and display descriptive error messages for invalid or corrupted data
+- **FR-PERSIST-011**: System MUST track mission dirty state (unsaved changes) and warn users before loading a different mission or creating a new mission
+- **FR-PERSIST-012**: Loaded missions MUST restore all behaviours in the correct sequence with accurate parameters
+- **FR-PERSIST-013**: After loading a mission, the map MUST display all behaviour patterns/routes correctly
 
 #### Simulation Execution
 
