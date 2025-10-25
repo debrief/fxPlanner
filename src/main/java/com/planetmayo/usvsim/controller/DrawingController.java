@@ -198,6 +198,14 @@ public class DrawingController {
                         Polygon polygon = new Polygon(vertices);
                         mode = DrawingMode.DISABLED;
 
+                        // Clean up JavaScript drawing state
+                        String cleanupScript = """
+                            window.currentDrawingMode = null;
+                            window.vertexCount = 0;
+                            console.log('Polygon drawing completed and cleaned up');
+                            """;
+                        webEngine.executeScript(cleanupScript);
+
                         if (onPolygonComplete != null) {
                             System.out.println("Calling onPolygonComplete callback with " + polygon.getVertices().size() + " vertices");
                             onPolygonComplete.accept(polygon);
@@ -225,6 +233,14 @@ public class DrawingController {
 
                     if (!waypoints.isEmpty() && waypoints.size() >= 2) {
                         mode = DrawingMode.DISABLED;
+
+                        // Clean up JavaScript drawing state
+                        String cleanupScript = """
+                            window.currentDrawingMode = null;
+                            window.vertexCount = 0;
+                            console.log('Polyline drawing completed and cleaned up');
+                            """;
+                        webEngine.executeScript(cleanupScript);
 
                         if (onWaypointsComplete != null) {
                             System.out.println("Calling onWaypointsComplete callback with " + waypoints.size() + " waypoints");
@@ -351,6 +367,23 @@ public class DrawingController {
         currentVertices.clear();
         onPolygonComplete = null;
         onWaypointsComplete = null;
+
+        // Tell JavaScript to stop drawing mode
+        String cancelScript = """
+            window.currentDrawingMode = null;
+            window.vertexCount = 0;
+            if (typeof window.cancelDrawing === 'function') {
+                window.cancelDrawing();
+            }
+            console.log('Drawing mode cancelled from Java');
+            """;
+
+        try {
+            webEngine.executeScript(cancelScript);
+        } catch (Exception e) {
+            System.err.println("Error cancelling drawing in JavaScript: " + e.getMessage());
+        }
+
         System.out.println("Drawing cancelled");
     }
 

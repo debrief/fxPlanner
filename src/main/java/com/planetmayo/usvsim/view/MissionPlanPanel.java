@@ -24,6 +24,7 @@ public class MissionPlanPanel extends VBox {
     private final ListView<Behaviour> behaviorList;
     private final Label emptyLabel;
     private final HBox buttonBar;
+    private java.util.function.Consumer<Behaviour> onBehaviourDelete;
 
     public MissionPlanPanel() {
         setStyle("-fx-border-color: #DDD; -fx-padding: 8; -fx-spacing: 8;");
@@ -123,6 +124,13 @@ public class MissionPlanPanel extends VBox {
         });
     }
 
+    /**
+     * Set delete button handler for removing behaviours
+     */
+    public void setOnBehaviourDelete(java.util.function.Consumer<Behaviour> handler) {
+        this.onBehaviourDelete = handler;
+    }
+
     private void handleMoveUp() {
         Behaviour selected = getSelectedBehavior();
         if (selected == null) return;
@@ -148,7 +156,12 @@ public class MissionPlanPanel extends VBox {
     private void handleDelete() {
         Behaviour selected = getSelectedBehavior();
         if (selected != null) {
-            removeBehavior(selected);
+            if (onBehaviourDelete != null) {
+                onBehaviourDelete.accept(selected);
+            } else {
+                // Fallback to direct removal if no handler set
+                removeBehavior(selected);
+            }
         }
     }
 

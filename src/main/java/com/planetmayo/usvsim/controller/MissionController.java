@@ -625,6 +625,9 @@ public class MissionController implements MainView.MissionControllerCallback {
         // Wire double-click handler for editing behaviours in mission plan
         missionPlanPanel.setOnBehaviourDoubleClick(this::handleEditBehaviour);
 
+        // Wire delete button handler for removing behaviours
+        missionPlanPanel.setOnBehaviourDelete(this::handleDeleteBehaviour);
+
         // Register this controller as the callback for MainView (T068)
         mainView.setMissionControllerCallback(this);
     }
@@ -761,6 +764,38 @@ public class MissionController implements MainView.MissionControllerCallback {
     }
 
     /**
+     * Handle deletion of a behaviour from the mission plan.
+     * Removes from mission model, UI, clears and re-renders map.
+     */
+    private void handleDeleteBehaviour(Behaviour behaviour) {
+        System.out.println("=== Deleting Behaviour ===");
+        System.out.println("Behaviour: " + behaviour.getName());
+        System.out.println("Before delete - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
+        System.out.println("Before delete - UI behaviours: " + missionPlanPanel.getBehaviors().size());
+
+        // Get index before removal
+        int index = mission.getMissionPlan().getBehaviours().indexOf(behaviour);
+
+        // Remove from mission model
+        mission.getMissionPlan().removeBehaviour(index);
+
+        // Remove from UI
+        missionPlanPanel.removeBehavior(behaviour);
+
+        System.out.println("After delete - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
+        System.out.println("After delete - UI behaviours: " + missionPlanPanel.getBehaviors().size());
+
+        // Clear map and re-render remaining behaviours
+        mapPanel.clearOverlays();
+        rerenderAllBehaviours();
+
+        // Update Start button state
+        updateStartButtonState();
+
+        System.out.println("Deleted behaviour: " + behaviour.getName());
+    }
+
+    /**
      * Handle editing of a behaviour from the mission plan.
      * Opens the appropriate dialog based on behaviour type and replaces behaviour if user saves.
      */
@@ -795,9 +830,16 @@ public class MissionController implements MainView.MissionControllerCallback {
         panel.setOnComplete(params -> {
             statePanel.hideDialog();
 
+            System.out.println("=== Editing Parallel Track Search ===");
+            System.out.println("Before edit - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
+            System.out.println("Before edit - UI behaviours: " + missionPlanPanel.getBehaviors().size());
+
             // Remove old behaviour
             mission.getMissionPlan().removeBehaviour(index);
             missionPlanPanel.removeBehavior(behaviour);
+
+            System.out.println("After remove - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
+            System.out.println("After remove - UI behaviours: " + missionPlanPanel.getBehaviors().size());
 
             // Create new behaviour with updated params
             ParallelTrackSearch newBehaviour = new ParallelTrackSearch(
@@ -811,9 +853,18 @@ public class MissionController implements MainView.MissionControllerCallback {
             mission.getMissionPlan().getBehaviours().add(index, newBehaviour);
             missionPlanPanel.getBehaviors().add(index, newBehaviour);
 
+            System.out.println("After add - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
+            System.out.println("After add - UI behaviours: " + missionPlanPanel.getBehaviors().size());
+            System.out.println("New behaviour waypoints: " + newBehaviour.getWaypoints().size());
+
+            // Refresh mission plan UI
+            missionPlanPanel.refresh();
+
             // Clear old overlays and re-render all behaviours
             mapPanel.clearOverlays();
+            System.out.println("Starting rerender of all behaviours...");
             rerenderAllBehaviours();
+            System.out.println("Rerender complete");
 
             // Update Start button state
             updateStartButtonState();
@@ -859,6 +910,9 @@ public class MissionController implements MainView.MissionControllerCallback {
             mission.getMissionPlan().getBehaviours().add(index, newBehaviour);
             missionPlanPanel.getBehaviors().add(index, newBehaviour);
 
+            // Refresh mission plan UI
+            missionPlanPanel.refresh();
+
             // Clear old overlays and re-render all behaviours
             mapPanel.clearOverlays();
             rerenderAllBehaviours();
@@ -899,6 +953,9 @@ public class MissionController implements MainView.MissionControllerCallback {
             mission.getMissionPlan().getBehaviours().add(index, newBehaviour);
             missionPlanPanel.getBehaviors().add(index, newBehaviour);
 
+            // Refresh mission plan UI
+            missionPlanPanel.refresh();
+
             // Clear old overlays and re-render all behaviours
             mapPanel.clearOverlays();
             rerenderAllBehaviours();
@@ -921,22 +978,28 @@ public class MissionController implements MainView.MissionControllerCallback {
      * Used after editing a behaviour to show updated pattern.
      */
     private void rerenderAllBehaviours() {
+        System.out.println("=== Rerendering " + mission.getMissionPlan().getBehaviours().size() + " behaviours ===");
         for (Behaviour behaviour : mission.getMissionPlan().getBehaviours()) {
             if (behaviour instanceof ParallelTrackSearch pts) {
+                System.out.println("Rendering ParallelTrackSearch: " + pts.getWaypoints().size() + " waypoints");
                 mapPanel.renderPolygon(pts.getSearchArea());
                 mapPanel.renderTracks(pts.getWaypoints());
             } else if (behaviour instanceof ExpandingSquareSearch ess) {
+                System.out.println("Rendering ExpandingSquareSearch: " + ess.getWaypoints().size() + " waypoints");
                 mapPanel.renderPolygon(ess.getSearchArea());
                 mapPanel.renderTracks(ess.getWaypoints());
             } else if (behaviour instanceof WaypointTransit wt) {
+                System.out.println("Rendering WaypointTransit: " + wt.getWaypoints().size() + " waypoints");
                 mapPanel.renderTracks(wt.getWaypoints(), true);
             } else if (behaviour instanceof ReturnToBase rtb) {
+                System.out.println("Rendering ReturnToBase");
                 // Find start position for RTB (last waypoint of previous behaviour)
                 int rtbIndex = mission.getMissionPlan().getBehaviours().indexOf(rtb);
                 Position startPos = getLastWaypointPosition(rtbIndex);
                 renderReturnToBasePath(startPos, rtb.getBaseLocation(), rtb.getPlatformSpeed());
             }
         }
+        System.out.println("=== Rerender complete ===");
     }
 
     /**

@@ -141,30 +141,72 @@ public final class SearchPatternGenerator {
         double bearing = GeoUtils.normalizeAngle(initialDirection);
         double legLength = legIncrement;
         int legCount = 0;
+        int consecutiveOutsideCount = 0; // Track consecutive waypoints outside polygon
+
+        System.out.println("=== Generating Expanding Square Search ===");
+        System.out.println("Starting from center: " + center);
+        System.out.println("Initial direction: " + initialDirection + "°");
+        System.out.println("Leg increment: " + legIncrement + "m");
 
         while (legLength < 100000) { // Limit: 100km max leg
-            // Four directions for square
+            int waypointsAddedThisSquare = 0;
+
+            System.out.println("--- Square " + (legCount/4 + 1) + ": leg length = " + String.format("%.0f", legLength) + "m ---");
+
+            // Four directions for square (all 4 legs use same length)
             for (int direction = 0; direction < 4; direction++) {
                 bearing = GeoUtils.normalizeAngle(bearing + 90);
                 Position current = waypoints.get(waypoints.size() - 1).getPosition();
                 Position next = current.destination(legLength, bearing);
 
-                // Check if waypoint is still within reasonable bounds
-                if (PolygonUtils.containsPoint(searchArea, next) ||
-                    current.distanceTo(next) < legLength * 1.1) { // Allow slight overshoot
+                // Check if waypoint is within polygon bounds
+                if (PolygonUtils.containsPoint(searchArea, next)) {
                     waypoints.add(Waypoint.search(next, speed));
+                    waypointsAddedThisSquare++;
+                    consecutiveOutsideCount = 0; // Reset counter
+                    System.out.println("WP " + (waypoints.size()-1) + ": bearing=" + String.format("%.0f", bearing) +
+                                     "° leg=" + String.format("%.0f", legLength) + "m pos=" +
+                                     String.format("%.5f,%.5f", next.getLatitude(), next.getLongitude()));
+                } else {
+                    consecutiveOutsideCount++;
+                    System.out.println("SKIP: bearing=" + String.format("%.0f", bearing) +
+                                     "° leg=" + String.format("%.0f", legLength) + "m (outside polygon)");
+                    // Stop if we've had 4+ consecutive waypoints outside (full square outside)
+                    if (consecutiveOutsideCount >= 4) {
+                        System.out.println("=== Terminating: 4+ consecutive outside ===");
+                        System.out.println("Total waypoints: " + waypoints.size());
+                        return waypoints;
+                    }
                 }
 
                 legCount++;
+            }
 
-                // Increment leg length every 2 legs (pairs: 1-2, 3-4, 5-6, etc.)
-                // Legs 1-2: legIncrement
-                // Legs 3-4: legIncrement + 2*legIncrement = 3*legIncrement
-                // Legs 5-6: 3*legIncrement + 2*legIncrement = 5*legIncrement
-                // Pattern: legs come in pairs with same length, then add 2*legIncrement
-                if (legCount % 2 == 0) {
-                    legLength += 2 * legIncrement;
-                }
+            // Increment leg length AFTER completing a full square (4 legs)
+            // Square 1: legIncrement
+            // Square 2: legIncrement + 2*legIncrement = 3*legIncrement
+            // Square 3: 3*legIncrement + 2*legIncrement = 5*legIncrement
+            // Pattern: add 2*legIncrement after each complete square
+            legLength += 2 * legIncrement;
+
+            // Stop if no waypoints were added in this complete square
+            if (waypointsAddedThisSquare == 0) {
+                System.out.println("=== Terminating: no waypoints in last square ===");
+                System.out.println("Total waypoints: " + waypoints.size());
+                break;
+            }
+        }
+
+        System.out.println("=== Pattern generation complete ===");
+        System.out.println("Total waypoints: " + waypoints.size());
+
+        // Check for duplicate positions
+        for (int i = 1; i < waypoints.size(); i++) {
+            Position prev = waypoints.get(i-1).getPosition();
+            Position curr = waypoints.get(i).getPosition();
+            double dist = prev.distanceTo(curr);
+            if (dist < 1.0) {
+                System.out.println("WARNING: Duplicate/near-duplicate waypoints at index " + (i-1) + " and " + i + " (dist=" + dist + "m)");
             }
         }
 

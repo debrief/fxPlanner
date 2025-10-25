@@ -722,6 +722,9 @@ public class MapPanel extends BorderPane {
      */
     public void clearOverlays() {
         String script = """
+            // Clear drawnItems FeatureGroup (used by Leaflet.Draw and fallback drawing)
+            window.drawnItems.clearLayers();
+
             // Clear all polygons
             window.drawnPolygons.forEach(p => window.leafletMap.removeLayer(p));
             window.drawnPolygons = [];
@@ -734,7 +737,7 @@ public class MapPanel extends BorderPane {
             window.markers.forEach(m => window.leafletMap.removeLayer(m));
             window.markers = [];
 
-            console.log('Map overlays cleared');
+            console.log('Map overlays cleared (including drawnItems)');
             """;
 
         executeMapScript(script);
