@@ -176,4 +176,24 @@ public class ReturnToBasePanel extends VBox {
     public void setOnCancel(Runnable handler) {
         this.onCancel = handler;
     }
+
+    /**
+     * Set initial values in the form (for editing existing behaviour)
+     */
+    public void setValues(Position baseLocation, double speed) {
+        // Check if base location matches current position (within small tolerance)
+        double tolerance = 0.0001;  // ~10m
+        boolean isCurrentPos = Math.abs(baseLocation.getLatitude() - currentPosition.getLatitude()) < tolerance &&
+                              Math.abs(baseLocation.getLongitude() - currentPosition.getLongitude()) < tolerance;
+
+        if (isCurrentPos) {
+            useCurrentRadio.setSelected(true);
+        } else {
+            useCustomRadio.setSelected(true);
+            latField.setText(String.valueOf(baseLocation.getLatitude()));
+            lonField.setText(String.valueOf(baseLocation.getLongitude()));
+        }
+
+        speedSpinner.getValueFactory().setValue(speed);
+    }
 }

@@ -827,19 +827,19 @@ public class MissionController implements MainView.MissionControllerCallback {
         com.planetmayo.usvsim.view.dialogs.ParallelTrackSearchPanel panel =
             new com.planetmayo.usvsim.view.dialogs.ParallelTrackSearchPanel();
 
+        // Populate panel with current values
+        panel.setValues(
+            behaviour.getTrackOrientation(),
+            behaviour.getTrackSpacing(),
+            behaviour.getPlatformSpeed()
+        );
+
         panel.setOnComplete(params -> {
             statePanel.hideDialog();
 
             System.out.println("=== Editing Parallel Track Search ===");
             System.out.println("Before edit - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
             System.out.println("Before edit - UI behaviours: " + missionPlanPanel.getBehaviors().size());
-
-            // Remove old behaviour
-            mission.getMissionPlan().removeBehaviour(index);
-            missionPlanPanel.removeBehavior(behaviour);
-
-            System.out.println("After remove - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
-            System.out.println("After remove - UI behaviours: " + missionPlanPanel.getBehaviors().size());
 
             // Create new behaviour with updated params
             ParallelTrackSearch newBehaviour = new ParallelTrackSearch(
@@ -849,12 +849,12 @@ public class MissionController implements MainView.MissionControllerCallback {
                 params.speed
             );
 
-            // Add at same index
-            mission.getMissionPlan().getBehaviours().add(index, newBehaviour);
-            missionPlanPanel.getBehaviors().add(index, newBehaviour);
+            // Replace at same index (instead of remove+add to maintain references)
+            mission.getMissionPlan().getBehaviours().set(index, newBehaviour);
+            missionPlanPanel.getBehaviors().set(index, newBehaviour);
 
-            System.out.println("After add - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
-            System.out.println("After add - UI behaviours: " + missionPlanPanel.getBehaviors().size());
+            System.out.println("After edit - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
+            System.out.println("After edit - UI behaviours: " + missionPlanPanel.getBehaviors().size());
             System.out.println("New behaviour waypoints: " + newBehaviour.getWaypoints().size());
 
             // Refresh mission plan UI
@@ -896,19 +896,21 @@ public class MissionController implements MainView.MissionControllerCallback {
         com.planetmayo.usvsim.view.dialogs.ReturnToBasePanel panel =
             new com.planetmayo.usvsim.view.dialogs.ReturnToBasePanel(mission.getPlatform().getState().getPosition());
 
+        // Populate panel with current values
+        panel.setValues(
+            behaviour.getBaseLocation(),
+            behaviour.getPlatformSpeed()
+        );
+
         panel.setOnComplete(params -> {
             statePanel.hideDialog();
 
-            // Remove old behaviour
-            mission.getMissionPlan().removeBehaviour(index);
-            missionPlanPanel.removeBehavior(behaviour);
-
-            // Create new behaviour
+            // Create new behaviour with updated params
             ReturnToBase newBehaviour = new ReturnToBase(params.baseLocation, params.speed);
 
-            // Add at same index
-            mission.getMissionPlan().getBehaviours().add(index, newBehaviour);
-            missionPlanPanel.getBehaviors().add(index, newBehaviour);
+            // Replace at same index (instead of remove+add to maintain references)
+            mission.getMissionPlan().getBehaviours().set(index, newBehaviour);
+            missionPlanPanel.getBehaviors().set(index, newBehaviour);
 
             // Refresh mission plan UI
             missionPlanPanel.refresh();

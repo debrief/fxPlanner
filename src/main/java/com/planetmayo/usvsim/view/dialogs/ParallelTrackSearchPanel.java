@@ -133,4 +133,13 @@ public class ParallelTrackSearchPanel extends VBox {
     public void setOnCancel(Runnable handler) {
         this.onCancel = handler;
     }
+
+    /**
+     * Set initial values in the form (for editing existing behaviour)
+     */
+    public void setValues(double orientation, double spacing, double speed) {
+        orientationField.setText(String.valueOf(orientation));
+        spacingField.setText(String.valueOf(spacing));
+        speedField.setText(String.valueOf(speed));
+    }
 }

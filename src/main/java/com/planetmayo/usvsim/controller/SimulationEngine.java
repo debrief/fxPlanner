@@ -40,7 +40,7 @@ public class SimulationEngine {
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicBoolean paused = new AtomicBoolean(false);
 
-    private double timeAcceleration = 1.0;  // 1× = real-time, up to 500× faster
+    private volatile double timeAcceleration = 1.0;  // 1× = real-time, up to 500× faster (volatile for thread safety)
     private long lastStepTimeMs;
     private double simulationTimeSeconds = 0.0;  // Accumulated simulation time
     private Runnable onStateChanged;

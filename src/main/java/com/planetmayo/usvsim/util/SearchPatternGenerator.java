@@ -143,12 +143,17 @@ public final class SearchPatternGenerator {
         int legCount = 0;
         int consecutiveOutsideCount = 0; // Track consecutive waypoints outside polygon
 
+        // Track theoretical position separately from actual waypoints
+        // This ensures the square pattern is maintained even when waypoints are skipped
+        Position theoreticalPosition = center;
+
         System.out.println("=== Generating Expanding Square Search ===");
         System.out.println("Starting from center: " + center);
         System.out.println("Initial direction: " + initialDirection + "°");
         System.out.println("Leg increment: " + legIncrement + "m");
 
-        while (legLength < 100000) { // Limit: 100km max leg
+        final double MAX_LEG_LENGTH = 100000.0; // 100km max
+        while (legLength < MAX_LEG_LENGTH) {
             // Expanding square: legs go in pairs with same length
             // Legs 0,1: L
             // Legs 2,3: L+I
@@ -158,8 +163,10 @@ public final class SearchPatternGenerator {
             // Do 2 legs at current length
             for (int legInPair = 0; legInPair < 2; legInPair++) {
                 bearing = GeoUtils.normalizeAngle(bearing + 90);
-                Position current = waypoints.get(waypoints.size() - 1).getPosition();
-                Position next = current.destination(legLength, bearing);
+                // Calculate next position from theoretical position, not last waypoint
+                Position next = theoreticalPosition.destination(legLength, bearing);
+                // Update theoretical position for next leg
+                theoreticalPosition = next;
 
                 System.out.println("Leg " + legCount + ": bearing=" + String.format("%.0f", bearing) +
                                  "° length=" + String.format("%.0f", legLength) + "m");
@@ -173,9 +180,10 @@ public final class SearchPatternGenerator {
                 } else {
                     consecutiveOutsideCount++;
                     System.out.println("  ✗ SKIP (outside polygon)");
-                    // Stop if we've had 8+ consecutive waypoints outside (4 complete leg pairs)
-                    if (consecutiveOutsideCount >= 8) {
-                        System.out.println("=== Terminating: 8+ consecutive outside ===");
+                    // Stop if we've had too many consecutive waypoints outside (4 complete leg pairs)
+                    final int MAX_CONSECUTIVE_OUTSIDE = 8;
+                    if (consecutiveOutsideCount >= MAX_CONSECUTIVE_OUTSIDE) {
+                        System.out.println("=== Terminating: " + MAX_CONSECUTIVE_OUTSIDE + "+ consecutive outside ===");
                         System.out.println("Total waypoints: " + waypoints.size());
                         return waypoints;
                     }

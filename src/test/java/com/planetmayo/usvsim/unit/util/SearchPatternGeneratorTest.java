@@ -366,14 +366,14 @@ class SearchPatternGeneratorTest {
 
         // Expected waypoints captured from correct algorithm implementation
         // Pattern: centroid, then spiral outward with legs incrementing every 2 legs
+        // Algorithm now correctly tracks theoretical position, skipping waypoints outside polygon
         List<Position> expectedPositions = List.of(
             Position.of(50.610000, -2.390000),  // WP 0 - centroid
             Position.of(50.610000, -2.382910),  // WP 1 - bearing 90°, leg 500m
             Position.of(50.605501, -2.382910),  // WP 2 - bearing 180°, leg 500m
             Position.of(50.605501, -2.397083),  // WP 3 - bearing 270°, leg 1000m
-            Position.of(50.614499, -2.397083),  // WP 4 - bearing 0°, leg 1000m
-            Position.of(50.601006, -2.397083),  // WP 5 - bearing 180°, leg 1500m
-            Position.of(50.618993, -2.397083)   // WP 6 - bearing 0°, leg 2000m
+            Position.of(50.614499, -2.397083)   // WP 4 - bearing 0°, leg 1000m
+            // Note: Legs beyond this point fall outside polygon and are skipped
         );
 
         // Verify exact waypoint count

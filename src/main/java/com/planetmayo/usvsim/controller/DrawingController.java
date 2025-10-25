@@ -218,8 +218,21 @@ public class DrawingController {
                         System.out.println("✓ Polygon complete: " + polygon.getVertices().size() + " vertices");
                     } else {
                         System.out.println("ERROR: Polygon needs at least 3 vertices, got: " + vertices.size());
+
+                        // Clean up drawing state before showing error
+                        String errorCleanupScript = """
+                            window.currentDrawingMode = null;
+                            window.vertexCount = 0;
+                            if (typeof window.isDrawing !== 'undefined') {
+                                window.isDrawing = false;
+                            }
+                            document.getElementById('map').style.cursor = 'grab';
+                            console.log('Drawing state cleaned up after error');
+                            """;
+                        webEngine.executeScript(errorCleanupScript);
+
+                        mode = DrawingMode.DISABLED;
                         showInvalidPolygonDialog(vertices.size());
-                        // Do NOT set mode to DISABLED - keep drawing active
                         return;
                     }
                 } catch (Exception e) {
