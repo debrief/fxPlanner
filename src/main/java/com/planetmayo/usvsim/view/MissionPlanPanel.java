@@ -82,10 +82,18 @@ public class MissionPlanPanel extends VBox {
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Button saveBtn = new Button("Save Mission");
+        // Save mission button with icon
+        Button saveBtn = new Button("⬇");
+        saveBtn.setPrefWidth(40);
+        saveBtn.setTooltip(new javafx.scene.control.Tooltip("Save Mission"));
+        saveBtn.setStyle("-fx-font-size: 16px;");
         saveBtn.setOnAction(e -> handleSaveMission());
 
-        Button loadBtn = new Button("Load Mission");
+        // Load mission button with icon
+        Button loadBtn = new Button("⬆");
+        loadBtn.setPrefWidth(40);
+        loadBtn.setTooltip(new javafx.scene.control.Tooltip("Load Mission"));
+        loadBtn.setStyle("-fx-font-size: 16px;");
         loadBtn.setOnAction(e -> handleLoadMission());
 
         box.getChildren().addAll(upBtn, downBtn, deleteBtn, spacer, saveBtn, loadBtn);

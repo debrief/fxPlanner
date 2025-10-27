@@ -76,11 +76,22 @@ public class DrawingController {
                 console.log('Polygon callback received with ' + coordinates.length + ' vertices');
             };
 
-            // Start drawing (works with both Leaflet.Draw and fallback)
-            if (typeof window.startDrawing === 'function') {
-                window.startDrawing();
+            // Ensure Leaflet.Draw is loaded before starting
+            if (typeof window.ensureLeafletDrawLoaded === 'function') {
+                window.ensureLeafletDrawLoaded(function() {
+                    if (typeof window.startDrawing === 'function') {
+                        window.startDrawing();
+                    } else {
+                        console.log('Drawing not initialized yet');
+                    }
+                });
             } else {
-                console.log('Drawing not initialized yet');
+                // Fallback if lazy load not available
+                if (typeof window.startDrawing === 'function') {
+                    window.startDrawing();
+                } else {
+                    console.log('Drawing not initialized yet');
+                }
             }
             """;
 
@@ -108,11 +119,22 @@ public class DrawingController {
                 console.log('Polyline callback received with ' + coordinates.length + ' waypoints');
             };
 
-            // Start polyline drawing
-            if (typeof window.startDrawingPolyline === 'function') {
-                window.startDrawingPolyline();
+            // Ensure Leaflet.Draw is loaded before starting
+            if (typeof window.ensureLeafletDrawLoaded === 'function') {
+                window.ensureLeafletDrawLoaded(function() {
+                    if (typeof window.startDrawingPolyline === 'function') {
+                        window.startDrawingPolyline();
+                    } else {
+                        console.log('Polyline drawing not initialized yet');
+                    }
+                });
             } else {
-                console.log('Polyline drawing not initialized yet');
+                // Fallback if lazy load not available
+                if (typeof window.startDrawingPolyline === 'function') {
+                    window.startDrawingPolyline();
+                } else {
+                    console.log('Polyline drawing not initialized yet');
+                }
             }
             """;
 

@@ -179,17 +179,6 @@ public class MapPanel extends BorderPane {
                         window.drawnItems = new L.FeatureGroup();
                         window.leafletMap.addLayer(window.drawnItems);
 
-                        // Periodic map size revalidation (helps WebView load missing tiles)
-                        var revalidateCount = 0;
-                        var revalidateInterval = setInterval(function() {
-                            if (revalidateCount++ < 5) {
-                                map.invalidateSize();
-                                console.log('Revalidated map size (#' + revalidateCount + ')');
-                            } else {
-                                clearInterval(revalidateInterval);
-                            }
-                        }, 1000);
-
                         return map;
                     }
 
@@ -486,21 +475,35 @@ public class MapPanel extends BorderPane {
                     // Detect WebView environment
                     var isWebView = navigator.userAgent.indexOf('JavaFX') > -1;
 
-                    // Initialize map with delay for WebView (Leaflet 1.8.0 + JavaFX fix)
+                    // Initialize map immediately for WebView (Leaflet 1.8.0 + JavaFX fix)
                     if (isWebView) {
-                        console.log('WebView detected, delaying map initialization...');
-                        setTimeout(function() {
-                            initMap();
-                            console.log('Leaflet 1.8.0 map initialized at Portland Harbour (WebView mode)');
-                            // Start loading Leaflet.Draw after map is ready
-                            loadLeafletDraw();
-                        }, 500);
+                        console.log('WebView detected, initializing map...');
+                        initMap();
+                        console.log('Leaflet 1.8.0 map initialized at Portland Harbour (WebView mode)');
+                        // Defer Leaflet.Draw loading (lazy load when needed)
+                        window.leafletDrawLoaded = false;
                     } else {
                         // Browser can initialize immediately
                         initMap();
                         console.log('Leaflet 1.8.0 map initialized at Portland Harbour (Browser mode)');
-                        loadLeafletDraw();
+                        // Defer Leaflet.Draw loading (lazy load when needed)
+                        window.leafletDrawLoaded = false;
                     }
+
+                    // Lazy load function - call when drawing is actually needed
+                    window.ensureLeafletDrawLoaded = function(callback) {
+                        if (window.leafletDrawLoaded) {
+                            if (callback) callback();
+                            return;
+                        }
+                        console.log('Lazy loading Leaflet.Draw...');
+                        window.leafletDrawLoaded = true;
+                        loadLeafletDraw();
+                        if (callback) {
+                            // Give time for library to load
+                            setTimeout(callback, 1000);
+                        }
+                    };
                 </script>
             </body>
             </html>

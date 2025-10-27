@@ -672,8 +672,22 @@ public class MissionController implements MainView.MissionControllerCallback {
 
     @Override
     public void onPlatformConfigRequested() {
-        // TODO: Implement platform configuration dialog
         System.out.println("Platform configuration requested");
+
+        // Get current platform capabilities
+        var currentCapabilities = mission.getPlatform().getCapabilities();
+
+        // Show configuration dialog
+        var dialog = new com.planetmayo.usvsim.view.dialogs.PlatformConfigDialog(currentCapabilities);
+        var newCapabilities = dialog.showAndWait();
+
+        if (newCapabilities != null) {
+            System.out.println("Platform configuration updated: " + newCapabilities);
+            // Note: New capabilities will be loaded on next mission creation
+            // Current running mission is not affected
+        } else {
+            System.out.println("Platform configuration cancelled");
+        }
     }
 
     /**
