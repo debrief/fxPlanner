@@ -86,7 +86,6 @@ public class MissionController implements MainView.MissionControllerCallback {
                     );
 
                     if (mapReady != null && Boolean.parseBoolean(mapReady.toString())) {
-                        System.out.println("Map ready - showing start position marker");
                         javafx.application.Platform.runLater(() -> {
                             Position startPos = mission.getPlatform().getState().getPosition();
                             mapPanel.showStartPosition(startPos);
@@ -101,8 +100,6 @@ public class MissionController implements MainView.MissionControllerCallback {
                         });
                         // Stop polling once marker is shown
                         mapReadyPoller.stop();
-                    } else {
-                        System.out.println("Waiting for map to initialize...");
                     }
                 } catch (Exception e) {
                     System.err.println("Error checking map readiness: " + e.getMessage());
@@ -150,12 +147,9 @@ public class MissionController implements MainView.MissionControllerCallback {
      * 6. Update map display
      */
     private void startParallelTrackSearchDialog() {
-        System.out.println("Starting Parallel Track Search workflow");
-
         // Step 1: Start polygon drawing on map (setup callback first)
         drawingController.startDrawingPolygon(polygon -> {
             // This callback is triggered when the polygon is drawn and confirmed
-            System.out.println("✓ Polygon received with " + polygon.getVertices().size() + " vertices");
 
             // Hide instructions panel, show parameter panel
             statePanel.hideDialog();
@@ -234,8 +228,6 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             // Add to mission
             mission.getMissionPlan().addBehaviour(behavior);
-            System.out.println("Added parallel track search: " + params.orientation + "°, " +
-                             params.spacing + "m spacing");
 
             // Update UI
             missionPlanPanel.addBehavior(behavior);
@@ -261,12 +253,9 @@ public class MissionController implements MainView.MissionControllerCallback {
      * 7. Update map display
      */
     private void startWaypointTransitDialog() {
-        System.out.println("Starting Waypoint Transit workflow");
-
         // Step 1: Start polyline drawing on map (setup callback first)
         drawingController.startDrawingWaypoints(waypoints -> {
             // This callback is triggered when the polyline is drawn and completed
-            System.out.println("✓ Polyline received with " + waypoints.size() + " waypoints");
 
             // Hide instructions panel, show parameter panel
             statePanel.hideDialog();
@@ -296,7 +285,6 @@ public class MissionController implements MainView.MissionControllerCallback {
         javafx.scene.control.Button doneButton = instructionsPanel.getDoneButton();
 
         instructionsPanel.setOnDoneDrawing(() -> {
-            System.out.println("User clicked Done Drawing - finishing polyline");
             drawingController.finishDrawing();
             // Note: callback will hide instructions and show config panel
         });
@@ -316,7 +304,6 @@ public class MissionController implements MainView.MissionControllerCallback {
                         javafx.application.Platform.runLater(() -> {
                             doneButton.setDisable(false);
                             doneButton.setText("Done Drawing");
-                            System.out.println("Done Drawing button enabled - " + vertexCount + " waypoints drawn");
                         });
                     }
                 } catch (Exception e) {
@@ -340,8 +327,6 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             // Add to mission
             mission.getMissionPlan().addBehaviour(behavior);
-            System.out.println("Added waypoint transit: " + params.waypoints.size() +
-                             " waypoints at " + params.speed + " knots");
 
             // Update UI
             missionPlanPanel.addBehavior(behavior);
@@ -363,8 +348,6 @@ public class MissionController implements MainView.MissionControllerCallback {
      * 4. Update map display
      */
     private void startReturnToBaseDialog() {
-        System.out.println("Starting Return to Base workflow");
-
         // Get current platform position as default
         Position currentPos = mission.getPlatform().getState().getPosition();
 
@@ -396,10 +379,6 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             // Add to mission
             mission.getMissionPlan().addBehaviour(behavior);
-            System.out.println("Added return to base: " + String.format("(%.3f°N, %.3f°E)",
-                             params.baseLocation.getLatitude(),
-                             params.baseLocation.getLongitude()) +
-                             " at " + params.speed + " knots");
 
             // Update UI
             missionPlanPanel.addBehavior(behavior);
@@ -420,37 +399,23 @@ public class MissionController implements MainView.MissionControllerCallback {
      */
     private Position getLastWaypointPosition() {
         var behaviours = mission.getMissionPlan().getBehaviours();
-        System.out.println("Getting last waypoint position - " + behaviours.size() + " behaviours total");
 
         if (behaviours.size() >= 1) {
             // Get last waypoint from most recent behaviour
             var lastBehaviour = behaviours.get(behaviours.size() - 1);
             var waypoints = lastBehaviour.getWaypoints();
-            System.out.println("  Last behaviour: " + lastBehaviour.getName() +
-                             " with " + waypoints.size() + " waypoints");
             if (!waypoints.isEmpty()) {
-                Position pos = waypoints.get(waypoints.size() - 1).getPosition();
-                System.out.println("  Using last waypoint from last behaviour");
-                return pos;
+                return waypoints.get(waypoints.size() - 1).getPosition();
             }
         }
         // Default to current platform position
-        Position pos = mission.getPlatform().getState().getPosition();
-        System.out.println("  Using current platform position (no behaviours yet)");
-        return pos;
+        return mission.getPlatform().getState().getPosition();
     }
 
     /**
      * Render return to base path from start position to base location
      */
     private void renderReturnToBasePath(Position startPos, Position basePos, double speed) {
-        System.out.println("Rendering return to base path:");
-        System.out.println("  Start: " + String.format("%.4f°N, %.4f°W",
-            startPos.getLatitude(), Math.abs(startPos.getLongitude())));
-        System.out.println("  Base:  " + String.format("%.4f°N, %.4f°W",
-            basePos.getLatitude(), Math.abs(basePos.getLongitude())));
-        System.out.println("  Speed: " + speed + " knots");
-
         // Create waypoints for rendering the path
         var pathWaypoints = new java.util.ArrayList<com.planetmayo.usvsim.model.geometry.Waypoint>();
         pathWaypoints.add(new com.planetmayo.usvsim.model.geometry.Waypoint(
@@ -458,11 +423,8 @@ public class MissionController implements MainView.MissionControllerCallback {
         pathWaypoints.add(new com.planetmayo.usvsim.model.geometry.Waypoint(
             basePos, speed, 50, com.planetmayo.usvsim.model.geometry.WaypointType.BASE));
 
-        System.out.println("  Created " + pathWaypoints.size() + " waypoints for rendering");
-
         // Render with start marker
         mapPanel.renderTracks(pathWaypoints, true);
-        System.out.println("  Called renderTracks with start marker");
     }
 
     /**
@@ -536,8 +498,6 @@ public class MissionController implements MainView.MissionControllerCallback {
         statePanel.reset();
         controlPanel.reset();
         mapPanel.updatePlatformPosition(initialPosition, 0.0);
-
-        System.out.println("Simulation stopped - all state reset to initial conditions");
     }
 
     /**
@@ -617,12 +577,6 @@ public class MissionController implements MainView.MissionControllerCallback {
 
                 // Disable pause button when simulation completes
                 controlPanel.setSimulationComplete();
-
-                System.out.println("Mission complete - final simulation time: " +
-                    String.format("%02d:%02d:%02d",
-                        finalSimulationTimeMs / 3600000,
-                        (finalSimulationTimeMs % 3600000) / 60000,
-                        (finalSimulationTimeMs % 60000) / 1000));
             });
         });
 
@@ -667,33 +621,22 @@ public class MissionController implements MainView.MissionControllerCallback {
 
     @Override
     public void onPlatformConfigRequested() {
-        System.out.println("Platform configuration requested");
-
         // Get current platform capabilities
         var currentCapabilities = mission.getPlatform().getCapabilities();
 
         // Show configuration dialog
         var dialog = new com.planetmayo.usvsim.view.dialogs.PlatformConfigDialog(currentCapabilities);
-        var newCapabilities = dialog.showAndWait();
-
-        if (newCapabilities != null) {
-            System.out.println("Platform configuration updated: " + newCapabilities);
-            // Note: New capabilities will be loaded on next mission creation
-            // Current running mission is not affected
-        } else {
-            System.out.println("Platform configuration cancelled");
-        }
+        dialog.showAndWait();
+        // Note: New capabilities will be loaded on next mission creation
+        // Current running mission is not affected
     }
 
     /**
      * Start the Expanding Square Search workflow
      */
     private void startExpandingSquareSearchDialog() {
-        System.out.println("Starting Expanding Square Search workflow");
-
         // Step 1: Start polygon drawing on map (setup callback first)
         drawingController.startDrawingPolygon(polygon -> {
-            System.out.println("✓ Polygon received with " + polygon.getVertices().size() + " vertices");
 
             // Hide instructions panel, show parameter panel
             statePanel.hideDialog();
@@ -723,7 +666,6 @@ public class MissionController implements MainView.MissionControllerCallback {
         javafx.scene.control.Button doneButton = instructionsPanel.getDoneButton();
 
         instructionsPanel.setOnDoneDrawing(() -> {
-            System.out.println("User clicked Done Drawing - finishing polygon");
             drawingController.finishDrawing();
             // Note: callback will hide instructions and show config panel
         });
@@ -743,7 +685,6 @@ public class MissionController implements MainView.MissionControllerCallback {
                         javafx.application.Platform.runLater(() -> {
                             doneButton.setDisable(false);
                             doneButton.setText("Done Drawing");
-                            System.out.println("Done Drawing button enabled - " + vertexCount + " vertices drawn");
                         });
                     }
                 } catch (Exception e) {
@@ -772,8 +713,6 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             // Add to mission
             mission.getMissionPlan().addBehaviour(behavior);
-            System.out.println("Added expanding square search: " + params.initialDirection + "°, " +
-                             params.legIncrement + "m increment");
 
             // Update UI
             missionPlanPanel.addBehavior(behavior);
@@ -793,11 +732,6 @@ public class MissionController implements MainView.MissionControllerCallback {
      * Removes from mission model, UI, clears and re-renders map.
      */
     private void handleDeleteBehaviour(Behaviour behaviour) {
-        System.out.println("=== Deleting Behaviour ===");
-        System.out.println("Behaviour: " + behaviour.getName());
-        System.out.println("Before delete - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
-        System.out.println("Before delete - UI behaviours: " + missionPlanPanel.getBehaviors().size());
-
         // Get index before removal
         int index = mission.getMissionPlan().getBehaviours().indexOf(behaviour);
 
@@ -807,17 +741,12 @@ public class MissionController implements MainView.MissionControllerCallback {
         // Remove from UI
         missionPlanPanel.removeBehavior(behaviour);
 
-        System.out.println("After delete - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
-        System.out.println("After delete - UI behaviours: " + missionPlanPanel.getBehaviors().size());
-
         // Clear map and re-render remaining behaviours
         mapPanel.clearOverlays();
         rerenderAllBehaviours();
 
         // Update Start button state
         updateStartButtonState();
-
-        System.out.println("Deleted behaviour: " + behaviour.getName());
     }
 
     /**
@@ -825,13 +754,8 @@ public class MissionController implements MainView.MissionControllerCallback {
      * Synchronizes the mission model with the UI list order.
      */
     private void handleReorderBehaviour(int fromIndex, int toIndex) {
-        System.out.println("=== Reordering Behaviour ===");
-        System.out.println("Moving behaviour from index " + fromIndex + " to " + toIndex);
-
         // Update mission model to match UI order
         mission.getMissionPlan().reorderBehaviour(fromIndex, toIndex);
-
-        System.out.println("Mission plan order synchronized");
 
         // Re-render map to show updated order (if needed for visual feedback)
         mapPanel.clearOverlays();
@@ -843,8 +767,6 @@ public class MissionController implements MainView.MissionControllerCallback {
      * Opens the appropriate dialog based on behaviour type and replaces behaviour if user saves.
      */
     private void handleEditBehaviour(Behaviour behaviour) {
-        System.out.println("Editing behaviour: " + behaviour.getName());
-
         // Get the index from UI list (more reliable than mission plan since UI may have stale references)
         int index = missionPlanPanel.getBehaviors().indexOf(behaviour);
         if (index < 0) {
@@ -855,9 +777,6 @@ public class MissionController implements MainView.MissionControllerCallback {
                 System.err.println("Behaviour not found in mission plan either - cannot edit");
                 return;
             }
-            System.out.println("Found in mission plan at index " + index);
-        } else {
-            System.out.println("Found in UI list at index " + index);
         }
 
         // Open appropriate dialog based on behaviour type
@@ -888,13 +807,6 @@ public class MissionController implements MainView.MissionControllerCallback {
         panel.setOnComplete(params -> {
             statePanel.hideDialog();
 
-            System.out.println("=== Editing Parallel Track Search ===");
-            System.out.println("Before edit - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
-            System.out.println("Before edit - UI behaviours: " + missionPlanPanel.getBehaviors().size());
-            System.out.println("Old params - Orientation: " + behaviour.getTrackOrientation() +
-                "°, Spacing: " + behaviour.getTrackSpacing() + "m, Speed: " + behaviour.getPlatformSpeed() + "kts");
-            System.out.println("Old waypoints: " + behaviour.getWaypoints().size());
-
             // Create new behaviour with updated params
             ParallelTrackSearch newBehaviour = new ParallelTrackSearch(
                 behaviour.getSearchArea(),
@@ -903,24 +815,9 @@ public class MissionController implements MainView.MissionControllerCallback {
                 params.speed
             );
 
-            System.out.println("New params - Orientation: " + params.orientation +
-                "°, Spacing: " + params.spacing + "m, Speed: " + params.speed + "kts");
-            System.out.println("New waypoints: " + newBehaviour.getWaypoints().size());
-
             // Replace at same index (instead of remove+add to maintain references)
             mission.getMissionPlan().setBehaviour(index, newBehaviour);
             missionPlanPanel.getBehaviors().set(index, newBehaviour);
-
-            System.out.println("After edit - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
-            System.out.println("After edit - UI behaviours: " + missionPlanPanel.getBehaviors().size());
-
-            // Verify the replacement worked
-            Behaviour verifyBehaviour = mission.getMissionPlan().getBehaviours().get(index);
-            if (verifyBehaviour instanceof ParallelTrackSearch verifyPts) {
-                System.out.println("VERIFY - Behaviour at index " + index + ": Orientation=" +
-                    verifyPts.getTrackOrientation() + "°, Spacing=" + verifyPts.getTrackSpacing() +
-                    "m, Waypoints=" + verifyPts.getWaypoints().size());
-            }
 
             // Refresh mission plan UI
             missionPlanPanel.refresh();
@@ -932,14 +829,10 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             // Clear old overlays and re-render all behaviours
             mapPanel.clearOverlays();
-            System.out.println("Starting rerender of all behaviours...");
             rerenderAllBehaviours();
-            System.out.println("Rerender complete");
 
             // Update Start button state
             updateStartButtonState();
-
-            System.out.println("Updated parallel track search at index " + index);
         });
 
         panel.setOnCancel(() -> {
@@ -996,8 +889,6 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             // Update Start button state
             updateStartButtonState();
-
-            System.out.println("Updated return to base at index " + index);
         });
 
         panel.setOnCancel(() -> {
@@ -1021,10 +912,6 @@ public class MissionController implements MainView.MissionControllerCallback {
         panel.setOnComplete(params -> {
             statePanel.hideDialog();
 
-            System.out.println("=== Editing Expanding Square Search ===");
-            System.out.println("Before edit - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
-            System.out.println("Before edit - UI behaviours: " + missionPlanPanel.getBehaviors().size());
-
             // Create new behaviour with updated params
             ExpandingSquareSearch newBehaviour = new ExpandingSquareSearch(
                 behaviour.getSearchArea(),
@@ -1037,10 +924,6 @@ public class MissionController implements MainView.MissionControllerCallback {
             mission.getMissionPlan().setBehaviour(index, newBehaviour);
             missionPlanPanel.getBehaviors().set(index, newBehaviour);
 
-            System.out.println("After edit - Mission behaviours: " + mission.getMissionPlan().getBehaviours().size());
-            System.out.println("After edit - UI behaviours: " + missionPlanPanel.getBehaviors().size());
-            System.out.println("New behaviour waypoints: " + newBehaviour.getWaypoints().size());
-
             // Refresh mission plan UI
             missionPlanPanel.refresh();
 
@@ -1051,14 +934,10 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             // Clear old overlays and re-render all behaviours
             mapPanel.clearOverlays();
-            System.out.println("Starting rerender of all behaviours...");
             rerenderAllBehaviours();
-            System.out.println("Rerender complete");
 
             // Update Start button state
             updateStartButtonState();
-
-            System.out.println("Updated expanding square search at index " + index);
         });
 
         panel.setOnCancel(() -> {
@@ -1073,28 +952,22 @@ public class MissionController implements MainView.MissionControllerCallback {
      * Used after editing a behaviour to show updated pattern.
      */
     private void rerenderAllBehaviours() {
-        System.out.println("=== Rerendering " + mission.getMissionPlan().getBehaviours().size() + " behaviours ===");
         for (Behaviour behaviour : mission.getMissionPlan().getBehaviours()) {
             if (behaviour instanceof ParallelTrackSearch pts) {
-                System.out.println("Rendering ParallelTrackSearch: " + pts.getWaypoints().size() + " waypoints");
                 mapPanel.renderPolygon(pts.getSearchArea());
                 mapPanel.renderTracks(pts.getWaypoints());
             } else if (behaviour instanceof ExpandingSquareSearch ess) {
-                System.out.println("Rendering ExpandingSquareSearch: " + ess.getWaypoints().size() + " waypoints");
                 mapPanel.renderPolygon(ess.getSearchArea());
                 mapPanel.renderTracks(ess.getWaypoints());
             } else if (behaviour instanceof WaypointTransit wt) {
-                System.out.println("Rendering WaypointTransit: " + wt.getWaypoints().size() + " waypoints");
                 mapPanel.renderTracks(wt.getWaypoints(), true);
             } else if (behaviour instanceof ReturnToBase rtb) {
-                System.out.println("Rendering ReturnToBase");
                 // Find start position for RTB (last waypoint of previous behaviour)
                 int rtbIndex = mission.getMissionPlan().getBehaviours().indexOf(rtb);
                 Position startPos = getLastWaypointPosition(rtbIndex);
                 renderReturnToBasePath(startPos, rtb.getBaseLocation(), rtb.getPlatformSpeed());
             }
         }
-        System.out.println("=== Rerender complete ===");
     }
 
     /**
@@ -1147,8 +1020,6 @@ public class MissionController implements MainView.MissionControllerCallback {
      * Shows file chooser and serializes mission to GeoJSON.
      */
     private void handleSaveMission() {
-        System.out.println("Save mission requested");
-
         // Check if mission has behaviours
         if (mission.getMissionPlan().getBehaviours().isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -1169,7 +1040,6 @@ public class MissionController implements MainView.MissionControllerCallback {
 
         File file = fileChooser.showSaveDialog(mainView.getScene().getWindow());
         if (file == null) {
-            System.out.println("Save cancelled by user");
             return;
         }
 
@@ -1190,8 +1060,6 @@ public class MissionController implements MainView.MissionControllerCallback {
             alert.setContentText("Saved to: " + file.getAbsolutePath());
             alert.showAndWait();
 
-            System.out.println("Mission saved to: " + file.getAbsolutePath());
-
         } catch (IOException e) {
             // Show error dialog
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -1210,8 +1078,6 @@ public class MissionController implements MainView.MissionControllerCallback {
      * Shows file chooser, deserializes mission from GeoJSON, and updates UI.
      */
     private void handleLoadMission() {
-        System.out.println("Load mission requested");
-
         // Warn if current mission has unsaved changes
         if (mission.isDirty()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -1221,7 +1087,6 @@ public class MissionController implements MainView.MissionControllerCallback {
 
             Optional<ButtonType> result = alert.showAndWait();
             if (result.isEmpty() || result.get() != ButtonType.OK) {
-                System.out.println("Load cancelled by user (unsaved changes)");
                 return;
             }
         }
@@ -1235,7 +1100,6 @@ public class MissionController implements MainView.MissionControllerCallback {
 
         File file = fileChooser.showOpenDialog(mainView.getScene().getWindow());
         if (file == null) {
-            System.out.println("Load cancelled by user");
             return;
         }
 
@@ -1276,8 +1140,6 @@ public class MissionController implements MainView.MissionControllerCallback {
             alert.setContentText("Loaded " + loadedMissionPlan.getBehaviours().size() +
                 " behaviours from: " + file.getName());
             alert.showAndWait();
-
-            System.out.println("Mission loaded from: " + file.getAbsolutePath());
 
         } catch (IOException e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);

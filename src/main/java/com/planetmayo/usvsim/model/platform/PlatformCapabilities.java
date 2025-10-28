@@ -85,8 +85,6 @@ public final class PlatformCapabilities {
         try (FileOutputStream out = new FileOutputStream(PROPERTIES_PATH.toFile())) {
             props.store(out, "USV Platform Configuration");
         }
-
-        System.out.println("Platform configuration saved to: " + PROPERTIES_PATH);
     }
 
     /**
@@ -98,7 +96,6 @@ public final class PlatformCapabilities {
     public static PlatformCapabilities load() {
         // Check if properties file exists
         if (!Files.exists(PROPERTIES_PATH)) {
-            System.out.println("No saved platform configuration found, using defaults");
             return defaultUSV();
         }
 
@@ -114,7 +111,6 @@ public final class PlatformCapabilities {
             double acceleration = Double.parseDouble(props.getProperty("acceleration", "0.5"));
             double deceleration = Double.parseDouble(props.getProperty("deceleration", "1.0"));
 
-            System.out.println("Platform configuration loaded from: " + PROPERTIES_PATH);
             return new PlatformCapabilities(platformType, maxSpeed, minSpeed, maxDepth,
                                            turnRadius, acceleration, deceleration);
 

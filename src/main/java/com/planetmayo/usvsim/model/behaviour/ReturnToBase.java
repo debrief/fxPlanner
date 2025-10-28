@@ -31,7 +31,6 @@ public class ReturnToBase implements Behaviour {
     private BehaviourState state;
     private boolean reachedBase;
     private boolean completionLogged = false;
-    private long lastLogTime = 0;
 
     /**
      * Create return to base behaviour.
@@ -84,19 +83,7 @@ public class ReturnToBase implements Behaviour {
             return new PlatformDemand(currentState.getHeading(), 0.0, 0.0, TurnDirection.SHORTEST);
         }
 
-        PlatformDemand demand = BehaviourExecutor.getDemandedState(currentState, waypoints.get(0));
-
-        // Debug logging every 5 seconds
-        long now = System.currentTimeMillis();
-        if (lastLogTime == 0 || now - lastLogTime > 5000) {
-            double distance = currentState.getPosition().distanceTo(waypoints.get(0).getPosition());
-            System.out.println("RTB: distance=" + String.format("%.1fm", distance) +
-                             ", demanded_speed=" + String.format("%.1fkn", demand.getDemandedSpeed()) +
-                             ", actual_speed=" + String.format("%.1fkn", currentState.getSpeed()));
-            lastLogTime = now;
-        }
-
-        return demand;
+        return BehaviourExecutor.getDemandedState(currentState, waypoints.get(0));
     }
 
     @Override
@@ -120,13 +107,7 @@ public class ReturnToBase implements Behaviour {
         if (withinRadius || (nearlyStopped && closeToBase) || (veryClose && almostStopped)) {
             reachedBase = true;
             state = BehaviourState.COMPLETE;
-
-            // Log completion only once
-            if (!completionLogged) {
-                System.out.println("Return to Base complete - distance: " + String.format("%.1fm", distance) +
-                                 ", speed: " + String.format("%.2fkn", speed));
-                completionLogged = true;
-            }
+            completionLogged = true;
         }
     }
 

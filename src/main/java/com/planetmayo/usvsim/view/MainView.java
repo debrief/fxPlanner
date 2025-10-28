@@ -111,10 +111,6 @@ public class MainView extends BorderPane {
 
     private void wireEventHandlers() {
         // Control panel handlers (wired in MissionController)
-        controlPanel.setOnStart(() -> System.out.println("Start simulation"));
-        controlPanel.setOnPause(() -> System.out.println("Pause simulation"));
-        controlPanel.setOnStop(() -> System.out.println("Stop simulation"));
-        controlPanel.setOnSpeedChange(speed -> System.out.println("Speed: " + speed + "×"));
     }
 
     private void handleAddBehavior(String behaviorType) {

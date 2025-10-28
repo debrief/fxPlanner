@@ -115,7 +115,6 @@ public class CompositeBehaviour implements Behaviour {
             // Advance to next behaviour if current is complete
             if (current.isComplete()) {
                 currentIndex++;
-                System.out.println("Behaviour complete - advanced to " + currentIndex + " of " + behaviours.size());
             }
         }
     }
@@ -124,11 +123,7 @@ public class CompositeBehaviour implements Behaviour {
     public boolean isComplete() {
         if (behaviours.isEmpty()) return true;
         // Complete when currentIndex has advanced past all behaviours
-        boolean complete = currentIndex >= behaviours.size();
-        if (complete && currentIndex == behaviours.size()) {
-            System.out.println("Mission plan complete - all " + behaviours.size() + " behaviours finished");
-        }
-        return complete;
+        return currentIndex >= behaviours.size();
     }
 
     @Override
