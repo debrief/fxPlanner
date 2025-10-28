@@ -2,6 +2,28 @@
 
 A JavaFX desktop application for planning and simulating Unmanned Surface Vehicle (USV) mine clearance missions. Users draw search patterns on a map, configure mission behaviors, and execute realistic simulations with platform dynamics.
 
+## Screenshots
+
+### Application Startup
+![Application Startup](screenshots/01-application-startup.png)
+The main application window showing the map panel (left), mission plan panel (top right), control panel (middle right), and state panel (bottom right). The interface is ready for mission planning in Portland Harbour.
+
+### Parallel Track Search Pattern
+![Parallel Track Search](screenshots/02-parallel-track-search.png)
+A parallel track search behavior configured with 45° orientation and 150m spacing. The systematic grid coverage pattern is visualized with waypoints showing the planned search path.
+
+### Expanding Square Search Pattern
+![Expanding Square Search](screenshots/03-expanding-square-search.png)
+An expanding square search behavior starting from the centroid and spiraling outward with 200m leg increments. This pattern is ideal for localized area searches.
+
+### Multi-Behavior Mission
+![Multi-Behavior Mission](screenshots/04-multi-behavior-mission.png)
+A complete multi-phase mission with four sequential behaviors: waypoint transit to the search area, parallel track search, expanding square search, and return to base. Each behavior is listed in the mission plan panel with its parameters.
+
+### Simulation Execution
+![Simulation Running](screenshots/05-simulation-executing.png)
+The simulation in progress, showing the USV platform navigating the planned route. The state panel displays real-time position, heading, speed, and progress information. Track history is visible on the map.
+
 ## Features
 
 ### Mission Planning (US1)
