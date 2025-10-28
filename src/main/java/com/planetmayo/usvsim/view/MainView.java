@@ -179,7 +179,7 @@ public class MainView extends BorderPane {
     }
 
     public void show() {
-        Scene scene = new Scene(this, 1000, 700);
+        Scene scene = new Scene(this, 1000, 900);
         stage.setScene(scene);
         stage.setTitle("USV Mission Planner");
         stage.show();
