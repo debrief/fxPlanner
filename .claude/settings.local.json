@@ -1,9 +1,28 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(git fetch:*)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
+      "Bash(.specify/scripts/bash/*.sh:*)",
+      "Bash(.specify/scripts/bash/update-agent-context.sh:*)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(git rev-parse:*)",
+      "Read(//Users/ian/.claude/**)",
+      "Read(//Users/ian/.claude/commands/**)",
+      "Bash(mvn clean compile:*)",
+      "Bash(mvn test:*)",
+      "Bash(mvn clean test:*)",
+      "Bash(mvn:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:stackoverflow.com)",
+      "WebSearch",
+      "Bash(awk:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [
+      "Bash(git add:*)"
+    ]
   }
 }
