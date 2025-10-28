@@ -96,9 +96,6 @@ public class MapPanel extends BorderPane {
                 <!-- CRITICAL: Use Leaflet 1.8.0 for JavaFX WebView compatibility -->
                 <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
 
-                <!-- Leaflet.Draw (for polygon drawing) - will be loaded dynamically -->
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-draw/1.0.4/leaflet.draw.css" />
-
                 <style>
                     * { box-sizing: border-box; }
                     html, body { margin: 0; padding: 0; height: 100%%; }
@@ -108,27 +105,6 @@ public class MapPanel extends BorderPane {
                     .leaflet-control { z-index: 999 !important; }
                     .leaflet-top { z-index: 999; }
                     .leaflet-bottom { z-index: 999; }
-
-                    /* Leaflet.Draw toolbar styling - ensure visibility */
-                    .leaflet-draw { z-index: 1000 !important; }
-                    .leaflet-draw-toolbar {
-                        background-color: white !important;
-                        border-radius: 4px !important;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
-                        border: 1px solid #ddd !important;
-                    }
-                    .leaflet-draw-toolbar a {
-                        background-color: white !important;
-                        border: 1px solid #ccc !important;
-                        color: #333 !important;
-                    }
-                    .leaflet-draw-toolbar a:hover {
-                        background-color: #f5f5f5 !important;
-                    }
-                    .leaflet-draw-actions { background-color: white !important; }
-
-                    /* Ensure draw icons are visible if CDN CSS loads */
-                    .leaflet-draw-draw-polygon::before { content: "█" !important; }
                 </style>
             </head>
             <body>
@@ -192,108 +168,7 @@ public class MapPanel extends BorderPane {
                         console.log(msg);
                     }
 
-                    // Initialize Leaflet.Draw controls
-                    function initializeDrawing() {
-                        updateStatus('=== DRAW INIT ===');
-                        updateStatus('Step 1: Check L object');
-                        updateStatus('  L: ' + typeof L);
-                        updateStatus('  L.Control: ' + typeof L.Control);
-                        updateStatus('  L.Control.Draw: ' + typeof L.Control.Draw);
-
-                        if (typeof L.Control.Draw === 'undefined') {
-                            updateStatus('Step 2: WAITING for L.Control.Draw...');
-                            setTimeout(initializeDrawing, 200);
-                            return;
-                        }
-
-                        updateStatus('Step 3: Creating drawControl');
-                        try {
-                            var drawControl = new L.Control.Draw({
-                                draw: {
-                                    polygon: true,
-                                    polyline: false,
-                                    circle: false,
-                                    rectangle: false,
-                                    circlemarker: false,
-                                    marker: false
-                                },
-                                edit: {
-                                    featureGroup: window.drawnItems
-                                }
-                            });
-
-                            updateStatus('Step 4: drawControl created');
-
-                            // Add control to map
-                            window.leafletMap.addControl(drawControl);
-                            window.drawControl = drawControl;
-                            updateStatus('Step 5: drawControl ADDED');
-
-                            // Verify it's on the map
-                            var controls = document.querySelectorAll('.leaflet-draw');
-                            updateStatus('Step 6: Found ' + controls.length + ' .leaflet-draw in DOM');
-
-                            // Handle drawing completion
-                            window.leafletMap.on('draw:created', function(e) {
-                                var layer = e.layer;
-                                if (layer instanceof L.Polygon) {
-                                    var coords = layer.getLatLngs()[0];
-                                    window.drawnCoordinates = coords.map(latlng => [latlng.lat, latlng.lng]);
-                                    updateStatus('✓ Polygon: ' + coords.length + ' vertices');
-                                    window.drawnItems.addLayer(layer);
-                                    if (window.polygonReadyCallback) {
-                                        window.polygonReadyCallback(window.drawnCoordinates);
-                                    }
-                                }
-                            });
-
-                            updateStatus('=== DRAW INIT COMPLETE ===');
-                        } catch (error) {
-                            updateStatus('ERROR: ' + error.message);
-                        }
-                    }
-
-                    // Dynamically load Leaflet.Draw script from multiple CDNs
-                    function loadLeafletDraw() {
-                        updateStatus('Loading Leaflet.Draw library...');
-                        var cdns = [
-                            'https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet-draw.js',
-                            'https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet-draw.js',
-                            'https://cdnjs.cloudflare.com/ajax/libs/leaflet-draw/1.0.4/leaflet.draw.js'
-                        ];
-                        var cdnIndex = 0;
-
-                        function tryLoadFromCdn() {
-                            if (cdnIndex >= cdns.length) {
-                                updateStatus('ERROR: All CDN sources failed!');
-                                // Fall back to built-in drawing
-                                updateStatus('Using built-in click-to-draw');
-                                enableClickToDrawMode();
-                                return;
-                            }
-
-                            var cdnUrl = cdns[cdnIndex];
-                            updateStatus('CDN #' + (cdnIndex + 1) + ': ' + cdnUrl.split('/')[2]);
-                            var script = document.createElement('script');
-                            script.src = cdnUrl;
-
-                            script.onload = function() {
-                                updateStatus('✓ Leaflet.Draw loaded successfully');
-                                initializeDrawing();
-                            };
-
-                            script.onerror = function() {
-                                cdnIndex++;
-                                tryLoadFromCdn();
-                            };
-
-                            document.head.appendChild(script);
-                        }
-
-                        tryLoadFromCdn();
-                    }
-
-                    // Fallback: simple click-to-draw using Leaflet's built-in features
+                    // Simple click-to-draw using Leaflet's built-in features
                     function enableClickToDrawMode() {
                         updateStatus('FALLBACK: Click-to-draw enabled');
                         window.isDrawing = false;  // Expose globally for Java cleanup
@@ -480,30 +355,13 @@ public class MapPanel extends BorderPane {
                         console.log('WebView detected, initializing map...');
                         initMap();
                         console.log('Leaflet 1.8.0 map initialized at Portland Harbour (WebView mode)');
-                        // Defer Leaflet.Draw loading (lazy load when needed)
-                        window.leafletDrawLoaded = false;
+                        enableClickToDrawMode();
                     } else {
                         // Browser can initialize immediately
                         initMap();
                         console.log('Leaflet 1.8.0 map initialized at Portland Harbour (Browser mode)');
-                        // Defer Leaflet.Draw loading (lazy load when needed)
-                        window.leafletDrawLoaded = false;
+                        enableClickToDrawMode();
                     }
-
-                    // Lazy load function - call when drawing is actually needed
-                    window.ensureLeafletDrawLoaded = function(callback) {
-                        if (window.leafletDrawLoaded) {
-                            if (callback) callback();
-                            return;
-                        }
-                        console.log('Lazy loading Leaflet.Draw...');
-                        window.leafletDrawLoaded = true;
-                        loadLeafletDraw();
-                        if (callback) {
-                            // Give time for library to load
-                            setTimeout(callback, 1000);
-                        }
-                    };
                 </script>
             </body>
             </html>
