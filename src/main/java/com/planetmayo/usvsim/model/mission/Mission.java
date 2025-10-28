@@ -1,6 +1,5 @@
 package com.planetmayo.usvsim.model.mission;
 
-import com.planetmayo.usvsim.model.behaviour.Behaviour;
 import com.planetmayo.usvsim.model.platform.Platform;
 import com.planetmayo.usvsim.model.platform.PlatformCapabilities;
 import com.planetmayo.usvsim.model.platform.PlatformState;

@@ -9,7 +9,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
-import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationTest;
 
 import static org.junit.jupiter.api.Assertions.*;

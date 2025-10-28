@@ -93,7 +93,7 @@ public class MainView extends BorderPane {
             "Return to Base"
         );
         addBehaviorDropdown.setPrefWidth(180);
-        addBehaviorDropdown.setOnAction(event -> {
+        addBehaviorDropdown.setOnAction(_ -> {
             String selected = addBehaviorDropdown.getValue();
             handleAddBehavior(selected);
             // Reset selection to allow re-selecting same behavior type
@@ -103,7 +103,7 @@ public class MainView extends BorderPane {
         // Configure button
         Button configureBtn = new Button("⚙ Configure");
         configureBtn.setPrefWidth(100);
-        configureBtn.setOnAction(event -> handleConfigure());
+        configureBtn.setOnAction(_ -> handleConfigure());
 
         box.getChildren().addAll(addBehaviorDropdown, configureBtn);
         return box;

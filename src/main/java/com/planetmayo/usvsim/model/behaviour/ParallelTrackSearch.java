@@ -5,7 +5,6 @@ import com.planetmayo.usvsim.model.geometry.Waypoint;
 import com.planetmayo.usvsim.model.platform.PlatformDemand;
 import com.planetmayo.usvsim.model.platform.PlatformState;
 import com.planetmayo.usvsim.model.platform.TurnDirection;
-import com.planetmayo.usvsim.util.GeoUtils;
 import com.planetmayo.usvsim.util.SearchPatternGenerator;
 import javafx.scene.paint.Color;
 

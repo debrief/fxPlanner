@@ -2,11 +2,8 @@ package com.planetmayo.usvsim.unit.controller;
 
 import com.planetmayo.usvsim.model.geometry.Position;
 import com.planetmayo.usvsim.model.platform.PlatformCapabilities;
-import com.planetmayo.usvsim.model.platform.PlatformState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -51,11 +51,9 @@ public class BehaviorEditingE2ETest {
     private MainView mainView;
     private MissionController controller;
     private Mission mission;
-    private Stage stage;
 
     @Start
     private void start(Stage stage) {
-        this.stage = stage;
 
         // Create main view
         mainView = new MainView(stage);
@@ -373,9 +371,6 @@ public class BehaviorEditingE2ETest {
         CountDownLatch editLast = new CountDownLatch(1);
 
         Platform.runLater(() -> {
-            Behaviour lastBehavior = mission.getMissionPlan().getBehaviours().get(2);
-            ReturnToBase oldRtb = (ReturnToBase) lastBehavior;
-
             ReturnToBase newRtb = new ReturnToBase(
                 Position.of(50.60, -2.40),  // Changed base
                 10.0                         // Changed speed

@@ -4,9 +4,6 @@ import com.planetmayo.usvsim.model.geometry.Position;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-
-import java.util.Optional;
 
 /**
  * Dialog for configuring return-to-base behaviour.
@@ -104,7 +101,7 @@ public class ReturnToBaseDialog extends Dialog<ReturnToBaseParams> {
         grid.add(currentLabel, 0, 5, 2, 1);
 
         // Toggle listener
-        useCustomRadio.selectedProperty().addListener((obs, oldVal, newVal) -> {
+        useCustomRadio.selectedProperty().addListener((_, _, newVal) -> {
             latField.setDisable(!newVal);
             lonField.setDisable(!newVal);
         });

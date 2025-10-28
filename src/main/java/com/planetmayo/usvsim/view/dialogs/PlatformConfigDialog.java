@@ -6,7 +6,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -87,12 +86,12 @@ public class PlatformConfigDialog {
         Button saveButton = new Button("Save");
         saveButton.setPrefWidth(80);
         saveButton.setDefaultButton(true);
-        saveButton.setOnAction(e -> handleSave());
+        saveButton.setOnAction(_ -> handleSave());
 
         Button cancelButton = new Button("Cancel");
         cancelButton.setPrefWidth(80);
         cancelButton.setCancelButton(true);
-        cancelButton.setOnAction(e -> dialog.close());
+        cancelButton.setOnAction(_ -> dialog.close());
 
         HBox buttonBox = new HBox(10);
         buttonBox.getChildren().addAll(saveButton, cancelButton);
@@ -109,22 +108,22 @@ public class PlatformConfigDialog {
 
     private void addValidation() {
         // Turn radius: 50-500m
-        turnRadiusField.textProperty().addListener((obs, oldVal, newVal) -> {
+        turnRadiusField.textProperty().addListener((_, _, _) -> {
             validateNumericField(turnRadiusField, 50.0, 500.0);
         });
 
         // Max speed: 1-15 knots
-        maxSpeedField.textProperty().addListener((obs, oldVal, newVal) -> {
+        maxSpeedField.textProperty().addListener((_, _, _) -> {
             validateNumericField(maxSpeedField, 1.0, 15.0);
         });
 
         // Acceleration: 0.1-2.0 m/s²
-        accelerationField.textProperty().addListener((obs, oldVal, newVal) -> {
+        accelerationField.textProperty().addListener((_, _, _) -> {
             validateNumericField(accelerationField, 0.1, 2.0);
         });
 
         // Deceleration: 0.5-3.0 m/s²
-        decelerationField.textProperty().addListener((obs, oldVal, newVal) -> {
+        decelerationField.textProperty().addListener((_, _, _) -> {
             validateNumericField(decelerationField, 0.5, 3.0);
         });
     }

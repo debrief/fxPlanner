@@ -3,7 +3,6 @@ package com.planetmayo.usvsim.controller;
 import com.planetmayo.usvsim.model.geometry.Polygon;
 import com.planetmayo.usvsim.model.geometry.Position;
 import com.planetmayo.usvsim.view.MapPanel;
-import javafx.application.Platform;
 import javafx.scene.web.WebEngine;
 
 import java.util.ArrayList;
@@ -29,7 +28,6 @@ public class DrawingController {
         DISABLED, POLYGON, WAYPOINT
     }
 
-    private final MapPanel mapPanel;
     private final WebEngine webEngine;
     private DrawingMode mode = DrawingMode.DISABLED;
     private Consumer<Polygon> onPolygonComplete;
@@ -37,27 +35,9 @@ public class DrawingController {
     private List<Position> currentVertices = new ArrayList<>();
 
     public DrawingController(MapPanel mapPanel) {
-        this.mapPanel = mapPanel;
         this.webEngine = mapPanel.getWebEngine();
         // Drawing controls are initialized in MapPanel HTML when page loads
         System.out.println("DrawingController initialized - Leaflet.Draw controls auto-initialized on map");
-    }
-
-    /**
-     * Setup additional event handlers (drawing controls are initialized in MapPanel HTML)
-     */
-    private void setupDrawingIntegration() {
-        // Leaflet.Draw is initialized in the HTML page itself
-        // This method is kept for any additional setup from Java side
-        String eventHandlerSetup = """
-            console.log('Additional drawing event handlers configured');
-            """;
-
-        try {
-            webEngine.executeScript(eventHandlerSetup);
-        } catch (Exception e) {
-            System.err.println("Error in drawing integration: " + e.getMessage());
-        }
     }
 
     /**
@@ -378,36 +358,6 @@ public class DrawingController {
         }
 
         return positions;
-    }
-
-    /**
-     * Add a vertex to the current drawing
-     */
-    private void addVertex(Position position) {
-        if (mode == DrawingMode.DISABLED) {
-            return;
-        }
-
-        currentVertices.add(position);
-        System.out.println("Added vertex: " + position + " (total: " + currentVertices.size() + ")");
-
-        // Update map visualization
-        if (mode == DrawingMode.WAYPOINT) {
-            String markerScript = String.format("""
-                var marker = L.circleMarker([%f, %f], {
-                    radius: 5,
-                    fillColor: '#FFA500',
-                    color: '#FF8C00',
-                    weight: 1,
-                    opacity: 0.8,
-                    fillOpacity: 0.8
-                }).addTo(window.leafletMap);
-                window.markers.push(marker);
-                console.log('Waypoint marker added');
-                """, position.getLatitude(), position.getLongitude());
-
-            webEngine.executeScript(markerScript);
-        }
     }
 
     /**

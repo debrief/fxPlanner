@@ -108,7 +108,7 @@ public class WaypointTransitPanel extends VBox {
 
         Button addButton = new Button("Add Waypoint");
         addButton.setPrefWidth(120);
-        addButton.setOnAction(e -> addWaypoint());
+        addButton.setOnAction(_ -> addWaypoint());
         grid.add(addButton, 2, 1, 1, 2);
 
         return grid;
@@ -128,10 +128,10 @@ public class WaypointTransitPanel extends VBox {
         HBox buttonBox = new HBox(10);
         Button removeButton = new Button("Remove Selected");
         removeButton.setPrefWidth(120);
-        removeButton.setOnAction(e -> removeWaypoint());
+        removeButton.setOnAction(_ -> removeWaypoint());
         Button clearButton = new Button("Clear All");
         clearButton.setPrefWidth(120);
-        clearButton.setOnAction(e -> clearWaypoints());
+        clearButton.setOnAction(_ -> clearWaypoints());
         buttonBox.getChildren().addAll(removeButton, clearButton);
 
         listBox.getChildren().addAll(listLabel, waypointList, buttonBox);
@@ -144,14 +144,14 @@ public class WaypointTransitPanel extends VBox {
 
         Button cancelBtn = new Button("Cancel");
         cancelBtn.setPrefWidth(100);
-        cancelBtn.setOnAction(e -> {
+        cancelBtn.setOnAction(_ -> {
             if (onCancel != null) onCancel.run();
         });
 
         Button okBtn = new Button("OK");
         okBtn.setPrefWidth(100);
         okBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
-        okBtn.setOnAction(e -> handleOk());
+        okBtn.setOnAction(_ -> handleOk());
 
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, Priority.ALWAYS);

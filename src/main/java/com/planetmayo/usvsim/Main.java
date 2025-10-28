@@ -30,8 +30,8 @@ public class Main extends Application {
         // Start position: 50°34'16.3"N 2°27'09.1"W = 50.5712°N, -2.4525°W
         Mission mission = Mission.createDefault(Position.of(50.5712, -2.4525));
 
-        // Create controller to wire UI to model
-        MissionController controller = new MissionController(mission, mainView);
+        // Create controller to wire UI to model (constructor has side effects - wires everything up)
+        new MissionController(mission, mainView);
 
         // Display the application
         mainView.show();

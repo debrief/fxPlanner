@@ -3,8 +3,6 @@ package com.planetmayo.usvsim.view.dialogs;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 /**
@@ -81,7 +79,7 @@ public class ParallelTrackSearchDialog extends Dialog<ParallelTrackSearchParams>
         orientLabel.setStyle("-fx-font-weight: bold;");
         orientationField = new TextField("45");
         orientationField.setPrefWidth(200);
-        orientationField.setOnKeyReleased(e -> validateInputs());
+        orientationField.setOnKeyReleased(_ -> validateInputs());
         grid.add(orientLabel, 0, 0);
         grid.add(orientationField, 1, 0);
 
@@ -90,7 +88,7 @@ public class ParallelTrackSearchDialog extends Dialog<ParallelTrackSearchParams>
         spacingLabel.setStyle("-fx-font-weight: bold;");
         spacingField = new TextField("500");
         spacingField.setPrefWidth(200);
-        spacingField.setOnKeyReleased(e -> validateInputs());
+        spacingField.setOnKeyReleased(_ -> validateInputs());
         grid.add(spacingLabel, 0, 1);
         grid.add(spacingField, 1, 1);
 
@@ -99,7 +97,7 @@ public class ParallelTrackSearchDialog extends Dialog<ParallelTrackSearchParams>
         speedLabel.setStyle("-fx-font-weight: bold;");
         speedField = new TextField("6.0");
         speedField.setPrefWidth(200);
-        speedField.setOnKeyReleased(e -> validateInputs());
+        speedField.setOnKeyReleased(_ -> validateInputs());
         grid.add(speedLabel, 0, 2);
         grid.add(speedField, 1, 2);
 

@@ -14,13 +14,9 @@ import com.planetmayo.usvsim.view.MainView;
 import com.planetmayo.usvsim.view.MapPanel;
 import com.planetmayo.usvsim.view.MissionPlanPanel;
 import com.planetmayo.usvsim.view.StatePanel;
-import com.planetmayo.usvsim.view.dialogs.ParallelTrackSearchDialog;
 import com.planetmayo.usvsim.view.dialogs.ParallelTrackSearchParams;
-import com.planetmayo.usvsim.view.dialogs.WaypointTransitDialog;
 import com.planetmayo.usvsim.view.dialogs.WaypointTransitParams;
-import com.planetmayo.usvsim.view.dialogs.ReturnToBaseDialog;
 import com.planetmayo.usvsim.view.dialogs.ReturnToBaseParams;
-import com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchDialog;
 import com.planetmayo.usvsim.view.dialogs.ExpandingSquareSearchParams;
 import com.planetmayo.usvsim.util.MissionSerializer;
 
@@ -32,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -532,7 +527,7 @@ public class MissionController implements MainView.MissionControllerCallback {
         ));
 
         // Reset all behaviours to PENDING state
-        for (com.planetmayo.usvsim.model.behaviour.Behaviour behaviour : mission.getMissionPlan().getBehaviours()) {
+        for (com.planetmayo.usvsim.model.behaviour.Behaviour _ : mission.getMissionPlan().getBehaviours()) {
             // Note: Behaviours don't have a reset method, they would need to be recreated
             // For now, we can clear the mission plan and let user recreate behaviours
         }

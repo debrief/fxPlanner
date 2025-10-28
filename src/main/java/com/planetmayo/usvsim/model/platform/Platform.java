@@ -4,7 +4,6 @@ import com.planetmayo.usvsim.model.geometry.Position;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import java.time.Instant;
 import java.util.List;
 
 /**

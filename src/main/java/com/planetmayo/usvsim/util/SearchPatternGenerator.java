@@ -4,7 +4,6 @@ import com.planetmayo.usvsim.model.geometry.Polygon;
 import com.planetmayo.usvsim.model.geometry.Position;
 import com.planetmayo.usvsim.model.geometry.Waypoint;
 import org.locationtech.jts.geom.*;
-import org.locationtech.jts.geom.util.AffineTransformation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +16,6 @@ import java.util.List;
  */
 public final class SearchPatternGenerator {
     private static final GeometryFactory gf = new GeometryFactory();
-    private static final double DEGREES_PER_METRE = 1.0 / 111195.0;
 
     private SearchPatternGenerator() {
         // Utility class - no instantiation

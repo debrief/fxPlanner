@@ -4,7 +4,6 @@ import com.planetmayo.usvsim.controller.MissionController;
 import com.planetmayo.usvsim.model.behaviour.Behaviour;
 import com.planetmayo.usvsim.model.geometry.Polygon;
 import com.planetmayo.usvsim.model.geometry.Position;
-import com.planetmayo.usvsim.model.geometry.Waypoint;
 import com.planetmayo.usvsim.model.mission.Mission;
 import com.planetmayo.usvsim.view.MainView;
 import com.planetmayo.usvsim.view.dialogs.ParallelTrackSearchParams;
@@ -19,7 +18,6 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -48,11 +46,9 @@ public class BehaviorDeletionE2ETest {
     private MainView mainView;
     private MissionController controller;
     private Mission mission;
-    private Stage stage;
 
     @Start
     private void start(Stage stage) {
-        this.stage = stage;
 
         // Create main view
         mainView = new MainView(stage);

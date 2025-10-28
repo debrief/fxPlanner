@@ -92,6 +92,7 @@ class SearchPatternGeneratorTest {
                 area, bearing, 400.0, 5.0
             );
             // May or may not generate waypoints depending on orientation
+            assertNotNull(waypoints, "Waypoints list should not be null for bearing " + bearing);
             assertDoesNotThrow(() -> {
                 // Just verify no exceptions thrown
             });

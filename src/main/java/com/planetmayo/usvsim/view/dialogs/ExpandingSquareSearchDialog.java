@@ -3,7 +3,6 @@ package com.planetmayo.usvsim.view.dialogs;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 
 /**
  * Dialog for configuring expanding square search pattern.

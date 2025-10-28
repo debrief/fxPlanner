@@ -9,7 +9,6 @@ import javafx.scene.layout.VBox;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Dialog for configuring waypoint transit behaviour.
@@ -123,7 +122,7 @@ public class WaypointTransitDialog extends Dialog<WaypointTransitParams> {
 
         Button addButton = new Button("Add Waypoint");
         addButton.setPrefWidth(120);
-        addButton.setOnAction(e -> addWaypoint());
+        addButton.setOnAction(_ -> addWaypoint());
         grid.add(addButton, 2, 1, 1, 2);
 
         return grid;
@@ -142,10 +141,10 @@ public class WaypointTransitDialog extends Dialog<WaypointTransitParams> {
         HBox buttonBox = new HBox(10);
         Button removeButton = new Button("Remove Selected");
         removeButton.setPrefWidth(120);
-        removeButton.setOnAction(e -> removeWaypoint());
+        removeButton.setOnAction(_ -> removeWaypoint());
         Button clearButton = new Button("Clear All");
         clearButton.setPrefWidth(120);
-        clearButton.setOnAction(e -> clearWaypoints());
+        clearButton.setOnAction(_ -> clearWaypoints());
         buttonBox.getChildren().addAll(removeButton, clearButton);
 
         listBox.getChildren().addAll(listLabel, waypointList, buttonBox);
