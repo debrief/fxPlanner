@@ -36,6 +36,13 @@ import java.util.concurrent.TimeUnit;
 @ExtendWith(ApplicationExtension.class)
 public class ScreenshotCaptureE2ETest {
 
+    // Screenshot configuration
+    private static final String SCREENSHOT_DIR = "screenshots/";
+    private static final int UI_RENDER_WAIT_MS = 1000;
+    private static final int SIMULATION_RUN_WAIT_MS = 2000;
+    private static final int OPERATION_WAIT_MS = 500;
+    private static final int SCREENSHOT_TIMEOUT_SECONDS = 5;
+
     private MainView mainView;
     private MissionController controller;
     private Mission mission;
@@ -81,9 +88,9 @@ public class ScreenshotCaptureE2ETest {
         });
 
         try {
-            latch.await(5, TimeUnit.SECONDS);
+            latch.await(SCREENSHOT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             if (imageHolder[0] != null) {
-                File outputFile = new File("screenshots/" + filename);
+                File outputFile = new File(SCREENSHOT_DIR + filename);
                 outputFile.getParentFile().mkdirs();
                 ImageIO.write(SwingFXUtils.fromFXImage(imageHolder[0], null), "png", outputFile);
                 System.out.println("Screenshot saved: " + outputFile.getAbsolutePath());
@@ -97,7 +104,7 @@ public class ScreenshotCaptureE2ETest {
     @Test
     void captureApplicationStartup(FxRobot robot) throws Exception {
         // Wait for UI to fully render
-        robot.sleep(1000);
+        robot.sleep(UI_RENDER_WAIT_MS);
         
         // Capture initial application state
         captureScreenshot("01-application-startup.png");
@@ -120,7 +127,7 @@ public class ScreenshotCaptureE2ETest {
         });
 
         behaviorAdded.await(3, TimeUnit.SECONDS);
-        robot.sleep(1000);
+        robot.sleep(UI_RENDER_WAIT_MS);
         
         // Capture parallel track search pattern
         captureScreenshot("02-parallel-track-search.png");
@@ -143,7 +150,7 @@ public class ScreenshotCaptureE2ETest {
         });
 
         behaviorAdded.await(3, TimeUnit.SECONDS);
-        robot.sleep(1000);
+        robot.sleep(UI_RENDER_WAIT_MS);
         
         // Capture expanding square search pattern
         captureScreenshot("03-expanding-square-search.png");
@@ -186,7 +193,7 @@ public class ScreenshotCaptureE2ETest {
         });
 
         allBehaviorsAdded.await(5, TimeUnit.SECONDS);
-        robot.sleep(1000);
+        robot.sleep(UI_RENDER_WAIT_MS);
         
         // Capture complete multi-behavior mission
         captureScreenshot("04-multi-behavior-mission.png");
@@ -209,18 +216,18 @@ public class ScreenshotCaptureE2ETest {
         });
 
         behaviorAdded.await(3, TimeUnit.SECONDS);
-        robot.sleep(500);
+        robot.sleep(OPERATION_WAIT_MS);
         
         // Start simulation
         Platform.runLater(() -> controller.startSimulation());
-        robot.sleep(2000); // Let simulation run for 2 seconds
+        robot.sleep(SIMULATION_RUN_WAIT_MS); // Let simulation run
         
         // Capture during simulation
         captureScreenshot("05-simulation-executing.png");
         
         // Stop simulation
         Platform.runLater(() -> controller.stopSimulation());
-        robot.sleep(500);
+        robot.sleep(OPERATION_WAIT_MS);
     }
 
     // Helper method to create test squares
