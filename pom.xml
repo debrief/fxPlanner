@@ -14,8 +14,8 @@
     <description>JavaFX desktop application for USV mission planning and simulation</description>
 
     <properties>
-        <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>25</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>21.0.2</javafx.version>
         <jts.version>1.18.1</jts.version>
@@ -146,8 +146,11 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>25</source>
-                    <target>25</target>
+                    <source>21</source>
+                    <target>21</target>
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 
@@ -162,6 +165,7 @@
                         <include>**/*IntegrationTest.java</include>
                         <include>**/*E2ETest.java</include>
                     </includes>
+                    <argLine>--enable-preview</argLine>
                 </configuration>
             </plugin>
 
