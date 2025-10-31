@@ -30,7 +30,6 @@ public class ReturnToBase implements Behaviour {
     private final List<Waypoint> waypoints;
     private BehaviourState state;
     private boolean reachedBase;
-    private boolean completionLogged = false;
 
     /**
      * Create return to base behaviour.
@@ -107,7 +106,6 @@ public class ReturnToBase implements Behaviour {
         if (withinRadius || (nearlyStopped && closeToBase) || (veryClose && almostStopped)) {
             reachedBase = true;
             state = BehaviourState.COMPLETE;
-            completionLogged = true;
         }
     }
 
