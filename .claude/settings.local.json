@@ -19,7 +19,8 @@
       "WebFetch(domain:stackoverflow.com)",
       "WebSearch",
       "Bash(awk:*)",
-      "Bash(gh issue view:*)"
+      "Bash(gh issue view:*)",
+      "Bash(.specify/scripts/bash/setup-plan.sh:*)"
     ],
     "deny": [],
     "ask": [
