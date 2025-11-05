@@ -181,3 +181,10 @@ specs/001-usv-mission-planner/
 - Offline-capable (bundled map tiles)
 - Interview demo target: 5-10 min scenarios
 - Constitution document: `.specify/memory/constitution.md` (defines all 8 core principles)
+
+## Active Technologies
+- Java 25 (backend), TypeScript 5.x (frontend), React 19 (UI framework) + Spring Boot (REST API), React 19 (UI), Leaflet 1.9+ (maps), JTS Topology Suite 1.18.1 (geometry) (003-web-delivery)
+- No persistent storage - client-side file management only (upload/download GeoJSON) (003-web-delivery)
+
+## Recent Changes
+- 003-web-delivery: Added Java 25 (backend), TypeScript 5.x (frontend), React 19 (UI framework) + Spring Boot (REST API), React 19 (UI), Leaflet 1.9+ (maps), JTS Topology Suite 1.18.1 (geometry)
