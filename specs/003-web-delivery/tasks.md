@@ -23,14 +23,14 @@
 
 **Purpose**: Initialize backend and frontend project structures
 
-- [ ] T001 Create backend/ directory structure following Spring Boot conventions
-- [ ] T002 Create frontend/ directory structure following Create React App conventions
-- [ ] T003 [P] Create backend/pom.xml with Spring Boot 3.x, Spring Web, and Jackson dependencies
-- [ ] T004 [P] Create frontend/package.json with React 19, TypeScript 5.x, Leaflet 1.9+, react-leaflet, axios dependencies
-- [ ] T005 [P] Configure Maven frontend-maven-plugin in root pom.xml to build React app during Maven package
-- [ ] T006 [P] Create backend/src/main/resources/application.properties with PORT binding (server.port=${PORT:8080})
-- [ ] T007 [P] Create Procfile in repository root: "web: java -jar backend/target/usv-web.jar"
-- [ ] T008 [P] Add backend/src/main/resources/static/ directory for embedded frontend resources
+- [X] T001 Create backend/ directory structure following Spring Boot conventions
+- [X] T002 Create frontend/ directory structure following Create React App conventions
+- [X] T003 [P] Create backend/pom.xml with Spring Boot 3.x, Spring Web, and Jackson dependencies
+- [X] T004 [P] Create frontend/package.json with React 19, TypeScript 5.x, Leaflet 1.9+, react-leaflet, axios dependencies
+- [X] T005 [P] Configure Maven frontend-maven-plugin in root pom.xml to build React app during Maven package
+- [X] T006 [P] Create backend/src/main/resources/application.properties with PORT binding (server.port=${PORT:8080})
+- [X] T007 [P] Create Procfile in repository root: "web: java -jar backend/target/usv-web.jar"
+- [X] T008 [P] Add backend/src/main/resources/static/ directory for embedded frontend resources
 
 **Checkpoint**: Project structure ready for implementation
 
