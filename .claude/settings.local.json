@@ -20,7 +20,9 @@
       "WebSearch",
       "Bash(awk:*)",
       "Bash(gh issue view:*)",
-      "Bash(.specify/scripts/bash/setup-plan.sh:*)"
+      "Bash(.specify/scripts/bash/setup-plan.sh:*)",
+      "Bash(tree:*)",
+      "Bash(backend/src/main/resources/static/README.md)"
     ],
     "deny": [],
     "ask": [
