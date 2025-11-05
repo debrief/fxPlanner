@@ -85,4 +85,44 @@ public interface Behaviour {
      * @return JavaFX Color
      */
     Color getDisplayColor();
+
+    // ===================================================================
+    // STATELESS INTERFACE METHODS (for REST API / Web Frontend)
+    // ===================================================================
+
+    /**
+     * Calculates platform demand given external execution state (stateless).
+     *
+     * Pure function that computes control demands without modifying internal state.
+     * Used by stateless REST API backend for web frontend.
+     *
+     * @param executionState Current behavior execution state (waypoint index, progress)
+     * @param platformState  Current platform state (position, heading, speed)
+     * @return Control demand (heading, speed, depth, turn direction)
+     */
+    PlatformDemand calculateDemand(BehaviourExecutionState executionState, PlatformState platformState);
+
+    /**
+     * Updates execution state based on platform progress (stateless).
+     *
+     * Pure function that returns new state without modifying input.
+     * Increments waypoint index if platform reached current waypoint.
+     * Used by stateless REST API backend for web frontend.
+     *
+     * @param executionState Current behavior execution state
+     * @param platformState  Current platform state
+     * @return Updated execution state (may have incremented waypoint index or changed state)
+     */
+    BehaviourExecutionState updateProgress(BehaviourExecutionState executionState, PlatformState platformState);
+
+    /**
+     * Checks if behavior is complete given external execution state (stateless).
+     *
+     * Pure function that determines completion without accessing internal state.
+     * Used by stateless REST API backend for web frontend.
+     *
+     * @param executionState Current behavior execution state
+     * @return true if all waypoints reached or behavior complete
+     */
+    boolean isComplete(BehaviourExecutionState executionState);
 }
