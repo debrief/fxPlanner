@@ -22,7 +22,8 @@
       "Bash(gh issue view:*)",
       "Bash(.specify/scripts/bash/setup-plan.sh:*)",
       "Bash(tree:*)",
-      "Bash(backend/src/main/resources/static/README.md)"
+      "Bash(backend/src/main/resources/static/README.md)",
+      "Bash(src/test/java/com/planetmayo/usvsim/unit/WaypointTransitTest.java)"
     ],
     "deny": [],
     "ask": [
