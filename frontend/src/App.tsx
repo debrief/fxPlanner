@@ -54,8 +54,8 @@ function App() {
         </div>
       </div>
       <div className="app-right">
-        <MissionPlanPanel />
         <ControlPanel />
+        <MissionPlanPanel />
         <StatePanel />
       </div>
 
