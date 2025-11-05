@@ -19,7 +19,7 @@
 
 ---
 
-## Phase 1: Setup (Project Structure)
+## Phase 1: Setup & Project Structure
 
 **Purpose**: Initialize backend and frontend project structures
 
@@ -44,7 +44,7 @@
 
 ### State Objects
 
-- [ ] T009 Create src/main/java/com/planetmayo/usvsim/model/behaviour/BehaviourExecutionState.java as Java record with currentWaypointIndex, state (BehaviourState enum), lastDistanceToWaypoint, and initial() factory method
+- [ ] T009 Create src/main/java/com/planetmayo/usvsim/model/behaviour/BehaviourExecutionState.java as Java record with currentWaypointIndex, state (BehaviourState enum), lastDistanceToWaypoint, and initial() factory method. Annotate with @JsonCreator for Jackson serialization compatibility
 
 ### Interface Evolution
 
@@ -52,12 +52,16 @@
 
 ### Refactor Behaviors (Sequential - one at a time)
 
+- [ ] T011a **[TEST-FIRST]** Write unit tests for WaypointTransit stateless interface in src/test/java/com/planetmayo/usvsim/unit/WaypointTransitTest.java covering calculateDemand(state, platform), updateProgress(state, platform), isComplete(state) with various scenarios (at waypoint, approaching, past waypoint)
 - [ ] T011 Refactor src/main/java/com/planetmayo/usvsim/model/behaviour/WaypointTransit.java to implement stateless interface, remove instance variables for execution state, implement calculateDemand/updateProgress/isComplete accepting state parameters
 - [ ] T012 Run mvn test -Dtest="WaypointTransitTest" to verify WaypointTransit refactoring
+- [ ] T013a **[TEST-FIRST]** Write unit tests for ParallelTrackSearch stateless interface in src/test/java/com/planetmayo/usvsim/unit/ParallelTrackSearchTest.java covering pattern generation, track alternation, state transitions
 - [ ] T013 Refactor src/main/java/com/planetmayo/usvsim/model/behaviour/ParallelTrackSearch.java to implement stateless interface, remove execution state instance variables
 - [ ] T014 Run mvn test -Dtest="ParallelTrackSearchTest" to verify ParallelTrackSearch refactoring
+- [ ] T015a **[TEST-FIRST]** Write unit tests for ExpandingSquareSearch stateless interface in src/test/java/com/planetmayo/usvsim/unit/ExpandingSquareSearchTest.java covering spiral pattern generation, leg increment logic, state progression
 - [ ] T015 Refactor src/main/java/com/planetmayo/usvsim/model/behaviour/ExpandingSquareSearch.java to implement stateless interface, remove execution state instance variables
 - [ ] T016 Run mvn test -Dtest="ExpandingSquareSearchTest" to verify ExpandingSquareSearch refactoring
+- [ ] T017a **[TEST-FIRST]** Write unit tests for ReturnToBase stateless interface in src/test/java/com/planetmayo/usvsim/unit/ReturnToBaseTest.java covering direct transit to base, arrival detection, completion state
 - [ ] T017 Refactor src/main/java/com/planetmayo/usvsim/model/behaviour/ReturnToBase.java to implement stateless interface, remove execution state instance variables
 - [ ] T018 Run mvn test -Dtest="ReturnToBaseTest" to verify ReturnToBase refactoring
 
@@ -84,7 +88,7 @@
 
 ### Spring Boot Application
 
-- [ ] T024 [US4] Create backend/src/main/java/com/planetmayo/usvsim/api/Application.java as Spring Boot main class with @SpringBootApplication and PORT binding
+- [ ] T024 [US4] Create backend/src/main/java/com/planetmayo/usvsim/api/USVWebApplication.java as Spring Boot main class with @SpringBootApplication and PORT binding
 - [ ] T025 [P] [US4] Create backend/src/main/java/com/planetmayo/usvsim/api/config/WebConfig.java with CORS configuration for development (allow localhost:3000)
 - [ ] T026 [P] [US4] Create backend/src/main/java/com/planetmayo/usvsim/api/controller/ClientForwardController.java to forward all non-API routes to /index.html for React Router support
 
@@ -154,7 +158,9 @@
 - [ ] T049 [US1] Initialize React app in frontend/ using Create React App with TypeScript template: npx create-react-app . --template typescript
 - [ ] T050 [US1] Create frontend/src/types/api.ts that re-exports generated types and includes manual service interfaces, type guards, and constants from specs/003-web-delivery/contracts/types.ts
 - [ ] T051 [US1] Install dependencies: npm install react@19 react-dom@19 leaflet@1.9 react-leaflet axios openapi-typescript
-- [ ] T052 [US1] Configure proxy in frontend/package.json: "proxy": "http://localhost:8080" for development
+- [ ] T052 [US1] Configure proxy in frontend/package.json: "proxy": "http://localhost:8080" for development (development only - production uses embedded deployment)
+- [ ] T052a [US1] Document desktop application layout with screenshot or ASCII diagram in specs/003-web-delivery/desktop-layout.md as reference for web replication (FR-008 requirement)
+- [ ] T052b **[MOCKUP-FIRST]** Create ASCII mockup for main application layout showing MapPanel (70% width left), MissionPlanPanel + ControlPanel + StatePanel (30% width right, stacked vertically) and get Doc approval before implementing components
 
 ### Main Layout Components
 
@@ -176,7 +182,7 @@
 
 ### Build Configuration
 
-- [ ] T062 [US1] Configure Maven to build frontend during package phase: add execution in frontend-maven-plugin to run "npm install" and "npm run build", copy build/ to backend/src/main/resources/static/
+- [ ] T062 [US1] Configure Maven to build frontend during package phase: add execution in frontend-maven-plugin to run "npm install" and "npm run build", copy all files from frontend/build/ to backend/src/main/resources/static/ preserving directory structure
 - [ ] T063 [US1] Update backend/pom.xml to package as executable JAR with spring-boot-maven-plugin
 
 ### Deployment Testing
@@ -197,6 +203,7 @@
 
 ### Behavior Configuration Components
 
+- [ ] T066a **[MOCKUP-FIRST]** Create ASCII mockups for 4 behavior configuration dialogs (ParallelTrackSearch, ExpandingSquareSearch, WaypointTransit, ReturnToBase) showing field layouts and interaction flow, get Doc approval before implementation
 - [ ] T067 [P] [US2] Create frontend/src/components/behaviors/BehaviorSelector.tsx with dropdown for 4 behavior types (ParallelTrackSearch, ExpandingSquareSearch, WaypointTransit, ReturnToBase) and "Configure" button
 - [ ] T068 [P] [US2] Create frontend/src/components/behaviors/ParallelTrackSearchDialog.tsx with fields for trackOrientation (0-360°), trackSpacing (meters), platformSpeed (m/s), and "Draw Search Area" button
 - [ ] T069 [P] [US2] Create frontend/src/components/behaviors/ExpandingSquareSearchDialog.tsx with fields for initialDirection (0-360°), legIncrement (meters), platformSpeed (m/s), and "Draw Search Area" button
@@ -280,7 +287,7 @@
 
 - [ ] T108 [US3] Add platform marker to MapPanel.tsx: SVG icon showing heading direction (triangle pointing forward), positioned at platformState.position
 - [ ] T109 [US3] Update platform marker in real-time: subscribe to SimulationService state changes, update marker position and rotation when platformState updates
-- [ ] T110 [US3] Add track history rendering to MapPanel.tsx: polyline showing last 100 platform positions with fade effect (recent positions darker)
+- [ ] T110 [US3] Add track history rendering to MapPanel.tsx: polyline showing last 100 platform positions with fade effect (recent positions darker). Maintain track history in frontend state array with maximum size of 100 positions
 - [ ] T111 [US3] Add platform demand visualization to MapPanel.tsx: draw line from platform to demanded heading, display turn radius arc
 
 ### Simulation Integration
@@ -351,6 +358,13 @@
 - [ ] T139 [P] Add network error handling: display retry options when POST /api/simulation/tick fails, queue requests if backend temporarily unavailable
 - [ ] T140 [P] Add browser tab close warning: implement beforeunload event handler to warn user if mission has unsaved changes (FR-010a requirement)
 
+### Edge Case Validation
+
+- [ ] T140a Test JavaScript disabled edge case: access web application with JavaScript disabled in browser, verify clear error message displays with instructions to enable JavaScript
+- [ ] T140b Test backend/frontend version mismatch: modify frontend to report different version, verify version mismatch warning displays prominently
+- [ ] T140c Test Heroku dyno restart during simulation: restart Heroku dyno while simulation running, verify frontend continues simulation seamlessly with new dyno instance (stateless backend validation)
+- [ ] T140d Test extended simulation duration: run simulation for 2+ hours in browser tab, verify no memory leaks, tab remains responsive, simulation state maintained
+
 ### Logging & Monitoring
 
 - [ ] T141 [P] Add backend request logging: log all /api/simulation/tick requests with latency, payload size for performance monitoring
@@ -359,7 +373,7 @@
 
 ### Documentation
 
-- [ ] T144 [P] Create specs/003-web-delivery/deployment-guide.md with step-by-step Heroku deployment instructions, PORT configuration, buildpack setup
+- [ ] T144 [P] Create specs/003-web-delivery/deployment-guide.md with step-by-step Heroku deployment instructions, PORT configuration, buildpack setup, security assumptions (no authentication per FR-031, network-level access control required)
 - [ ] T145 [P] Update specs/003-web-delivery/quickstart.md with actual code examples from implementation, validate all commands work
 - [ ] T146 [P] Document API endpoints in specs/003-web-delivery/api-reference.md with curl examples for each endpoint, expected responses
 
@@ -367,8 +381,13 @@
 
 - [ ] T147 Run specs/003-web-delivery/quickstart.md step-by-step from clean checkout, verify all commands succeed and application works
 - [ ] T148 Deploy to Heroku test instance, verify application accessible via public URL, health check responds, mission planning works
-- [ ] T149 Performance test: measure POST /api/simulation/tick latency with 10 concurrent requests, verify <50ms maintained (SC-008)
+- [ ] T149 Performance test: measure POST /api/simulation/tick latency with 10 concurrent requests using Apache Bench (ab) or curl loop, verify <50ms maintained (SC-008)
 - [ ] T150 Load test: run 10 simultaneous simulation sessions in different browser tabs, verify no cross-contamination of state, all sessions independent
+- [ ] T150a Memory profiling: profile application memory usage with VisualVM or browser DevTools during 10-minute simulation, verify <512MB memory usage (constitution requirement)
+- [ ] T150b Validate SC-002: verify TypeScript type definitions were reviewed and approved during Phase 3 checkpoint
+- [ ] T150c Validate SC-004: count clicks required for mission planning workflow in desktop vs web, verify parity (select behavior, configure, draw, add to plan)
+- [ ] T150d Validate SC-006: create mission in desktop, save as GeoJSON, load in web, save again, compare files with diff tool, verify 100% data fidelity (no data loss)
+- [ ] T150e Validate SC-009: document both deployment options (desktop JAR, web JAR) in README with identical feature lists, verify organization can switch without migration
 
 **Checkpoint**: Application production-ready with performance validated
 

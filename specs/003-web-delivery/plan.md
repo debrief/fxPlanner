@@ -17,13 +17,13 @@ Refactor the existing JavaFX USV mission planner into a web-based delivery optio
 **Testing**: JUnit 5 (backend), Jest + React Testing Library (frontend), TestFX (desktop validation)
 **Target Platform**: Heroku (single dyno), modern browsers (Chrome, Firefox, Safari, Edge - last 2 versions)
 **Project Type**: Web application with embedded frontend in JAR
-**Performance Goals**: <50ms POST /simulation/tick latency, 60 FPS map rendering, 20+ FPS simulation
+**Performance Goals**: <50ms POST /simulation/tick latency, 60 FPS map rendering, 20+ FPS simulation, 3s maximum startup
 **Constraints**: Stateless backend (no session memory), Heroku ephemeral filesystem, single JAR deployment
 **Scale/Scope**: 10 concurrent simulation sessions, missions up to 100 waypoints, 4 behavior types
 
-## Constitution Check
+## Constitution Compliance Plan
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*Assessment of planned implementation against constitution principles. Re-validate after implementation.*
 
 ### Principle Compliance Assessment
 
@@ -104,12 +104,12 @@ src/main/java/com/planetmayo/usvsim/
 backend/
 ├── src/main/
 │   ├── java/com/planetmayo/usvsim/api/
-│   │   ├── Application.java           # Spring Boot main
+│   │   ├── USVWebApplication.java     # Spring Boot main
 │   │   ├── controllers/
 │   │   │   ├── SimulationController.java  # POST /simulation/tick
 │   │   │   ├── BehaviorController.java    # Pattern generation
 │   │   │   └── MissionController.java     # Serialization
-│   │   ├── models/                    # DTOs for API
+│   │   ├── dto/                       # Data Transfer Objects for API
 │   │   │   ├── SimulationTickRequest.java
 │   │   │   ├── SimulationTickResponse.java
 │   │   │   ├── PlatformState.java

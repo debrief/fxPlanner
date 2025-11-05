@@ -120,7 +120,7 @@ As a user or organization, I want to choose between desktop and web deployment b
 - **FR-003**: Web frontend MUST communicate with backend exclusively via REST API (no direct model access)
 - **FR-004**: Backend MUST provide health check/heartbeat endpoint that frontend polls to detect connectivity issues
 - **FR-005**: Backend MUST expose REST API endpoints for behavior pattern generation (waypoint computation from polygon and parameters)
-- **FR-005a**: Backend MUST expose REST endpoint POST /simulation/tick for stateless simulation computation (accept mission state + platform state + time delta, return next platform state)
+- **FR-005b**: Backend MUST expose REST endpoint POST /simulation/tick for stateless simulation computation (accept mission state + platform state + time delta, return next platform state)
 
 #### Frontend Implementation
 
@@ -128,7 +128,7 @@ As a user or organization, I want to choose between desktop and web deployment b
 - **FR-007**: Web frontend MUST integrate Leaflet map library directly (not via WebView) for map rendering and interaction
 - **FR-008**: Web frontend MUST replicate the current UI layout and arrangement from the desktop version (map panel 70%, controls 30%, same panel organization)
 - **FR-009**: Web frontend MUST support context-specific drawing interactions: click-to-draw polygons for search behaviors (ParallelTrackSearch, ExpandingSquareSearch), click-to-place waypoints for WaypointTransit, single point selection for ReturnToBase, following behavior-first UX flow (select behavior → configure → draw)
-- **FR-010**: Web frontend MUST drive simulation execution loop (using requestAnimationFrame or setInterval), calling backend POST /simulation/tick endpoint each frame with current state and rendering returned next state with sub-second latency
+- **FR-010**: Web frontend MUST drive simulation execution loop (using requestAnimationFrame or setInterval), calling backend POST /simulation/tick endpoint each frame with current state and rendering returned next state (sub-50ms latency per FR-029)
 - **FR-010a**: Web frontend MUST warn user before closing browser tab/window if mission has unsaved changes, prompting to download mission file
 
 #### Backend Implementation
@@ -159,10 +159,10 @@ As a user or organization, I want to choose between desktop and web deployment b
 
 #### Non-Functional Requirements
 
-- **FR-027**: Backend API MUST respond to pattern generation requests within 500ms for standard mission sizes (up to 10 behaviors, polygons with up to 100 vertices)
+- **FR-027**: Backend API MUST respond to pattern generation requests within 500ms for standard mission sizes (up to 10 behaviors per mission, polygons with up to 100 vertices each)
 - **FR-028**: Web frontend MUST load and display initial interface within 3 seconds on standard broadband connection
 - **FR-029**: Backend POST /simulation/tick endpoint MUST respond within 50ms for standard missions (up to 100 waypoints), enabling smooth 20+ FPS simulation
-- **FR-030**: Backend MUST support at least 10 concurrent simulation tick requests per second without response time degradation
+- **FR-030**: Backend MUST support at least 10 concurrent simulation tick requests per second (for missions with up to 100 waypoints each) without response time degradation beyond FR-029 limits
 - **FR-031**: Web application SHALL NOT implement user authentication/authorization, assuming deployment in trusted network environment where access control is managed at network/infrastructure level
 
 ### Key Entities
@@ -171,7 +171,7 @@ As a user or organization, I want to choose between desktop and web deployment b
 
 - **Mission**: Container for mission metadata (name, created date) and collection of behaviors forming mission plan. Includes overall mission state (Planning, Executing, Paused).
 
-- **Behaviour**: Abstract interface representing mission activities. Subtypes: ParallelTrackSearch, ExpandingSquareSearch, WaypointTransit, ReturnToBase. Each generates waypoints and provides demanded platform state (heading, speed).
+- **Behavior**: Abstract interface representing mission activities. Subtypes: ParallelTrackSearch, ExpandingSquareSearch, WaypointTransit, ReturnToBase. Each generates waypoints and provides demanded platform state (heading, speed).
 
 - **Platform**: USV representation including current state (position, heading, speed, depth), capabilities (max speed, turn radius, acceleration/deceleration limits), and track history.
 
@@ -330,7 +330,7 @@ As a user or organization, I want to choose between desktop and web deployment b
 
 ## Dependencies
 
-- **Phase 1 Completion (Critical Path)**: Web frontend development depends on successful completion of behavior refactoring in Phase 1. Risk: If behavior refactoring breaks desktop application or requires more extensive changes than anticipated, web development timeline delayed. Mitigation: Complete Phase 1 fully and verify desktop application before starting Phase 2/3.
+- **Phase 1 Completion (Critical Path)**: See Constraints section "Phasing Order (Critical)" for blocking requirement. Risk: If behavior refactoring breaks desktop application or requires more extensive changes than anticipated, web development timeline delayed. Mitigation: Complete Phase 1 fully and verify desktop application before starting Phase 2/3.
 
 - **Behavior Refactoring**: Current behaviors store internal state (progress tracking, waypoint sequence). Must be refactored to accept/return state as parameters. Risk: Complex state machines in behaviors may be difficult to externalize. Mitigation: Start with simplest behavior (WaypointTransit), establish pattern, then apply to complex behaviors (search patterns).
 
