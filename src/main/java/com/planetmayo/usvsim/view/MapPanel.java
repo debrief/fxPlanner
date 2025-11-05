@@ -380,15 +380,15 @@ public class MapPanel extends BorderPane {
 
         Button zoomIn = new Button("+");
         zoomIn.setPrefWidth(50);
-        zoomIn.setOnAction(_ -> executeMapScript("window.leafletMap.zoomIn();"));
+        zoomIn.setOnAction(event -> executeMapScript("window.leafletMap.zoomIn();"));
 
         Button zoomOut = new Button("-");
         zoomOut.setPrefWidth(50);
-        zoomOut.setOnAction(_ -> executeMapScript("window.leafletMap.zoomOut();"));
+        zoomOut.setOnAction(event -> executeMapScript("window.leafletMap.zoomOut();"));
 
         Button resetView = new Button("Reset View");
         resetView.setPrefWidth(100);
-        resetView.setOnAction(_ -> handleResetView());
+        resetView.setOnAction(event -> handleResetView());
 
         box.getChildren().addAll(zoomIn, zoomOut, resetView);
         return box;

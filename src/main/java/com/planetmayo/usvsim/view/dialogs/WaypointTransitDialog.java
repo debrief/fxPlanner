@@ -122,7 +122,7 @@ public class WaypointTransitDialog extends Dialog<WaypointTransitParams> {
 
         Button addButton = new Button("Add Waypoint");
         addButton.setPrefWidth(120);
-        addButton.setOnAction(_ -> addWaypoint());
+        addButton.setOnAction(event -> addWaypoint());
         grid.add(addButton, 2, 1, 1, 2);
 
         return grid;
@@ -141,10 +141,10 @@ public class WaypointTransitDialog extends Dialog<WaypointTransitParams> {
         HBox buttonBox = new HBox(10);
         Button removeButton = new Button("Remove Selected");
         removeButton.setPrefWidth(120);
-        removeButton.setOnAction(_ -> removeWaypoint());
+        removeButton.setOnAction(event -> removeWaypoint());
         Button clearButton = new Button("Clear All");
         clearButton.setPrefWidth(120);
-        clearButton.setOnAction(_ -> clearWaypoints());
+        clearButton.setOnAction(event -> clearWaypoints());
         buttonBox.getChildren().addAll(removeButton, clearButton);
 
         listBox.getChildren().addAll(listLabel, waypointList, buttonBox);

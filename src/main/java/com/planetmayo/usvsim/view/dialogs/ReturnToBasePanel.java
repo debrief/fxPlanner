@@ -98,7 +98,7 @@ public class ReturnToBasePanel extends VBox {
         grid.add(currentLabel, 0, 5, 2, 1);
 
         // Toggle listener
-        useCustomRadio.selectedProperty().addListener((_, _, newVal) -> {
+        useCustomRadio.selectedProperty().addListener((observable, oldVal, newVal) -> {
             latField.setDisable(!newVal);
             lonField.setDisable(!newVal);
         });
@@ -122,14 +122,14 @@ public class ReturnToBasePanel extends VBox {
 
         Button cancelBtn = new Button("Cancel");
         cancelBtn.setPrefWidth(100);
-        cancelBtn.setOnAction(_ -> {
+        cancelBtn.setOnAction(event -> {
             if (onCancel != null) onCancel.run();
         });
 
         Button okBtn = new Button("OK");
         okBtn.setPrefWidth(100);
         okBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
-        okBtn.setOnAction(_ -> handleOk());
+        okBtn.setOnAction(event -> handleOk());
 
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, Priority.ALWAYS);

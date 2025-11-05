@@ -69,7 +69,7 @@ public class PolygonDrawingInstructionsPanel extends VBox {
 
         Button cancelBtn = new Button("Cancel");
         cancelBtn.setPrefWidth(100);
-        cancelBtn.setOnAction(_ -> {
+        cancelBtn.setOnAction(event -> {
             if (onCancel != null) onCancel.run();
         });
 
@@ -77,7 +77,7 @@ public class PolygonDrawingInstructionsPanel extends VBox {
         doneButton.setPrefWidth(280);
         doneButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
         doneButton.setDisable(true);
-        doneButton.setOnAction(_ -> {
+        doneButton.setOnAction(event -> {
             if (onDoneDrawing != null) onDoneDrawing.run();
         });
 

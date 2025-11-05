@@ -79,7 +79,7 @@ public class MissionController implements MainView.MissionControllerCallback {
         javafx.animation.Timeline mapReadyPoller = new javafx.animation.Timeline();
         javafx.animation.KeyFrame checkFrame = new javafx.animation.KeyFrame(
             javafx.util.Duration.millis(200),
-            _ -> {
+            event -> {
                 try {
                     Object mapReady = mapPanel.getWebEngine().executeScript(
                         "typeof window.leafletMap !== 'undefined' && window.leafletMap !== null"
@@ -191,7 +191,7 @@ public class MissionController implements MainView.MissionControllerCallback {
 
         // Setup polling to enable button when vertices are drawn
         javafx.animation.Timeline enableButtonPoller = new javafx.animation.Timeline(
-            new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), _ -> {
+            new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), event -> {
                 Object vertexCountObj = mapPanel.getWebEngine().executeScript("window.vertexCount || 0");
                 try {
                     final int vertexCount = vertexCountObj != null ? Integer.parseInt(vertexCountObj.toString()) : 0;
@@ -296,7 +296,7 @@ public class MissionController implements MainView.MissionControllerCallback {
 
         // Setup polling to enable button when waypoints are drawn
         javafx.animation.Timeline enableButtonPoller = new javafx.animation.Timeline(
-            new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), _ -> {
+            new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), event -> {
                 Object vertexCountObj = mapPanel.getWebEngine().executeScript("window.vertexCount || 0");
                 try {
                     final int vertexCount = vertexCountObj != null ? Integer.parseInt(vertexCountObj.toString()) : 0;
@@ -489,7 +489,7 @@ public class MissionController implements MainView.MissionControllerCallback {
         ));
 
         // Reset all behaviours to PENDING state
-        for (com.planetmayo.usvsim.model.behaviour.Behaviour _ : mission.getMissionPlan().getBehaviours()) {
+        for (com.planetmayo.usvsim.model.behaviour.Behaviour ignored : mission.getMissionPlan().getBehaviours()) {
             // Note: Behaviours don't have a reset method, they would need to be recreated
             // For now, we can clear the mission plan and let user recreate behaviours
         }
@@ -677,7 +677,7 @@ public class MissionController implements MainView.MissionControllerCallback {
 
         // Setup polling to enable button when vertices are drawn
         javafx.animation.Timeline enableButtonPoller = new javafx.animation.Timeline(
-            new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), _ -> {
+            new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), event -> {
                 Object vertexCountObj = mapPanel.getWebEngine().executeScript("window.vertexCount || 0");
                 try {
                     final int vertexCount = vertexCountObj != null ? Integer.parseInt(vertexCountObj.toString()) : 0;

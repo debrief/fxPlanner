@@ -86,12 +86,12 @@ public class PlatformConfigDialog {
         Button saveButton = new Button("Save");
         saveButton.setPrefWidth(80);
         saveButton.setDefaultButton(true);
-        saveButton.setOnAction(_ -> handleSave());
+        saveButton.setOnAction(event -> handleSave());
 
         Button cancelButton = new Button("Cancel");
         cancelButton.setPrefWidth(80);
         cancelButton.setCancelButton(true);
-        cancelButton.setOnAction(_ -> dialog.close());
+        cancelButton.setOnAction(event -> dialog.close());
 
         HBox buttonBox = new HBox(10);
         buttonBox.getChildren().addAll(saveButton, cancelButton);
@@ -108,22 +108,22 @@ public class PlatformConfigDialog {
 
     private void addValidation() {
         // Turn radius: 50-500m
-        turnRadiusField.textProperty().addListener((_, _, _) -> {
+        turnRadiusField.textProperty().addListener((observable, oldValue, newValue) -> {
             validateNumericField(turnRadiusField, 50.0, 500.0);
         });
 
         // Max speed: 1-15 knots
-        maxSpeedField.textProperty().addListener((_, _, _) -> {
+        maxSpeedField.textProperty().addListener((observable, oldValue, newValue) -> {
             validateNumericField(maxSpeedField, 1.0, 15.0);
         });
 
         // Acceleration: 0.1-2.0 m/s²
-        accelerationField.textProperty().addListener((_, _, _) -> {
+        accelerationField.textProperty().addListener((observable, oldValue, newValue) -> {
             validateNumericField(accelerationField, 0.1, 2.0);
         });
 
         // Deceleration: 0.5-3.0 m/s²
-        decelerationField.textProperty().addListener((_, _, _) -> {
+        decelerationField.textProperty().addListener((observable, oldValue, newValue) -> {
             validateNumericField(decelerationField, 0.5, 3.0);
         });
     }

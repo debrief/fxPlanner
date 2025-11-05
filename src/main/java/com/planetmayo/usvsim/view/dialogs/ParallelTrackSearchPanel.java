@@ -82,14 +82,14 @@ public class ParallelTrackSearchPanel extends VBox {
 
         Button cancelBtn = new Button("Cancel");
         cancelBtn.setPrefWidth(100);
-        cancelBtn.setOnAction(_ -> {
+        cancelBtn.setOnAction(event -> {
             if (onCancel != null) onCancel.run();
         });
 
         Button okBtn = new Button("OK");
         okBtn.setPrefWidth(100);
         okBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
-        okBtn.setOnAction(_ -> handleOk());
+        okBtn.setOnAction(event -> handleOk());
 
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, Priority.ALWAYS);
