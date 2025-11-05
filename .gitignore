@@ -63,3 +63,14 @@ dist/
 coverage/
 *.coverage
 .jacoco
+
+# Node.js / Frontend (added for web delivery)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.npm
+.yarn/
+frontend/build/
+frontend/dist/
