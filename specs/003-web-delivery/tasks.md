@@ -101,6 +101,15 @@
 - [ ] T035 [P] [US4] Create backend/src/main/java/com/planetmayo/usvsim/api/dto/ExpandingSquareRequest.java with searchArea, initialDirection, legIncrement, platformSpeed fields
 - [ ] T036 [P] [US4] Create backend/src/main/java/com/planetmayo/usvsim/api/dto/PatternResponse.java with waypoints (List<WaypointDTO>) and estimatedDuration fields
 
+### Type Generation Setup
+
+**Strategy**: OpenAPI spec (api.openapi.yaml) is single source of truth. TypeScript types auto-generated from spec. Backend validates against spec at runtime. This ensures type consistency across REST boundary.
+
+- [ ] T036a [P] [US4] Add springdoc-openapi-starter-webmvc-ui dependency (version 2.3.0) to backend/pom.xml for OpenAPI validation and Swagger UI
+- [ ] T036b [P] [US4] Add openapi-typescript as dev dependency to frontend/package.json for type generation from OpenAPI spec
+- [ ] T036c [US4] Add "generate-types" script to frontend/package.json: "openapi-typescript ../../specs/003-web-delivery/contracts/api.openapi.yaml -o src/types/generated.ts"
+- [ ] T036d [US4] Add "prebuild" script to frontend/package.json: "npm run generate-types" to auto-generate types before every build
+
 ### Service Layer
 
 - [ ] T037 [US4] Create backend/src/main/java/com/planetmayo/usvsim/api/service/SimulationService.java with stateless tick(SimulationTickRequest) method that uses refactored behaviors to compute next state
@@ -125,10 +134,12 @@
 
 **TypeScript Type Definition Checkpoint** ⚠️
 
-- [ ] T047 [US4] Review specs/003-web-delivery/contracts/types.ts against implemented Java DTOs, verify all fields match
-- [ ] T048 [US4] Document any discrepancies between types.ts and Java DTOs, update types.ts if needed
+- [ ] T047 [US4] Generate TypeScript types from OpenAPI spec: cd frontend && npm run generate-types, verify frontend/src/types/generated.ts created with all DTOs
+- [ ] T048 [US4] Compare generated types (generated.ts) with manual types (specs/003-web-delivery/contracts/types.ts), verify service interfaces and helper types are compatible
+- [ ] T048a [US4] Start backend and verify OpenAPI integration: mvn spring-boot:run, navigate to http://localhost:8080/swagger-ui.html, verify API documentation displays correctly
+- [ ] T048b [US4] Update frontend/src/types/api.ts to export generated types and keep manual service interfaces, type guards, and constants
 
-**Checkpoint**: Backend API functional, TypeScript types approved - frontend development can proceed
+**Checkpoint**: Backend API functional, OpenAPI spec serves generated types, TypeScript types approved - frontend development can proceed
 
 ---
 
@@ -141,8 +152,8 @@
 ### React Application Bootstrap
 
 - [ ] T049 [US1] Initialize React app in frontend/ using Create React App with TypeScript template: npx create-react-app . --template typescript
-- [ ] T050 [US1] Copy specs/003-web-delivery/contracts/types.ts to frontend/src/types/api.ts
-- [ ] T051 [US1] Install dependencies: npm install react@19 react-dom@19 leaflet@1.9 react-leaflet axios
+- [ ] T050 [US1] Create frontend/src/types/api.ts that re-exports generated types and includes manual service interfaces, type guards, and constants from specs/003-web-delivery/contracts/types.ts
+- [ ] T051 [US1] Install dependencies: npm install react@19 react-dom@19 leaflet@1.9 react-leaflet axios openapi-typescript
 - [ ] T052 [US1] Configure proxy in frontend/package.json: "proxy": "http://localhost:8080" for development
 
 ### Main Layout Components
@@ -479,7 +490,8 @@ With multiple developers:
 
 - Tests NOT included unless explicitly requested (spec doesn't require TDD)
 - Desktop validation tests (T021-T023) are CRITICAL GATE - must pass before web work
-- TypeScript type checkpoint (T047-T048) is CRITICAL GATE - must approve before frontend
+- TypeScript type checkpoint (T047-T048b) is CRITICAL GATE - types generated from OpenAPI spec, must approve before frontend
+- Type consistency maintained via OpenAPI as single source of truth (T036a-d, T047-T048b)
 - [P] tasks = different files, no dependencies, can run simultaneously
 - [Story] labels map tasks to user stories for traceability
 - Phase 2 (Behavior Refactoring) is SEQUENTIAL - refactor one behavior at a time with validation
@@ -492,12 +504,12 @@ With multiple developers:
 
 ## Task Summary
 
-**Total Tasks**: 150
+**Total Tasks**: 156
 
 **By Phase**:
 - Phase 1 (Setup): 8 tasks
 - Phase 2 (Foundational - Behavior Refactoring): 15 tasks ⚠️ CRITICAL GATE
-- Phase 3 (US4 Part 1 - Backend API): 25 tasks ⚠️ TYPE CHECKPOINT
+- Phase 3 (US4 Part 1 - Backend API): 31 tasks ⚠️ TYPE CHECKPOINT
 - Phase 4 (US1 - Deploy Web Application): 18 tasks 🎯 MVP
 - Phase 5 (US2 - Plan Mission): 29 tasks
 - Phase 6 (US3 - Execute Simulation): 26 tasks
@@ -508,14 +520,14 @@ With multiple developers:
 - US1 (Deploy Web Application): 18 tasks
 - US2 (Plan Mission): 29 tasks
 - US3 (Execute Simulation): 26 tasks
-- US4 (Use Either Option): 38 tasks (25 backend + 13 validation)
+- US4 (Use Either Option): 44 tasks (31 backend + 13 validation)
 - Setup + Foundational: 23 tasks
 - Polish: 16 tasks
 
-**Parallel Opportunities**: 47 tasks marked [P] can run in parallel with others in same phase
+**Parallel Opportunities**: 50 tasks marked [P] can run in parallel with others in same phase
 
-**MVP Scope** (Setup + Foundational + Backend + US1): 66 tasks
+**MVP Scope** (Setup + Foundational + Backend + US1): 72 tasks
 
 **Critical Gates**:
 1. Desktop validation after behavior refactoring (T021-T023)
-2. TypeScript type approval before frontend (T047-T048)
+2. TypeScript type generation and approval before frontend (T047-T048b)
