@@ -40,12 +40,12 @@ const MissionPlanPanel: React.FC<MissionPlanPanelProps> = ({ behaviors, onAddBeh
 
   const handleSaveMission = () => {
     if (behaviors.length === 0) {
-      alert('No behaviors to save. Add at least one behavior to the mission plan.');
+      console.log('No behaviors to save. Add at least one behavior to the mission plan.');
       return;
     }
 
     downloadMission(behaviors);
-    alert('Mission saved successfully!');
+    console.log('Mission saved successfully!');
   };
 
   const handleLoadMission = () => {
@@ -59,9 +59,9 @@ const MissionPlanPanel: React.FC<MissionPlanPanelProps> = ({ behaviors, onAddBeh
     try {
       const mission = await uploadMission(file);
       onLoadMission(mission.behaviors);
-      alert(`Mission "${mission.name}" loaded successfully with ${mission.behaviors.length} behavior(s)!`);
+      console.log(`Mission "${mission.name}" loaded successfully with ${mission.behaviors.length} behavior(s)!`);
     } catch (error: any) {
-      alert(`Error loading mission: ${error.message}`);
+      console.log(`Error loading mission: ${error.message}`);
       console.error('Mission load error:', error);
     }
 

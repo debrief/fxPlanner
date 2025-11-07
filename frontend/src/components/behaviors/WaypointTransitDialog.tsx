@@ -107,7 +107,7 @@ const WaypointTransitDialog: React.FC<WaypointTransitDialogProps> = ({
 
   const handleConfirm = () => {
     if (waypoints.length === 0) {
-      alert('Please add at least one waypoint');
+      console.log('Please add at least one waypoint');
       return;
     }
     onConfirm(waypoints);

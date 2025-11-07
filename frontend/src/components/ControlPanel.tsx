@@ -40,7 +40,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ hasBehaviors }) => {
       console.log('[ControlPanel] Start() returned successfully');
     } catch (error: any) {
       console.error('[ControlPanel] Start error:', error);
-      alert(error.message);
     }
   };
 

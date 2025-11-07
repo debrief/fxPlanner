@@ -104,22 +104,22 @@ const ExpandingSquareSearchPanel: React.FC<ExpandingSquareSearchPanelProps> = ({
 
   const handleConfirm = async () => {
     if (!polygon) {
-      alert('Please draw a search area on the map');
+      console.log('Please draw a search area on the map');
       return;
     }
 
     if (initialDirection < 0 || initialDirection >= 360) {
-      alert('Initial direction must be between 0 and 360 degrees');
+      console.log('Initial direction must be between 0 and 360 degrees');
       return;
     }
 
     if (legIncrement <= 0) {
-      alert('Leg increment must be greater than 0');
+      console.log('Leg increment must be greater than 0');
       return;
     }
 
     if (platformSpeed <= 0) {
-      alert('Platform speed must be greater than 0');
+      console.log('Platform speed must be greater than 0');
       return;
     }
 
@@ -146,7 +146,7 @@ const ExpandingSquareSearchPanel: React.FC<ExpandingSquareSearchPanelProps> = ({
       onConfirm(polygon, params, result.waypoints, result.estimatedDuration);
 
       // Success message
-      alert(
+      console.log(
         `Pattern generated successfully!\n` +
         `Waypoints: ${result.waypoints.length}\n` +
         `Estimated duration: ${Math.floor(result.estimatedDuration / 60)} min`
@@ -155,7 +155,7 @@ const ExpandingSquareSearchPanel: React.FC<ExpandingSquareSearchPanelProps> = ({
       // Close panel handled by parent
     } catch (error: any) {
       // Show error to user
-      alert(`Failed to generate pattern: ${error.message}`);
+      console.log(`Failed to generate pattern: ${error.message}`);
       console.error('Pattern generation error:', error);
     } finally {
       setIsGenerating(false);

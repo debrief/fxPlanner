@@ -33,12 +33,12 @@ const ReturnToBasePanel: React.FC<ReturnToBasePanelProps> = ({
 
   const handleConfirm = () => {
     if (!basePosition) {
-      alert('Please select a base location');
+      console.log('Please select a base location');
       return;
     }
 
     if (platformSpeed <= 0) {
-      alert('Platform speed must be greater than 0');
+      console.log('Platform speed must be greater than 0');
       return;
     }
 

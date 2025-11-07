@@ -107,22 +107,22 @@ const ParallelTrackSearchDialog: React.FC<ParallelTrackSearchDialogProps> = ({
 
   const handleConfirm = async () => {
     if (!polygon) {
-      alert('Please draw a search area on the map');
+      console.log('Please draw a search area on the map');
       return;
     }
 
     if (trackOrientation < 0 || trackOrientation >= 360) {
-      alert('Track orientation must be between 0 and 360 degrees');
+      console.log('Track orientation must be between 0 and 360 degrees');
       return;
     }
 
     if (trackSpacing <= 0) {
-      alert('Track spacing must be greater than 0');
+      console.log('Track spacing must be greater than 0');
       return;
     }
 
     if (platformSpeed <= 0) {
-      alert('Platform speed must be greater than 0');
+      console.log('Platform speed must be greater than 0');
       return;
     }
 
@@ -149,7 +149,7 @@ const ParallelTrackSearchDialog: React.FC<ParallelTrackSearchDialogProps> = ({
       onConfirm(polygon, params);
 
       // Success message
-      alert(
+      console.log(
         `Pattern generated successfully!\n` +
         `Waypoints: ${result.waypoints.length}\n` +
         `Estimated duration: ${Math.floor(result.estimatedDuration / 60)} min`
@@ -159,7 +159,7 @@ const ParallelTrackSearchDialog: React.FC<ParallelTrackSearchDialogProps> = ({
       onClose();
     } catch (error: any) {
       // Show error to user
-      alert(`Failed to generate pattern: ${error.message}`);
+      console.log(`Failed to generate pattern: ${error.message}`);
       console.error('Pattern generation error:', error);
     } finally {
       setIsGenerating(false);
