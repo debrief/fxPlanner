@@ -40,7 +40,8 @@
       "Bash(pgrep:*)",
       "Bash(node:*)",
       "Bash(git stash:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": [
