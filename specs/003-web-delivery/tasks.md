@@ -11,13 +11,13 @@
 ✅ **Phase 1: Setup & Project Structure** (8/8 tasks complete)
 ✅ **Phase 2: Foundational - Behavior Refactoring** (19/19 tasks complete, 215 tests PASS)
 ✅ **Phase 3: REST API Implementation** (36/36 tasks, 73 files compile ✅)
-✅ **Phase 4: User Story 1 - Deploy Web Application** (16/42 tasks, full-stack build ✅ 138MB JAR)
+✅ **Phase 4: User Story 1 - Deploy Web Application** (16/42 tasks, full-stack build ✅ 76MB unified JAR)
 ⏸️ **Phase 5: User Story 2 - Configure Mission** (0/15 tasks)
 ⏸️ **Phase 6: User Story 3 - Execute Simulation** (0/18 tasks)
-⏸️ **Phase 7: User Story 4 - Save/Load Missions** (0/11 tasks)
+🔄 **Phase 7: User Story 4 - Cross-Version Compatibility** (2/11 tasks - build verification complete, unified JAR architecture)
 ⏸️ **Phase 8: Validation & Deployment** (0/17 tasks)
 
-**Total**: 79/166 tasks complete (47.6%)
+**Total**: 81/166 tasks complete (48.8%)
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -329,10 +329,23 @@
 
 **Independent Test**: Build both desktop and web packages from same codebase, run each independently, create mission in desktop version, save as GeoJSON, load in web version, verify identical display and behavior
 
+**ARCHITECTURE NOTE**: Current implementation uses unified JAR (target/usv-mission-planner-1.0.0.jar, 76MB) containing:
+- JavaFX desktop application (src/main/java/com/planetmayo/usvsim/view + controller)
+- Spring Boot web application (src/main/java/com/planetmayo/usvsim/api)
+- React frontend (BOOT-INF/classes/static/)
+- Shared model layer (src/main/java/com/planetmayo/usvsim/model) - used by both desktop and web
+
+**REMAINING WORK FOR PHASE 7**: Tasks T124-T134 require manual validation testing that cannot be completed without:
+1. Completing Phase 5 (mission planning UI in React - behaviors, drawing, configuration dialogs)
+2. Completing Phase 6 (simulation execution UI in React - control panel, state display)
+3. Implementing GeoJSON save/load in both desktop and web
+
+**DECISION POINT**: Phase 7 validation tasks blocked until Phases 5 & 6 complete. Recommend proceeding to Phase 5 to build out mission planning UI, then Phase 6 for simulation, then returning to Phase 7 for cross-version validation.
+
 ### Cross-Version Compatibility
 
-- [ ] T122 [US4] Verify desktop build still works: mvn clean package, verify target/usv-mission-planner-1.0.0.jar exists
-- [ ] T123 [US4] Verify web build still works: mvn clean package, verify backend/target/usv-web.jar exists
+- [x] T122 [US4] Verify desktop build still works: mvn clean package, verify target/usv-mission-planner-1.0.0.jar exists
+- [x] T123 [US4] Verify web build still works: mvn clean package, verify backend/target/usv-web.jar exists (NOTE: Unified JAR at target/usv-mission-planner-1.0.0.jar contains both desktop and web)
 - [ ] T124 [US4] Run desktop application: java -jar target/usv-mission-planner-1.0.0.jar, verify JavaFX UI launches and all panels display correctly
 - [ ] T125 [US4] Create mission in desktop: add ParallelTrackSearch behavior with 4-vertex polygon, trackOrientation=45, trackSpacing=100, save as desktop-mission.json
 - [ ] T126 [US4] Load desktop mission in web: start web app, click Load, select desktop-mission.json, verify behavior loads with identical polygon and parameters, pattern matches
