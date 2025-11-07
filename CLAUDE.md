@@ -1,190 +1,97 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Project Overview
 
-JavaFX desktop application for USV (Unmanned Surface Vehicle) mission planning & simulation. Users draw search patterns on a map, configure mission behaviors, execute realistic simulations with platform dynamics.
+Hybrid USV (Unmanned Surface Vehicle) mission planner with dual deployment options:
+1. **Desktop**: JavaFX application with native UI
+2. **Web**: Spring Boot REST API + React 19 frontend
 
-**Status**: Pre-implementation (planning phase)
-**Tech Stack**: Java 25, JavaFX 21+, java_leaflet (maps), JTS Topology Suite (geometry), Maven
+Users draw search patterns on map, configure mission behaviors, execute realistic simulations with platform dynamics.
+
+**Status**: Web delivery implementation (branch: 003-web-delivery)
+**Tech Stack**: Java 25, JavaFX 21+, Spring Boot 3.x, React 19, TypeScript 5.x, Leaflet 1.9+, JTS Topology Suite 1.18.1
 **Package**: `com.planetmayo.usvsim`
+**Architecture**: Unified JAR (76MB) contains both desktop and web apps sharing model layer
 
-## Build & Run Commands
+## Build & Run
 
-**Build project**:
+**Build unified JAR** (desktop + web):
 ```bash
-mvn clean install
+mvn clean package  # Builds frontend, embeds in backend, creates unified JAR
 ```
 
-**Run application**:
+**Run desktop**:
 ```bash
-mvn javafx:run
+mvn javafx:run  # Development
+java -jar target/usv-mission-planner-1.0.0.jar  # Production
 ```
 
-**Run tests**:
+**Run web**:
 ```bash
-mvn test                           # All tests
-mvn test -Dtest="*Test"            # Unit only
-mvn test -Dtest="*IntegrationTest" # Integration only
-mvn test -Dtest="*E2ETest"         # E2E (requires display)
+java -jar target/usv-mission-planner-1.0.0.jar  # Opens http://localhost:8080
+PORT=5000 java -jar target/usv-mission-planner-1.0.0.jar  # Custom port
 ```
 
-**Coverage**:
+**Frontend development** (hot reload):
 ```bash
-mvn jacoco:prepare-agent test jacoco:report
-# View: target/site/jacoco/index.html
+cd frontend && npm start  # React dev server on :3000, proxies API to :8080
 ```
 
-**Package**:
+**Tests**:
 ```bash
-mvn clean package
-java -jar target/usv-mission-planner-1.0.0.jar
+mvn test                  # All tests (215 passing)
+mvn test -Dtest="*Test"   # Unit only
+mvn test -Dtest="*E2ETest"  # E2E (requires display)
 ```
 
 ## Architecture
 
-**MVC Pattern** (strict separation):
-- **Model** (`model/`): Mission, Behaviour interface, Platform (state/capabilities/demand), geometry (Position, Waypoint, Polygon)
-- **View** (`view/`): JavaFX panels (MainView, MapPanel, MissionPlanPanel, ControlPanel, StatePanel)
-- **Controller** (`controller/`): MissionController, SimulationEngine (dedicated thread), BehaviourExecutor, DrawingController
+**Dual Paths** (shared model):
+- **Desktop**: JavaFX MVC (`view/`, `controller/`) → SimulationEngine (dedicated thread)
+- **Web**: React frontend (`frontend/src/`) → Spring Boot REST API (`api/`) → stateless ticks
 
-**Core Contracts**:
-- `Behaviour` interface: All mission activities implement this (ParallelTrackSearch, ExpandingSquareSearch, WaypointTransit, ReturnToBase)
-- `CompositeBehaviour`: Sequences child behaviours for multi-phase missions
-- `SimulationEngine`: Runs on separate thread, never blocks UI
-
-**Utility Modules** (`util/`): Framework-independent, pure functions
-- `GeoUtils`: Great circle calculations (distance, bearing)
-- `SearchPatternGenerator`: Pattern algorithms (parallel tracks, expanding square)
-- `PolygonUtils`: Geometry operations
+**Shared Model** (`model/`, `util/`):
+- Mission, Behaviour (stateless), Platform, Geometry (Position, Waypoint, Polygon)
+- 4 Behaviors: ParallelTrackSearch, ExpandingSquareSearch, WaypointTransit, ReturnToBase
+- CompositeBehaviour (sequences), GeoUtils, SearchPatternGenerator, PolygonUtils
 
 ## Development Principles
 
-### Testing Strategy (Constitution Principles I, VII, VIII)
-1. **Business logic** (algorithms, calculations): Test-first. Write tests, get approval, implement (Red-Green-Refactor). Target >80% coverage for `util/` and `model/`.
-2. **UI components**: Mockup-first. Create ASCII mockup, get Doc approval, then implement. No test-first requirement for UI.
-3. **E2E workflows**: TestFX for complete scenarios (mission planning → simulation execution)
+**Testing**: Business logic test-first (>80% coverage util/model). UI mockup-first (ASCII → Doc approval). **CRITICAL**: Never skip tests. All 215 tests must pass.
 
-**CRITICAL**: Never skip tests to achieve project goals. All tests must pass.
+**Thread Safety**: SimulationEngine on dedicated thread. No blocking on UI thread.
 
-### UI Development (Principle II)
-All UI requires ASCII mockup approved by Doc before implementation. Mockups needed: MainView layout, MissionPlanPanel, ControlPanel, StatePanel, behavior dialogs.
+**Performance**: 60 FPS, <100ms UI response, <50ms REST tick, <500ms pattern gen, <3s startup, <512MB memory
 
-### Thread Safety (Principle III)
-- SimulationEngine runs on dedicated thread
-- JavaFX property bindings connect views to models
-- No blocking operations on UI thread
+**Design Patterns**:
+- Stateless Behaviours: State passed as parameter (enables REST stateless ticks)
+- Sequential Execution: CompositeBehaviour auto-advances on completion
+- Platform Dynamics: Turn radius 200m, accel/decel 0.5/1.0 m/s², max 8 knots
 
-### Incremental Phases (Principle V)
-- Phase 1: Core Foundation (Maven, map, basic UI)
-- Phase 2: MVP Features (4 behaviors, basic simulation)
-- Phase 3: Complete Functionality (algorithms, dynamics, drawing tools)
-- Phase 4: Visual Polish (60 FPS, animations, styling)
-- Phase 5: Demo Preparation (optimization, screenshots)
+## Key Paths
 
-### Performance Targets (Principle VI)
-- 60 FPS animations
-- <100ms UI response
-- 1Hz simulation minimum
-- <500ms pattern generation
-- <3s startup
-- <512MB memory
+`src/test/` - unit/, integration/, e2e/ | `src/main/` - view/, controller/, model/, util/, api/
+`frontend/src/` - components/, services/, types/ | `specs/003-web-delivery/` - spec, plan, tasks, contracts
 
-## Key Design Patterns
+## Workflows
 
-**Behaviour Interface Pattern**: All USV activities implement common interface with:
-- State management (PENDING, EXECUTING, COMPLETE)
-- Progress tracking
-- Waypoint generation
-- Demand calculation (heading, speed for platform)
+**Pattern Generation**: Parallel tracks (orientation, spacing) or Expanding square (direction, leg increment)
 
-**Sequential Execution**: CompositeBehaviour manages behavior transitions. When behavior completes (all waypoints reached), automatically advances to next.
+**Mission Execution**: Create behaviors → Generate waypoints → Execute (SimulationEngine or POST /api/simulation/tick) → Platform follows with dynamics → CompositeBehaviour advances
 
-**Platform Dynamics**: Realistic navigation with:
-- Turn radius (default 200m)
-- Acceleration/deceleration (0.5/1.0 m/s²)
-- Speed limits (max 8 knots)
-- Smooth curved paths (no sharp corners)
-- Turn arcs calculated from geometry
+**Cross-Version**: GeoJSON missions load in both desktop/web. Shared model ensures identical behavior. No persistent storage.
 
-## Test Structure
+## Key Files
 
-```
-src/test/java/com/planetmayo/usvsim/
-├── unit/              # Pure business logic (GeoUtils, SearchPatternGenerator, behaviors)
-├── integration/       # Component interactions (SimulationEngine, MissionController)
-└── e2e/              # Complete workflows (planning → execution)
-```
+`pom.xml` - root Maven (builds frontend, creates unified JAR) | `backend/pom.xml` - Spring Boot config
+`frontend/package.json` - React + TypeScript types gen | `Procfile` - Heroku deployment
+`src/main/resources/application.properties` - PORT binding | `.specify/memory/constitution.md` - 8 principles
 
-**Unit test example locations**:
-- Geometry: `GeoUtilsTest`, `PolygonUtilsTest`
-- Patterns: `SearchPatternGeneratorTest`
-- Behaviors: `ParallelTrackSearchTest`, `ExpandingSquareSearchTest`
-- Platform: `BehaviourExecutorTest`
+## Constraints
 
-**E2E test examples**:
-- `MissionPlanningWorkflowTest`: Draw polygon → configure → verify pattern
-- `SimulationExecutionTest`: Start → run → observe movement
-- `MultiBehaviourMissionTest`: Sequence 3+ behaviors → verify transitions
+Single USV, Portland Harbour (50.6°N, 2.4°W), offline-capable (desktop), no persistent storage (GeoJSON files), no auth (network-level required)
 
-## Documentation Structure
+## Status (003-web-delivery)
 
-```
-specs/001-usv-mission-planner/
-├── spec.md              # Feature specification with user stories
-├── plan.md              # Implementation plan (phases, structure)
-├── research.md          # Research findings
-├── data-model.md        # Entity definitions & relationships
-├── quickstart.md        # Developer setup guide
-└── contracts/           # Interface contracts
-    ├── behaviour-interface.md
-    └── simulation-engine.md
-```
-
-## Common Patterns
-
-**Search Pattern Generation**:
-- Parallel tracks: Specify orientation (0-360°), spacing (m) → generates alternating tracks
-- Expanding square: Specify initial direction, leg increment → spirals from centroid
-
-**Mission Execution Flow**:
-1. User creates behaviors (draws areas, specifies parameters)
-2. Behaviors generate waypoints
-3. SimulationEngine executes on separate thread
-4. Platform follows waypoints with dynamics (turns, acceleration)
-5. CompositeBehaviour advances through sequence
-
-**Great Circle Navigation**:
-- All distance/bearing calculations use spherical geometry (GeoUtils)
-- Appropriate for local operations (<100km)
-- Position: lat/lon decimal degrees
-
-## Code Quality Requirements
-
-- JavaDoc for all public APIs
-- Comments for complex algorithms (pattern generation, turn calculations)
-- No business logic in view classes
-- No UI blocking in controller classes
-- Clean MVC separation (verified in code review)
-
-## Special Files
-
-- `src/main/resources/map-tiles/`: Offline Portland Harbour tiles (bundled for demo)
-- `src/main/resources/application.properties`: User preferences
-- `pom.xml`: Maven dependencies (JavaFX, JTS, JUnit 5, TestFX)
-
-## Notes
-
-- Single USV only (no multi-platform)
-- Portland Harbour area only (50.6°N, 2.4°W)
-- Offline-capable (bundled map tiles)
-- Interview demo target: 5-10 min scenarios
-- Constitution document: `.specify/memory/constitution.md` (defines all 8 core principles)
-
-## Active Technologies
-- Java 25 (backend), TypeScript 5.x (frontend), React 19 (UI framework) + Spring Boot (REST API), React 19 (UI), Leaflet 1.9+ (maps), JTS Topology Suite 1.18.1 (geometry) (003-web-delivery)
-- No persistent storage - client-side file management only (upload/download GeoJSON) (003-web-delivery)
-
-## Recent Changes
-- 003-web-delivery: Added Java 25 (backend), TypeScript 5.x (frontend), React 19 (UI framework) + Spring Boot (REST API), React 19 (UI), Leaflet 1.9+ (maps), JTS Topology Suite 1.18.1 (geometry)
+**Complete** (81/166, 48.8%): ✅ Structure, ✅ Stateless behaviors (215 tests), ✅ REST API, 🔄 Web UI
+**Next**: Phase 4 (mission planning UI), Phase 5 (simulation UI), Phase 6 (cross-version validation)
