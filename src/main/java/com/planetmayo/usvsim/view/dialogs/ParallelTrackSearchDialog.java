@@ -79,7 +79,7 @@ public class ParallelTrackSearchDialog extends Dialog<ParallelTrackSearchParams>
         orientLabel.setStyle("-fx-font-weight: bold;");
         orientationField = new TextField("45");
         orientationField.setPrefWidth(200);
-        orientationField.setOnKeyReleased(_ -> validateInputs());
+        orientationField.setOnKeyReleased(event -> validateInputs());
         grid.add(orientLabel, 0, 0);
         grid.add(orientationField, 1, 0);
 
@@ -88,7 +88,7 @@ public class ParallelTrackSearchDialog extends Dialog<ParallelTrackSearchParams>
         spacingLabel.setStyle("-fx-font-weight: bold;");
         spacingField = new TextField("500");
         spacingField.setPrefWidth(200);
-        spacingField.setOnKeyReleased(_ -> validateInputs());
+        spacingField.setOnKeyReleased(event -> validateInputs());
         grid.add(spacingLabel, 0, 1);
         grid.add(spacingField, 1, 1);
 
@@ -97,7 +97,7 @@ public class ParallelTrackSearchDialog extends Dialog<ParallelTrackSearchParams>
         speedLabel.setStyle("-fx-font-weight: bold;");
         speedField = new TextField("6.0");
         speedField.setPrefWidth(200);
-        speedField.setOnKeyReleased(_ -> validateInputs());
+        speedField.setOnKeyReleased(event -> validateInputs());
         grid.add(speedLabel, 0, 2);
         grid.add(speedField, 1, 2);
 

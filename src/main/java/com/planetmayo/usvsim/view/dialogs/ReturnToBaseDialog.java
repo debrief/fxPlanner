@@ -101,7 +101,7 @@ public class ReturnToBaseDialog extends Dialog<ReturnToBaseParams> {
         grid.add(currentLabel, 0, 5, 2, 1);
 
         // Toggle listener
-        useCustomRadio.selectedProperty().addListener((_, _, newVal) -> {
+        useCustomRadio.selectedProperty().addListener((observable, oldVal, newVal) -> {
             latField.setDisable(!newVal);
             lonField.setDisable(!newVal);
         });

@@ -1,0 +1,512 @@
+openapi: 3.0.3
+info:
+  title: USV Mission Planner Web API
+  description: REST API for web-based USV mission planning and simulation
+  version: 1.0.0
+  contact:
+    name: Planet Mayo
+
+servers:
+  - url: http://localhost:8080/api
+    description: Local development
+  - url: https://{app-name}.herokuapp.com/api
+    description: Heroku production
+    variables:
+      app-name:
+        default: usv-mission-planner
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns service health status for heartbeat monitoring
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /simulation/tick:
+    post:
+      summary: Calculate next simulation state
+      description: Stateless simulation computation - accepts current state, returns next state
+      operationId: simulationTick
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulationTickRequest'
+      responses:
+        '200':
+          description: Next simulation state calculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationTickResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /behaviors/parallel-track/generate:
+    post:
+      summary: Generate parallel track search pattern
+      description: Calculates waypoints for parallel track search behavior
+      operationId: generateParallelTrackPattern
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParallelTrackRequest'
+      responses:
+        '200':
+          description: Pattern generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatternResponse'
+        '400':
+          description: Invalid polygon or parameters
+
+  /behaviors/expanding-square/generate:
+    post:
+      summary: Generate expanding square search pattern
+      description: Calculates waypoints for expanding square search behavior
+      operationId: generateExpandingSquarePattern
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpandingSquareRequest'
+      responses:
+        '200':
+          description: Pattern generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatternResponse'
+        '400':
+          description: Invalid polygon or parameters
+
+  /mission/serialize:
+    post:
+      summary: Serialize mission to GeoJSON
+      description: Converts mission object to GeoJSON format for download
+      operationId: serializeMission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Mission'
+      responses:
+        '200':
+          description: Mission serialized to GeoJSON
+          content:
+            application/geo+json:
+              schema:
+                type: object
+        '400':
+          description: Invalid mission data
+
+  /mission/deserialize:
+    post:
+      summary: Deserialize mission from GeoJSON
+      description: Converts uploaded GeoJSON to mission object
+      operationId: deserializeMission
+      requestBody:
+        required: true
+        content:
+          application/geo+json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Mission deserialized successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mission'
+        '400':
+          description: Invalid GeoJSON format
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [UP, DOWN]
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+          example: "1.0.0"
+
+    SimulationTickRequest:
+      type: object
+      required:
+        - mission
+        - platformState
+        - behaviorState
+        - deltaTime
+      properties:
+        mission:
+          $ref: '#/components/schemas/Mission'
+        platformState:
+          $ref: '#/components/schemas/PlatformState'
+        behaviorState:
+          $ref: '#/components/schemas/BehaviorExecutionState'
+        deltaTime:
+          type: number
+          format: float
+          minimum: 0.01
+          maximum: 1.0
+          description: Time step in seconds
+        timeAcceleration:
+          type: number
+          format: float
+          minimum: 1
+          maximum: 500
+          default: 1
+          description: Simulation speed multiplier
+
+    SimulationTickResponse:
+      type: object
+      required:
+        - platformState
+        - behaviorState
+        - demand
+        - behaviorComplete
+        - missionComplete
+      properties:
+        platformState:
+          $ref: '#/components/schemas/PlatformState'
+        behaviorState:
+          $ref: '#/components/schemas/BehaviorExecutionState'
+        demand:
+          $ref: '#/components/schemas/PlatformDemand'
+        behaviorComplete:
+          type: boolean
+        missionComplete:
+          type: boolean
+
+    Mission:
+      type: object
+      required:
+        - id
+        - name
+        - behaviors
+        - state
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        createdAt:
+          type: string
+          format: date-time
+        behaviors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Behavior'
+          minItems: 1
+        state:
+          $ref: '#/components/schemas/MissionState'
+
+    Behavior:
+      type: object
+      required:
+        - id
+        - type
+        - name
+        - waypoints
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/BehaviorType'
+        name:
+          type: string
+        description:
+          type: string
+        waypoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Waypoint'
+        displayColor:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+        # Type-specific properties
+        searchArea:
+          $ref: '#/components/schemas/Polygon'
+        trackOrientation:
+          type: number
+          minimum: 0
+          maximum: 360
+        trackSpacing:
+          type: number
+          minimum: 1
+        initialDirection:
+          type: number
+          minimum: 0
+          maximum: 360
+        legIncrement:
+          type: number
+          minimum: 1
+        transitWaypoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Position'
+        baseLocation:
+          $ref: '#/components/schemas/Position'
+        platformSpeed:
+          type: number
+          minimum: 0.1
+          maximum: 8
+
+    BehaviorExecutionState:
+      type: object
+      required:
+        - behaviorId
+        - currentWaypointIndex
+        - state
+      properties:
+        behaviorId:
+          type: string
+          format: uuid
+        currentWaypointIndex:
+          type: integer
+          minimum: 0
+        state:
+          $ref: '#/components/schemas/BehaviorState'
+        lastDistanceToWaypoint:
+          type: number
+        startTime:
+          type: string
+          format: date-time
+        waypointsReached:
+          type: integer
+          minimum: 0
+
+    PlatformState:
+      type: object
+      required:
+        - position
+        - heading
+        - speed
+        - depth
+        - timestamp
+      properties:
+        position:
+          $ref: '#/components/schemas/Position'
+        heading:
+          type: number
+          minimum: 0
+          maximum: 360
+        speed:
+          type: number
+          minimum: 0
+        depth:
+          type: number
+          default: 0
+        timestamp:
+          type: string
+          format: date-time
+
+    PlatformDemand:
+      type: object
+      required:
+        - demandedHeading
+        - demandedSpeed
+        - demandedDepth
+        - turnDirection
+      properties:
+        demandedHeading:
+          type: number
+          minimum: 0
+          maximum: 360
+        demandedSpeed:
+          type: number
+          minimum: 0
+        demandedDepth:
+          type: number
+          default: 0
+        turnDirection:
+          $ref: '#/components/schemas/TurnDirection'
+
+    Position:
+      type: object
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          minimum: -180
+          maximum: 180
+
+    Waypoint:
+      type: object
+      required:
+        - position
+        - speed
+        - tolerance
+        - type
+      properties:
+        position:
+          $ref: '#/components/schemas/Position'
+        speed:
+          type: number
+          minimum: 0
+        tolerance:
+          type: number
+          minimum: 1
+          default: 50
+        type:
+          $ref: '#/components/schemas/WaypointType'
+
+    Polygon:
+      type: object
+      required:
+        - vertices
+      properties:
+        vertices:
+          type: array
+          items:
+            $ref: '#/components/schemas/Position'
+          minItems: 3
+        isClosed:
+          type: boolean
+          default: true
+
+    ParallelTrackRequest:
+      type: object
+      required:
+        - searchArea
+        - trackOrientation
+        - trackSpacing
+        - platformSpeed
+      properties:
+        searchArea:
+          $ref: '#/components/schemas/Polygon'
+        trackOrientation:
+          type: number
+          minimum: 0
+          maximum: 360
+        trackSpacing:
+          type: number
+          minimum: 1
+        platformSpeed:
+          type: number
+          minimum: 0.1
+          maximum: 8
+
+    ExpandingSquareRequest:
+      type: object
+      required:
+        - searchArea
+        - initialDirection
+        - legIncrement
+        - platformSpeed
+      properties:
+        searchArea:
+          $ref: '#/components/schemas/Polygon'
+        initialDirection:
+          type: number
+          minimum: 0
+          maximum: 360
+        legIncrement:
+          type: number
+          minimum: 1
+        platformSpeed:
+          type: number
+          minimum: 0.1
+          maximum: 8
+
+    PatternResponse:
+      type: object
+      required:
+        - waypoints
+        - estimatedDuration
+      properties:
+        waypoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Waypoint'
+        estimatedDuration:
+          type: number
+          description: Estimated time in seconds
+
+    MissionState:
+      type: string
+      enum:
+        - PLANNING
+        - EXECUTING
+        - PAUSED
+        - COMPLETE
+
+    BehaviorType:
+      type: string
+      enum:
+        - PARALLEL_TRACK_SEARCH
+        - EXPANDING_SQUARE_SEARCH
+        - WAYPOINT_TRANSIT
+        - RETURN_TO_BASE
+
+    BehaviorState:
+      type: string
+      enum:
+        - PENDING
+        - EXECUTING
+        - COMPLETE
+
+    WaypointType:
+      type: string
+      enum:
+        - TRANSIT
+        - SEARCH
+        - BASE
+
+    TurnDirection:
+      type: string
+      enum:
+        - PORT
+        - STARBOARD
+        - SHORTEST
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object

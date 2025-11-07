@@ -47,7 +47,7 @@ public class MissionPlanPanel extends VBox {
 
         // Behavior list
         behaviorList = new ListView<>();
-        behaviorList.setCellFactory(_ -> new BehaviourCell());
+        behaviorList.setCellFactory(param -> new BehaviourCell());
         behaviorList.setPrefHeight(150);
         VBox.setVgrow(behaviorList, Priority.ALWAYS);
 
@@ -68,16 +68,16 @@ public class MissionPlanPanel extends VBox {
 
         Button upBtn = new Button("↑");
         upBtn.setPrefWidth(40);
-        upBtn.setOnAction(_ -> handleMoveUp());
+        upBtn.setOnAction(event -> handleMoveUp());
 
         Button downBtn = new Button("↓");
         downBtn.setPrefWidth(40);
-        downBtn.setOnAction(_ -> handleMoveDown());
+        downBtn.setOnAction(event -> handleMoveDown());
 
         Button deleteBtn = new Button("✕");
         deleteBtn.setPrefWidth(40);
         deleteBtn.setStyle("-fx-text-fill: #F44336;");
-        deleteBtn.setOnAction(_ -> handleDelete());
+        deleteBtn.setOnAction(event -> handleDelete());
 
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -87,14 +87,14 @@ public class MissionPlanPanel extends VBox {
         saveBtn.setPrefWidth(40);
         saveBtn.setTooltip(new javafx.scene.control.Tooltip("Save Mission"));
         saveBtn.setStyle("-fx-font-size: 16px;");
-        saveBtn.setOnAction(_ -> handleSaveMission());
+        saveBtn.setOnAction(event -> handleSaveMission());
 
         // Load mission button with icon
         Button loadBtn = new Button("⬆");
         loadBtn.setPrefWidth(40);
         loadBtn.setTooltip(new javafx.scene.control.Tooltip("Load Mission"));
         loadBtn.setStyle("-fx-font-size: 16px;");
-        loadBtn.setOnAction(_ -> handleLoadMission());
+        loadBtn.setOnAction(event -> handleLoadMission());
 
         box.getChildren().addAll(upBtn, downBtn, deleteBtn, spacer, saveBtn, loadBtn);
         return box;

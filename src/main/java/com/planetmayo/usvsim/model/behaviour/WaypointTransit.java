@@ -126,4 +126,55 @@ public class WaypointTransit implements Behaviour {
         }
         return positions;
     }
+
+    // ===================================================================
+    // STATELESS INTERFACE IMPLEMENTATION (for REST API / Web Frontend)
+    // ===================================================================
+
+    @Override
+    public PlatformDemand calculateDemand(BehaviourExecutionState executionState, PlatformState platformState) {
+        // If past all waypoints, demand zero speed (stop)
+        if (executionState.currentWaypointIndex() >= waypoints.size()) {
+            return new PlatformDemand(platformState.getHeading(), 0.0, 0.0, TurnDirection.SHORTEST);
+        }
+
+        // Get current target waypoint
+        Waypoint targetWaypoint = waypoints.get(executionState.currentWaypointIndex());
+
+        // Use existing helper method for demand calculation
+        return BehaviourExecutor.getDemandedState(platformState, targetWaypoint);
+    }
+
+    @Override
+    public BehaviourExecutionState updateProgress(BehaviourExecutionState executionState, PlatformState platformState) {
+        BehaviourExecutionState newState = executionState;
+
+        // Transition from PENDING to EXECUTING on first update
+        if (executionState.state() == BehaviourState.PENDING) {
+            newState = newState.withState(BehaviourState.EXECUTING);
+        }
+
+        // Check if current waypoint has been reached
+        if (executionState.currentWaypointIndex() < waypoints.size()) {
+            Waypoint currentWaypoint = waypoints.get(executionState.currentWaypointIndex());
+
+            if (BehaviourExecutor.isWaypointReached(platformState, currentWaypoint)) {
+                // Increment waypoint index
+                newState = newState.withWaypointIndex(executionState.currentWaypointIndex() + 1);
+            }
+        }
+
+        // Check if all waypoints reached - transition to COMPLETE
+        if (newState.currentWaypointIndex() >= waypoints.size()) {
+            newState = newState.withState(BehaviourState.COMPLETE);
+        }
+
+        return newState;
+    }
+
+    @Override
+    public boolean isComplete(BehaviourExecutionState executionState) {
+        return executionState.state() == BehaviourState.COMPLETE ||
+               executionState.currentWaypointIndex() >= waypoints.size();
+    }
 }

@@ -56,7 +56,7 @@ public class ControlPanel extends VBox {
         startBtn = new Button("Start");
         startBtn.setPrefWidth(80);
         startBtn.setStyle("-fx-font-size: 12;");
-        startBtn.setOnAction(_ -> {
+        startBtn.setOnAction(event -> {
             if (onStart != null) onStart.run();
             isPaused = false;
             pauseResumeBtn.setText("Pause");
@@ -67,7 +67,7 @@ public class ControlPanel extends VBox {
         pauseResumeBtn.setPrefWidth(80);
         pauseResumeBtn.setStyle("-fx-font-size: 12;");
         pauseResumeBtn.setDisable(true);
-        pauseResumeBtn.setOnAction(_ -> {
+        pauseResumeBtn.setOnAction(event -> {
             if (!isPaused) {
                 // Currently running - pause it
                 if (onPause != null) onPause.run();
@@ -85,7 +85,7 @@ public class ControlPanel extends VBox {
         stopBtn.setPrefWidth(80);
         stopBtn.setStyle("-fx-font-size: 12;");
         stopBtn.setDisable(true);
-        stopBtn.setOnAction(_ -> {
+        stopBtn.setOnAction(event -> {
             if (onStop != null) onStop.run();
             isPaused = false;
             pauseResumeBtn.setText("Pause");
@@ -110,7 +110,7 @@ public class ControlPanel extends VBox {
         speedSlider.setMinorTickCount(4);
         speedSlider.setSnapToTicks(false);  // Allow smooth adjustment
         speedSlider.setPrefWidth(200);
-        speedSlider.setOnMouseReleased(_ -> {
+        speedSlider.setOnMouseReleased(event -> {
             double value = speedSlider.getValue();
             speedLabel.setText(String.format("%.0f×", value));  // Show integer for clarity
             if (onSpeedChange != null) onSpeedChange.accept(value);

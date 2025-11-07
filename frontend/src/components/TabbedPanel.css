@@ -1,0 +1,128 @@
+/**
+ * Tabbed panel styles
+ */
+
+.tabbed-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Tab header bar */
+.tab-header-bar {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-bottom: 2px solid #e0e0e0;
+  background-color: #f5f5f5;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc #f5f5f5;
+}
+
+.tab-header-bar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tab-header-bar::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.tab-header-bar::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.tab-header-bar::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Individual tab header */
+.tab-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  background-color: #f5f5f5;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  user-select: none;
+}
+
+.tab-header:hover {
+  background-color: #ebebeb;
+  color: #333;
+}
+
+.tab-header.active {
+  background-color: white;
+  color: #2196F3;
+  border-bottom: 2px solid #2196F3;
+}
+
+.tab-label {
+  flex: 1;
+}
+
+/* Tab close button */
+.tab-close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  color: #999;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 0;
+  transition: all 0.2s;
+}
+
+.tab-close-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.tab-header.active .tab-close-button {
+  color: #2196F3;
+}
+
+.tab-header.active .tab-close-button:hover {
+  background-color: rgba(33, 150, 243, 0.1);
+  color: #1976D2;
+}
+
+/* Tab content area */
+.tab-content-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tab-header {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .tab-close-button {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+}

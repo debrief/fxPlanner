@@ -14,8 +14,9 @@
     <description>JavaFX desktop application for USV mission planning and simulation</description>
 
     <properties>
-        <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>25</maven.compiler.target>
+        <!-- Compile to Java 21 for Spring Boot 3.3.x compatibility (runs on Java 25) -->
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>21.0.2</javafx.version>
         <jts.version>1.18.1</jts.version>
@@ -65,12 +66,8 @@
             <version>2.0.0</version>
         </dependency>
 
-        <!-- SLF4J for logging (required by java_leaflet) -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>2.0.9</version>
-        </dependency>
+        <!-- SLF4J for logging: Removed slf4j-simple to avoid conflict with Spring Boot's Logback -->
+        <!-- Spring Boot provides logback-classic which satisfies SLF4J dependency -->
 
         <!-- Lombok for annotations (used in java_leaflet example) -->
         <dependency>
@@ -85,6 +82,26 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.10.1</version>
+        </dependency>
+
+        <!-- Spring Boot for REST API (web delivery) -->
+        <!-- Using 3.3.5 for better Java 25 compatibility -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>3.3.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+            <version>3.3.5</version>
+        </dependency>
+
+        <!-- SpringDoc OpenAPI for API documentation and type generation -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.3.0</version>
         </dependency>
 
         <!-- Testing: JUnit 5 -->
@@ -146,8 +163,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>25</source>
-                    <target>25</target>
+                    <source>21</source>
+                    <target>21</target>
                 </configuration>
             </plugin>
 
@@ -213,7 +230,9 @@
                 </executions>
             </plugin -->
 
-            <!-- Maven Shade Plugin (for creating fat JAR) -->
+            <!-- Maven Shade Plugin (for desktop JAR - disabled for web deployment) -->
+            <!-- Spring Boot Maven Plugin handles JAR packaging for web application -->
+            <!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -231,6 +250,97 @@
                                     <mainClass>com.planetmayo.usvsim.Main</mainClass>
                                 </transformer>
                             </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
+
+            <!-- Frontend Maven Plugin (build React frontend) -->
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>1.15.0</version>
+                <configuration>
+                    <workingDirectory>frontend</workingDirectory>
+                    <installDirectory>target</installDirectory>
+                </configuration>
+                <executions>
+                    <!-- Install Node.js and npm -->
+                    <execution>
+                        <id>install node and npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>v20.10.0</nodeVersion>
+                            <npmVersion>10.2.5</npmVersion>
+                        </configuration>
+                    </execution>
+
+                    <!-- Install frontend dependencies -->
+                    <execution>
+                        <id>npm install</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>install --legacy-peer-deps</arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- Build frontend -->
+                    <execution>
+                        <id>npm run build</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Copy frontend build to backend static resources -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-frontend-build</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/src/main/resources/static</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/frontend/build</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Spring Boot Maven Plugin for executable JAR -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.3.5</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>com.planetmayo.usvsim.api.USVWebApplication</mainClass>
                         </configuration>
                     </execution>
                 </executions>

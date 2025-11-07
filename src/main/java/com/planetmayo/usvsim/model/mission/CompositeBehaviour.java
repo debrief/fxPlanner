@@ -1,6 +1,7 @@
 package com.planetmayo.usvsim.model.mission;
 
 import com.planetmayo.usvsim.model.behaviour.Behaviour;
+import com.planetmayo.usvsim.model.behaviour.BehaviourExecutionState;
 import com.planetmayo.usvsim.model.behaviour.BehaviourState;
 import com.planetmayo.usvsim.model.geometry.Waypoint;
 import com.planetmayo.usvsim.model.platform.PlatformDemand;
@@ -10,7 +11,9 @@ import javafx.collections.ObservableList;
 import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Sequences multiple behaviours for multi-phase missions.
@@ -21,6 +24,8 @@ import java.util.List;
 public class CompositeBehaviour implements Behaviour {
     private final ObservableList<Behaviour> behaviours;
     private int currentIndex = 0;
+    // Track execution state for each child behavior (for stateless delegation)
+    private final Map<Integer, BehaviourExecutionState> childStates = new HashMap<>();
 
     public CompositeBehaviour() {
         this.behaviours = FXCollections.observableArrayList();
@@ -101,7 +106,16 @@ public class CompositeBehaviour implements Behaviour {
     @Override
     public PlatformDemand getDemandedState(PlatformState currentState) {
         if (currentIndex < behaviours.size()) {
-            return behaviours.get(currentIndex).getDemandedState(currentState);
+            Behaviour currentBehaviour = behaviours.get(currentIndex);
+
+            // Get or create execution state for current child
+            BehaviourExecutionState childState = childStates.computeIfAbsent(
+                currentIndex,
+                idx -> BehaviourExecutionState.initial("composite-child-" + idx)
+            );
+
+            // Delegate to stateless method
+            return currentBehaviour.calculateDemand(childState, currentState);
         }
         return null;
     }
@@ -109,11 +123,20 @@ public class CompositeBehaviour implements Behaviour {
     @Override
     public void updateProgress(PlatformState currentState) {
         if (currentIndex < behaviours.size()) {
-            Behaviour current = behaviours.get(currentIndex);
-            current.updateProgress(currentState);
+            Behaviour currentBehaviour = behaviours.get(currentIndex);
+
+            // Get or create execution state for current child
+            BehaviourExecutionState childState = childStates.computeIfAbsent(
+                currentIndex,
+                idx -> BehaviourExecutionState.initial("composite-child-" + idx)
+            );
+
+            // Call stateless updateProgress and store returned state
+            BehaviourExecutionState newChildState = currentBehaviour.updateProgress(childState, currentState);
+            childStates.put(currentIndex, newChildState);
 
             // Advance to next behaviour if current is complete
-            if (current.isComplete()) {
+            if (currentBehaviour.isComplete(newChildState)) {
                 currentIndex++;
             }
         }
@@ -141,5 +164,38 @@ public class CompositeBehaviour implements Behaviour {
             return getCurrentBehaviour().getDisplayColor();
         }
         return Color.BLACK;
+    }
+
+    // ===================================================================
+    // STATELESS INTERFACE IMPLEMENTATION (for REST API / Web Frontend)
+    // ===================================================================
+
+    @Override
+    public PlatformDemand calculateDemand(com.planetmayo.usvsim.model.behaviour.BehaviourExecutionState executionState, PlatformState platformState) {
+        // CompositeBehaviour stateless implementation not yet fully supported
+        // For now, delegate to current behavior based on stateful index
+        if (getCurrentBehaviour() != null) {
+            return getCurrentBehaviour().calculateDemand(executionState, platformState);
+        }
+        return new PlatformDemand(platformState.getHeading(), 0.0, 0.0,
+            com.planetmayo.usvsim.model.platform.TurnDirection.SHORTEST);
+    }
+
+    @Override
+    public com.planetmayo.usvsim.model.behaviour.BehaviourExecutionState updateProgress(
+            com.planetmayo.usvsim.model.behaviour.BehaviourExecutionState executionState,
+            PlatformState platformState) {
+        // CompositeBehaviour stateless implementation not yet fully supported
+        // For now, delegate to current behavior
+        if (getCurrentBehaviour() != null) {
+            return getCurrentBehaviour().updateProgress(executionState, platformState);
+        }
+        return executionState.withState(com.planetmayo.usvsim.model.behaviour.BehaviourState.COMPLETE);
+    }
+
+    @Override
+    public boolean isComplete(com.planetmayo.usvsim.model.behaviour.BehaviourExecutionState executionState) {
+        // Composite is complete if all behaviors are complete
+        return currentIndex >= behaviours.size();
     }
 }

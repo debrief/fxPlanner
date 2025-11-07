@@ -129,4 +129,63 @@ public class ParallelTrackSearch implements Behaviour {
     public double getPlatformSpeed() {
         return platformSpeed;
     }
+
+    // ===================================================================
+    // STATELESS INTERFACE IMPLEMENTATION (for REST API / Web Frontend)
+    // ===================================================================
+
+    @Override
+    public PlatformDemand calculateDemand(BehaviourExecutionState executionState, PlatformState platformState) {
+        // If no waypoints or past all waypoints, demand zero speed
+        if (waypoints.isEmpty() || executionState.currentWaypointIndex() >= waypoints.size()) {
+            return new PlatformDemand(platformState.getHeading(), 0.0, 0.0, TurnDirection.SHORTEST);
+        }
+
+        // Get current target waypoint
+        Waypoint targetWaypoint = waypoints.get(executionState.currentWaypointIndex());
+
+        // Calculate bearing to waypoint
+        double desiredHeading = platformState.getPosition().bearingTo(targetWaypoint.getPosition());
+
+        return new PlatformDemand(desiredHeading, platformSpeed, 0.0, TurnDirection.SHORTEST);
+    }
+
+    @Override
+    public BehaviourExecutionState updateProgress(BehaviourExecutionState executionState, PlatformState platformState) {
+        BehaviourExecutionState newState = executionState;
+
+        // Transition from PENDING to EXECUTING on first update
+        if (executionState.state() == BehaviourState.PENDING) {
+            newState = newState.withState(BehaviourState.EXECUTING);
+        }
+
+        // If no waypoints, mark complete immediately
+        if (waypoints.isEmpty()) {
+            return newState.withState(BehaviourState.COMPLETE);
+        }
+
+        // Check if current waypoint has been reached
+        if (executionState.currentWaypointIndex() < waypoints.size()) {
+            Waypoint current = waypoints.get(executionState.currentWaypointIndex());
+            double distance = platformState.getPosition().distanceTo(current.getPosition());
+
+            if (distance <= acceptanceRadius) {
+                // Increment waypoint index
+                newState = newState.withWaypointIndex(executionState.currentWaypointIndex() + 1);
+            }
+        }
+
+        // Check if all waypoints reached - transition to COMPLETE
+        if (newState.currentWaypointIndex() >= waypoints.size()) {
+            newState = newState.withState(BehaviourState.COMPLETE);
+        }
+
+        return newState;
+    }
+
+    @Override
+    public boolean isComplete(BehaviourExecutionState executionState) {
+        return executionState.state() == BehaviourState.COMPLETE ||
+               executionState.currentWaypointIndex() >= waypoints.size();
+    }
 }
