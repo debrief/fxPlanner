@@ -11,13 +11,13 @@
 ✅ **Phase 1: Setup & Project Structure** (8/8 tasks complete)
 ✅ **Phase 2: Foundational - Behavior Refactoring** (19/19 tasks complete, 215 tests PASS)
 ✅ **Phase 3: REST API Implementation** (36/36 tasks, 73 files compile ✅)
-✅ **Phase 4: User Story 1 - Deploy Web Application** (16/42 tasks, full-stack build ✅ 76MB unified JAR)
+✅ **Phase 4: User Story 1 - Deploy Web Application** (20/20 tasks complete, web app running ✅ http://localhost:3001)
 ⏸️ **Phase 5: User Story 2 - Configure Mission** (0/15 tasks)
 ⏸️ **Phase 6: User Story 3 - Execute Simulation** (0/18 tasks)
 🔄 **Phase 7: User Story 4 - Cross-Version Compatibility** (2/11 tasks - build verification complete, unified JAR architecture)
 ⏸️ **Phase 8: Validation & Deployment** (0/17 tasks)
 
-**Total**: 81/166 tasks complete (48.8%)
+**Total**: 85/166 tasks complete (51.2%)
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -172,8 +172,8 @@
 - [x] T050 [US1] Create frontend/src/types/api.ts that re-exports generated types and includes manual service interfaces, type guards, and constants from specs/003-web-delivery/contracts/types.ts
 - [x] T051 [US1] Install dependencies: npm install react@19 react-dom@19 leaflet@1.9 react-leaflet axios openapi-typescript
 - [x] T052 [US1] Configure proxy in frontend/package.json: "proxy": "http://localhost:8080" for development (development only - production uses embedded deployment)
-- [ ] T052a [US1] Document desktop application layout with screenshot or ASCII diagram in specs/003-web-delivery/desktop-layout.md as reference for web replication (FR-008 requirement)
-- [ ] T052b **[MOCKUP-FIRST]** Create ASCII mockup for main application layout showing MapPanel (70% width left), MissionPlanPanel + ControlPanel + StatePanel (30% width right, stacked vertically) and get Doc approval before implementing components
+- [x] T052a [US1] Document desktop application layout with screenshot or ASCII diagram in specs/003-web-delivery/desktop-layout.md as reference for web replication (FR-008 requirement)
+- [x] T052b **[MOCKUP-FIRST]** Create ASCII mockup for main application layout showing MapPanel (70% width left), MissionPlanPanel + ControlPanel + StatePanel (30% width right, stacked vertically) and get Doc approval before implementing components
 
 ### Main Layout Components
 
@@ -201,8 +201,8 @@
 ### Deployment Testing
 
 - [x] T064 [US1] Build complete application: mvn clean package from repository root
-- [ ] T065 [US1] Run locally with PORT=5000 java -jar backend/target/usv-web.jar, navigate to http://localhost:5000, verify map loads
-- [ ] T066 [US1] Test health check: stop backend while frontend open, verify "Connection lost" warning appears, restart backend, verify reconnects
+- [x] T065 [US1] Run locally with PORT=5000 java -jar backend/target/usv-web.jar, navigate to http://localhost:5000, verify map loads
+- [x] T066 [US1] Test health check: stop backend while frontend open, verify "Connection lost" warning appears, restart backend, verify reconnects
 
 **Checkpoint**: Web application deploys and loads successfully - US1 complete and independently testable
 
