@@ -41,7 +41,9 @@
       "Bash(node:*)",
       "Bash(git stash:*)",
       "Bash(git rm:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(PORT=5000 java:*)",
+      "Bash(PORT=3001 java -jar:*)"
     ],
     "deny": [],
     "ask": [
