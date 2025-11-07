@@ -8,3 +8,183 @@
   height: 100%;
   width: 100%;
 }
+
+/* Drawing mode overlay */
+.drawing-overlay {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.drawing-instructions {
+  background-color: rgba(33, 150, 243, 0.95);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  min-width: 300px;
+  pointer-events: auto;
+}
+
+.drawing-instructions strong {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.drawing-instructions p {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  opacity: 0.95;
+}
+
+.cancel-drawing-button {
+  background-color: white;
+  color: #2196F3;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-drawing-button:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Waypoint drawing styles */
+.waypoint-instructions {
+  background-color: rgba(76, 175, 80, 0.95);
+}
+
+.drawing-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.finish-drawing-button {
+  background-color: white;
+  color: #4CAF50;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.finish-drawing-button:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Numbered waypoint marker styles */
+.numbered-waypoint-icon {
+  background: transparent;
+  border: none;
+}
+
+.waypoint-marker {
+  width: 32px;
+  height: 32px;
+  background-color: #4CAF50;
+  border: 3px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.waypoint-marker::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 10px solid #4CAF50;
+}
+
+/* Generated waypoint marker styles (blue) */
+.waypoint-marker.generated {
+  background-color: #2196F3;
+}
+
+.waypoint-marker.generated::after {
+  border-top: 10px solid #2196F3;
+}
+
+/* Simple search pattern waypoint dots (no numbers) */
+.search-pattern-waypoint-icon {
+  background: transparent;
+  border: none;
+}
+
+.search-waypoint-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #2196F3;
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Platform marker visualization */
+.platform-marker {
+  width: 32px;
+  height: 32px;
+  background-color: #FF5722;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 87, 34, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.platform-marker::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 12px solid white;
+  filter: drop-shadow(0 0 3px rgba(255, 87, 34, 0.8));
+}
+
+.platform-marker-icon {
+  font-size: 18px;
+  color: white;
+  font-weight: bold;
+}
+
+/* Track history polyline color */
+.platform-track-history {
+  stroke: #FF5722;
+  stroke-opacity: 0.6;
+  stroke-width: 3;
+  stroke-dasharray: 5, 5;
+  fill: none;
+}

@@ -33,7 +33,7 @@
   padding: 6px 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 13px;
   background: white;
   cursor: pointer;
 }
@@ -62,10 +62,37 @@
   background: #4CAF50 !important;
   color: white !important;
   border-color: #4CAF50 !important;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 6px 14px !important;
+  min-width: 36px;
 }
 
 .add-button:hover:not(:disabled) {
   background: #45a049 !important;
+}
+
+.mission-fieldset {
+  display: flex;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 0;
+  align-items: center;
+}
+
+.mission-fieldset legend {
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.mission-fieldset button {
+  padding: 4px 10px !important;
+  font-size: 12px !important;
 }
 
 .panel-content {
@@ -83,4 +110,105 @@
   color: #bbb;
   text-align: center;
   font-size: 13px;
+}
+
+.behavior-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.behavior-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: white;
+}
+
+.behavior-item:hover {
+  border-color: #ccc;
+  background: #fafafa;
+}
+
+.behavior-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #2196F3;
+  color: white;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.behavior-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.behavior-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.behavior-details {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.detail-item {
+  font-size: 12px;
+  color: #666;
+  padding: 2px 6px;
+  background: #f5f5f5;
+  border-radius: 3px;
+}
+
+.status-badge {
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.behavior-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.action-button {
+  padding: 4px 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.action-button:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #ccc;
+}
+
+.action-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.delete-button:hover:not(:disabled) {
+  background: #ffebee;
+  border-color: #f44336;
+  color: #f44336;
 }
