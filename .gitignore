@@ -74,3 +74,5 @@ package-lock.json
 .yarn/
 frontend/build/
 frontend/dist/
+backend/src/main/resources/static/
+src/main/resources/static/
