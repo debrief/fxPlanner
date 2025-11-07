@@ -88,6 +88,16 @@ public class PatternGenerationService {
      * Convert domain Waypoint to DTO.
      */
     private WaypointDTO toWaypointDTO(Waypoint waypoint) {
+        // Map domain WaypointType to DTO string
+        String dtoType;
+        if (waypoint.getType() == com.planetmayo.usvsim.model.geometry.WaypointType.BASE) {
+            dtoType = "BASE";
+        } else if (waypoint.getType() == com.planetmayo.usvsim.model.geometry.WaypointType.TURN) {
+            dtoType = "TURN_POINT";
+        } else {
+            dtoType = "NORMAL"; // TRANSIT or SEARCH
+        }
+
         return new WaypointDTO(
             new PositionDTO(
                 waypoint.getPosition().getLatitude(),
@@ -95,7 +105,7 @@ public class PatternGenerationService {
             ),
             waypoint.getSpeed(),
             waypoint.getAcceptanceRadius(),
-            waypoint.getType().name()
+            dtoType
         );
     }
 
